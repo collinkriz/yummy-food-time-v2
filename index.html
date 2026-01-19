@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yummy Food Time - Order Extractor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #fff5f0 0%, #ffe5e5 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #ff3008;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #ffccc7;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #fff9f8;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #ff7a59;
+            background: #fff5f4;
+        }
+        
+        .upload-area.dragging {
+            border-color: #ff3008;
+            background: #ffebe8;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .preview img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: #ff3008;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #e02b00;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .status.loading {
+            background: #e6f7ff;
+            color: #0050b3;
+            border: 1px solid #91d5ff;
+        }
+        
+        .status.error {
+            background: #fff2f0;
+            color: #cf1322;
+            border: 1px solid #ffccc7;
+        }
+        
+        .status.success {
+            background: #f6ffed;
+            color: #389e0d;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .results {
+            margin-top: 30px;
+        }
+        
+        .restaurant-info {
+            background: linear-gradient(135deg, #fff7e6 0%, #ffe7ba 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .restaurant-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .restaurant-address {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .items-section {
+            margin-top: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .item-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .item-price {
+            color: #ff3008;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .summary {
+            background: linear-gradient(135deg, #e6fffb 0%, #b5f5ec 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        
+        .summary-row.total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            border-top: 2px solid #52c41a;
+            padding-top: 12px;
+            margin-top: 8px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff3008;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍕 Yummy Food Time</h1>
+        <p class="subtitle">Upload any food delivery receipt to extract order details</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📸</div>
+            <div class="upload-text">Tap to upload food delivery receipt</div>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        
+        <div class="preview" id="preview" style="display: none;">
+            <img id="previewImage" alt="Preview">
+        </div>
+        
+        <button id="extractBtn" disabled>Extract Order Info</button>
+        
+        <div id="status" style="display: none;"></div>
+        
+        <div id="results" class="results" style="display: none;"></div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const previewImage = document.getElementById('previewImage');
+        const extractBtn = document.getElementById('extractBtn');
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        
+        let selectedFile = null;
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+        
+        function handleFile(file) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                preview.style.display = 'block';
+                extractBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        extractBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            
+            extractBtn.disabled = true;
+            results.style.display = 'none';
+            status.style.display = 'block';
+            status.className = 'status loading';
+            status.innerHTML = '<div class="spinner"></div><div>Analyzing receipt with AI...</div>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+                
+                const response = await fetch('/extract-order', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to extract order');
+                }
+                
+                status.className = 'status success';
+                status.textContent = '✅ Order extracted successfully!';
+                
+                displayResults(result.data);
+                
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ Error: ' + error.message;
+            } finally {
+                extractBtn.disabled = false;
+            }
+        });
+        
+        function displayResults(data) {
+            results.style.display = 'block';
+            results.innerHTML = `
+                <div class="restaurant-info">
+                    <div class="restaurant-name">${data.restaurant}</div>
+                    ${data.deliveryService && data.deliveryService !== 'Unknown' ? `
+                        <div style="color: #ff3008; font-weight: 600; margin: 8px 0;">
+                            via ${data.deliveryService}
+                        </div>
+                    ` : ''}
+                    <div class="restaurant-address">📍 ${data.address}</div>
+                </div>
+                
+                <div class="items-section">
+                    <div class="section-title">Order Items</div>
+                    ${data.items.map(item => `
+                        <div class="item">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-price">$${item.price.toFixed(2)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="summary">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>$${data.subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Delivery Fee</span>
+                        <span>$${data.deliveryFee.toFixed(2)}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Service Fee</span>
+                        <span>$${data.serviceFee.toFixed(2)}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Tax</span>
+                        <span>$${data.tax.toFixed(2)}</span>
+                    </div>
+                    ${data.discount !== 0 ? `
+                        <div class="summary-row">
+                            <span>Discount</span>
+                            <span>-$${Math.abs(data.discount).toFixed(2)}</span>
+                        </div>
+                    ` : ''}
+                    <div class="summary-row">
+                        <span>Tip</span>
+                        <span>$${data.tip.toFixed(2)}</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span>$${data.total.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
