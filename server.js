@@ -486,6 +486,68 @@ Keep it SHORT and friendly!`
   }
 });
 
+// Chat greeting endpoint
+app.get('/chat-greeting', async (req, res) => {
+  try {
+    const hour = new Date().getHours();
+    
+    // Get recent orders for context
+    const ordersResult = await pool.query(`
+      SELECT o.restaurant, o.created_at,
+             json_agg(
+               json_build_object(
+                 'name', oi.item_name,
+                 'rating', oi.rating
+               ) ORDER BY oi.rating DESC NULLS LAST
+             ) FILTER (WHERE oi.rating >= 4) as top_items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+      LIMIT 5
+    `);
+    
+    let greeting = '';
+    
+    // Time-based greetings
+    if (hour >= 5 && hour < 11) {
+      greeting = "Morning! Thinking breakfast or brunch?";
+    } else if (hour >= 11 && hour < 14) {
+      greeting = "Lunch time! What sounds good?";
+    } else if (hour >= 14 && hour < 17) {
+      greeting = "Afternoon! Hungry for a snack or early dinner?";
+    } else if (hour >= 17 && hour < 21) {
+      greeting = "Dinner time! What are you craving?";
+    } else {
+      greeting = "Late night vibes! What sounds good?";
+    }
+    
+    // Add context if they have recent orders
+    if (ordersResult.rows.length > 0) {
+      const recentRestaurant = ordersResult.rows[0].restaurant;
+      const daysSinceOrder = Math.floor((Date.now() - new Date(ordersResult.rows[0].created_at)) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceOrder === 0) {
+        const greetings = [
+          `Already ordered today! Want something different?`,
+          `Back for more? What sounds good?`,
+          `Hungry again? I got you!`
+        ];
+        greeting = greetings[Math.floor(Math.random() * greetings.length)];
+      } else if (daysSinceOrder < 3) {
+        // Don't suggest same restaurant
+        greeting = greeting.replace('What sounds good?', `Maybe try something new?`);
+      }
+    }
+    
+    res.json({ success: true, greeting });
+    
+  } catch (error) {
+    console.error('Error generating greeting:', error);
+    res.json({ success: true, greeting: "Hey! What sounds good?" });
+  }
+});
+
 // Health check
 app.get('/health', async (req, res) => {
   try {
