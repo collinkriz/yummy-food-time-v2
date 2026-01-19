@@ -451,30 +451,21 @@
             font-size: 20px;
         }
         
-        /* Recipe Tabs Container - One complete box */
-        .recipe-tabs-wrapper {
-            border: 4px solid #4A4A1F;
-            background: white;
-            margin-bottom: 20px;
-        }
-        
-        /* Recipe Tabs */
-        .recipe-tabs {
+        /* Recipe Toggle Buttons (separate from content box) */
+        .recipe-toggles {
             display: flex;
-            gap: 0;
-            margin-bottom: 0;
-            border-bottom: 4px solid #4A4A1F;
+            gap: 12px;
+            margin-bottom: 16px;
+            justify-content: center;
         }
         
-        .recipe-tab {
+        .recipe-toggle {
             flex: 1;
-            padding: 16px 8px;
-            background: #F5F1E8;
-            border: none;
-            border-right: 4px solid #4A4A1F;
-            border-bottom: 4px solid transparent;
-            margin-bottom: -4px;
-            font-size: 14px;
+            max-width: 200px;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #F5F1E8 0%, #E8E4D8 100%);
+            border: 4px solid #4A4A1F;
+            font-size: 15px;
             font-weight: 800;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -482,36 +473,39 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             text-align: center;
+            box-shadow: 3px 3px 0 rgba(74, 74, 31, 0.2);
+            border-radius: 8px;
         }
         
-        .recipe-tab:last-child {
-            border-right: none;
+        .recipe-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 0 rgba(74, 74, 31, 0.3);
         }
         
-        .recipe-tab:hover {
-            background: #FFE082;
+        .recipe-toggle.active {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+            box-shadow: 4px 4px 0 rgba(255, 152, 0, 0.3);
         }
         
-        .recipe-tab.active {
+        /* Recipe Content Box (simple bordered box) */
+        .recipe-content-box {
             background: white;
-            color: #FF9800;
-            border-bottom: 4px solid white;
+            border: 4px solid #4A4A1F;
+            padding: 24px;
+            box-shadow: 6px 6px 0 rgba(74, 74, 31, 0.2);
+            margin-bottom: 20px;
         }
         
-        .recipe-tab-content {
+        .recipe-section {
             display: none;
-            padding: 20px;
-            font-size: 16px;
-            line-height: 1.8;
-            color: #333;
-            background: white;
         }
         
-        .recipe-tab-content.active {
+        .recipe-section.active {
             display: block;
         }
         
-        .recipe-tab-content h4 {
+        .recipe-section h4 {
             font-size: 18px;
             font-weight: 800;
             color: #4A4A1F;
@@ -519,16 +513,16 @@
             text-transform: uppercase;
         }
         
-        .recipe-tab-content ul {
+        .recipe-section ul {
             margin-left: 20px;
             margin-bottom: 16px;
         }
         
-        .recipe-tab-content li {
+        .recipe-section li {
             margin-bottom: 8px;
         }
         
-        .recipe-tab-content p {
+        .recipe-section p {
             margin-bottom: 12px;
             white-space: pre-wrap;
         }
@@ -1014,16 +1008,16 @@
             showView('filterView');
         }
         
-        function switchRecipeTab(tabName) {
-            // Remove active from all tabs and content
-            document.querySelectorAll('.recipe-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.recipe-tab-content').forEach(content => content.classList.remove('active'));
+        function switchRecipeTab(sectionName) {
+            // Remove active from all toggles and sections
+            document.querySelectorAll('.recipe-toggle').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.recipe-section').forEach(section => section.classList.remove('active'));
             
-            // Add active to clicked tab
+            // Add active to clicked toggle
             event.target.classList.add('active');
             
-            // Show corresponding content
-            document.getElementById(tabName + '-tab').classList.add('active');
+            // Show corresponding section
+            document.getElementById(sectionName + '-section').classList.add('active');
         }
         
         function showUpload() {
@@ -1150,17 +1144,17 @@
             html += `<div style="text-align: center;"><div style="font-size: 24px;">🍽️</div><div style="font-weight: 600; color: #4A4A1F;">Servings: ${recipe.servings || 'N/A'}</div></div>`;
             html += '</div>';
             
-            // Wrap tabs in bordered container
-            html += '<div class="recipe-tabs-wrapper">';
-            
-            // Tabs
-            html += '<div class="recipe-tabs">';
-            html += '<button class="recipe-tab active" onclick="switchRecipeTab(\'ingredients\')">📝 Ingredients</button>';
-            html += '<button class="recipe-tab" onclick="switchRecipeTab(\'instructions\')">👩🏻‍🍳 Instructions</button>';
+            // Toggle buttons (separate from content box)
+            html += '<div class="recipe-toggles">';
+            html += '<button class="recipe-toggle active" onclick="switchRecipeTab(\'ingredients\')">📝 Ingredients</button>';
+            html += '<button class="recipe-toggle" onclick="switchRecipeTab(\'instructions\')">👩🏻‍🍳 Instructions</button>';
             html += '</div>';
             
-            // Ingredients tab
-            html += '<div id="ingredients-tab" class="recipe-tab-content active">';
+            // Content box with sections
+            html += '<div class="recipe-content-box">';
+            
+            // Ingredients section
+            html += '<div id="ingredients-section" class="recipe-section active">';
             if (recipe.ingredients) {
                 const ingredients = recipe.ingredients.split('\n').filter(i => i.trim());
                 html += '<ul>';
@@ -1173,8 +1167,8 @@
             }
             html += '</div>';
             
-            // Instructions tab
-            html += '<div id="instructions-tab" class="recipe-tab-content">';
+            // Instructions section
+            html += '<div id="instructions-section" class="recipe-section">';
             if (recipe.directions) {
                 html += `<p>${recipe.directions.replace(/\n/g, '<br><br>')}</p>`;
             } else {
@@ -1182,7 +1176,7 @@
             }
             html += '</div>';
             
-            html += '</div>'; // Close recipe-tabs-wrapper
+            html += '</div>'; // Close recipe-content-box
             
             // Source button
             if (recipe.source_url) {
