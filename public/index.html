@@ -164,23 +164,30 @@
         }
         
         .preview {
-            margin: 20px 0;
+            margin: 20px auto;
             text-align: center;
-            max-width: 100%;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
+            width: 100%;
+            display: block;
         }
         
         .preview img {
-            max-width: 100%;
-            width: auto;
-            max-height: 300px;
+            display: block;
+            margin: 0 auto;
+            max-width: 90%;
+            width: auto !important;
             height: auto;
+            max-height: 250px;
             object-fit: contain;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             border: 3px solid #FFD93D;
+        }
+        
+        @media (max-width: 768px) {
+            .preview img {
+                max-width: 95%;
+                max-height: 200px;
+            }
         }
         
         button {
@@ -924,10 +931,12 @@
                 });
                 
                 const result = await response.json();
+                console.log('Server response:', result);
                 
                 if (!response.ok) {
                     console.error('Server error:', result);
-                    throw new Error(result.error || 'Failed to save order');
+                    // Show detailed error
+                    throw new Error(result.error + (result.details ? '\n\nDetails: ' + result.details : ''));
                 }
                 
                 status.className = 'status success';
@@ -950,7 +959,7 @@
             } catch (error) {
                 console.error('Save order error:', error);
                 status.className = 'status error';
-                status.textContent = '❌ Error: ' + error.message;
+                status.innerHTML = `❌ Error: ${error.message}<br><br><small>Check if database is connected in Railway</small>`;
             }
         }
         
