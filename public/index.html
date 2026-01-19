@@ -25,7 +25,7 @@
             position: relative;
         }
         
-        /* Add subtle texture to background */
+        /* Subtle texture */
         body::before {
             content: '';
             position: fixed;
@@ -56,16 +56,10 @@
             z-index: 1;
         }
         
-        @media (max-width: 768px) {
-            .container {
-                padding: 8px;
-            }
-        }
-        
-        /* HEADER - Groovy 70s Style */
+        /* HEADER */
         .header {
             background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
-            padding: 32px 28px;
+            padding: 28px 24px;
             margin-bottom: 20px;
             box-shadow: 
                 8px 8px 0 rgba(74, 74, 31, 0.3),
@@ -73,11 +67,8 @@
             border: 4px solid #4A4A1F;
             position: relative;
             overflow: hidden;
-            box-sizing: border-box;
-            transition: transform 0.3s ease;
         }
         
-        /* Decorative corner elements */
         .header::before,
         .header::after {
             content: '';
@@ -104,7 +95,6 @@
         @media (max-width: 768px) {
             .header {
                 padding: 24px 20px;
-                margin-bottom: 16px;
             }
             
             .header::before,
@@ -124,7 +114,6 @@
             }
         }
         
-        /* Title - Big, Bold, Groovy */
         h1 {
             color: #4A4A1F;
             font-size: 42px;
@@ -143,15 +132,11 @@
         
         h1:hover {
             transform: scale(1.02);
-            text-shadow: 
-                4px 4px 0 rgba(255, 255, 255, 0.5),
-                -1px -1px 0 rgba(0, 0, 0, 0.15);
         }
         
         @media (max-width: 768px) {
             h1 {
                 font-size: 32px;
-                letter-spacing: -0.5px;
             }
         }
         
@@ -168,776 +153,405 @@
         @media (max-width: 768px) {
             .subtitle {
                 font-size: 14px;
-                letter-spacing: 0.5px;
             }
         }
         
-        /* TABS - Individual Bubbles */
-        .tabs {
+        /* TOP BUTTONS */
+        .top-buttons {
             display: flex;
             gap: 12px;
-            margin-top: 24px;
+            margin-top: 20px;
             position: relative;
             z-index: 2;
         }
         
-        @media (max-width: 768px) {
-            .tabs {
-                gap: 10px;
-                margin-top: 20px;
-            }
-        }
-        
-        .tab {
+        .top-btn {
             flex: 1;
-            padding: 14px 12px;
-            background: #FFC107;
-            border: 4px solid #4A4A1F;
-            font-size: 15px;
+            padding: 12px 16px;
+            background: #F5F1E8;
+            border: 3px solid #4A4A1F;
+            border-radius: 24px;
+            font-size: 14px;
             font-weight: 800;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             color: #4A4A1F;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            position: relative;
             box-shadow: 4px 4px 0 rgba(74, 74, 31, 0.25);
-            border-radius: 24px;
         }
         
-        @media (max-width: 768px) {
-            .tab {
-                padding: 12px 10px;
-                font-size: 13px;
-            }
-        }
-        
-        .tab:hover {
+        .top-btn:hover {
             background: #FF9800;
             transform: translateY(-2px);
             box-shadow: 5px 5px 0 rgba(74, 74, 31, 0.3);
         }
         
-        .tab.active {
-            background: #FF9800;
-            color: #4A4A1F;
-            box-shadow: 4px 4px 0 rgba(74, 74, 31, 0.25);
+        @media (max-width: 768px) {
+            .top-btn {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
         }
         
-        .tab:active {
-            transform: translateY(0);
-            box-shadow: 3px 3px 0 rgba(74, 74, 31, 0.25);
-        }
-        
-        .tab-content {
+        /* VIEWS */
+        .view {
             display: none;
         }
         
-        .tab-content.active {
+        .view.active {
             display: block;
             animation: fadeInSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         @keyframes fadeInSlide {
-            from { 
-                opacity: 0; 
-                transform: translateY(20px);
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0);
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* CHOICE CARDS (Take Out / Cook at Home) */
+        .choice-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .choice-cards {
+                grid-template-columns: 1fr;
+                gap: 16px;
             }
         }
         
-        /* CARDS - Chunky 70s Style */
-        .card {
+        .choice-card {
             background: white;
-            padding: 28px;
-            margin-bottom: 20px;
-            box-shadow: 
-                6px 6px 0 rgba(74, 74, 31, 0.2),
-                0 4px 16px rgba(0, 0, 0, 0.1);
             border: 4px solid #4A4A1F;
-            width: 100%;
-            max-width: 100%;
-            overflow-x: hidden;
-            box-sizing: border-box;
-            position: relative;
-        }
-        
-        @media (max-width: 768px) {
-            .card {
-                padding: 20px;
-                margin-bottom: 16px;
-            }
-        }
-        
-        /* UPLOAD AREA - Fun & Inviting */
-        .upload-area {
-            border: 5px dashed #B4B85E;
-            padding: 60px 20px;
+            padding: 60px 30px;
             text-align: center;
-            background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%);
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .upload-area::before {
-            content: '';
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            bottom: 10px;
-            border: 2px dashed rgba(180, 184, 94, 0.3);
-            pointer-events: none;
-        }
-        
-        .upload-area:hover {
-            border-color: #FF9800;
-            background: linear-gradient(135deg, #FFF9E6 0%, #FFE082 100%);
-            transform: scale(1.02);
-            box-shadow: inset 0 0 20px rgba(255, 152, 0, 0.1);
-        }
-        
-        @media (max-width: 768px) {
-            .upload-area {
-                padding: 50px 16px;
-            }
-        }
-        
-        input[type="file"] {
-            display: none;
-        }
-        
-        .upload-icon {
-            font-size: 72px;
-            margin-bottom: 16px;
-            animation: floatBounce 3s ease-in-out infinite;
-        }
-        
-        @keyframes floatBounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes diceRoll {
-            0% { transform: rotate(0deg) scale(1); }
-            25% { transform: rotate(90deg) scale(1.2); }
-            50% { transform: rotate(180deg) scale(1); }
-            75% { transform: rotate(270deg) scale(1.2); }
-            100% { transform: rotate(360deg) scale(1); }
-        }
-        
-        @media (max-width: 768px) {
-            .upload-icon {
-                font-size: 64px;
-            }
-        }
-        
-        .upload-text {
-            color: #4A4A1F;
-            font-weight: 700;
-            font-size: 18px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        /* PREVIEW IMAGE */
-        .preview {
-            margin: 24px auto;
-            text-align: center;
-            width: 100%;
-            display: block;
-        }
-        
-        .preview img {
-            display: block;
-            margin: 0 auto;
-            max-width: 90%;
-            width: auto !important;
-            height: auto !important;
-            object-fit: contain;
-            box-shadow: 
-                8px 8px 0 rgba(180, 184, 94, 0.3),
-                0 4px 20px rgba(0, 0, 0, 0.15);
-            border: 4px solid #B4B85E;
-            animation: photoSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        @keyframes photoSlideIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9) rotate(-2deg);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) rotate(0deg);
-            }
-        }
-        
-        /* BUTTONS - Chunky 70s Style */
-        button {
-            width: 100%;
-            padding: 18px 20px;
-            background: linear-gradient(135deg, #6B6B3D 0%, #5A5A32 100%);
-            color: #FFC107;
-            border: 4px solid #4A4A1F;
-            font-size: 17px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 
-                5px 5px 0 rgba(74, 74, 31, 0.3),
-                0 4px 12px rgba(0, 0, 0, 0.15);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        button:not(.tab)::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        button:not(.tab):hover::before {
-            left: 100%;
-        }
-        
-        @media (max-width: 768px) {
-            button {
-                padding: 16px 18px;
-                font-size: 15px;
-            }
-        }
-        
-        button:hover:not(:disabled):not(.tab) {
-            background: linear-gradient(135deg, #5A5A32 0%, #4A4A28 100%);
-            transform: translateY(-3px);
-            box-shadow: 
-                6px 6px 0 rgba(74, 74, 31, 0.3),
-                0 6px 16px rgba(0, 0, 0, 0.2);
-        }
-        
-        button:active:not(:disabled):not(.tab) {
-            transform: translateY(-1px);
-            box-shadow: 
-                3px 3px 0 rgba(74, 74, 31, 0.3),
-                0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
-            border-color: #999;
-            color: #666;
-        }
-        
-        /* STATUS MESSAGES - Groovy Feedback */
-        .status {
-            padding: 18px 20px;
-            margin: 18px 0;
-            font-size: 15px;
-            font-weight: 700;
-            border: 4px solid;
-            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
-            animation: statusPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        @keyframes statusPop {
-            0% { transform: scale(0.8); opacity: 0; }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        
-        .status.loading {
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-            color: #1976D2;
-            border-color: #1976D2;
-        }
-        
-        .status.error {
-            background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
-            color: #C62828;
-            border-color: #C62828;
-        }
-        
-        .status.success {
-            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-            color: #2E7D32;
-            border-color: #2E7D32;
-        }
-        
-        /* RESTAURANT INFO - Bold Header Card */
-        .restaurant-info {
-            background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
-            padding: 28px;
-            margin-bottom: 24px;
-            border: 4px solid #4A4A1F;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             box-shadow: 6px 6px 0 rgba(74, 74, 31, 0.2);
             position: relative;
+            overflow: hidden;
         }
         
-        @media (max-width: 768px) {
-            .restaurant-info {
-                padding: 20px;
-            }
+        .choice-card::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
+            transition: top 0.3s ease;
+            z-index: 0;
         }
         
-        .restaurant-name {
-            font-size: 32px;
+        .choice-card:hover::before {
+            top: 0;
+        }
+        
+        .choice-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 10px 10px 0 rgba(74, 74, 31, 0.3);
+        }
+        
+        .choice-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .choice-card:hover .choice-icon {
+            transform: scale(1.2) rotate(10deg);
+        }
+        
+        .choice-title {
+            font-size: 28px;
             font-weight: 900;
-            margin-bottom: 12px;
             color: #4A4A1F;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            letter-spacing: -0.5px;
             text-transform: uppercase;
-            text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.3);
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .choice-card:hover .choice-title {
+            color: white;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
         }
         
         @media (max-width: 768px) {
-            .restaurant-name {
+            .choice-card {
+                padding: 50px 20px;
+            }
+            
+            .choice-icon {
+                font-size: 64px;
+            }
+            
+            .choice-title {
                 font-size: 24px;
             }
         }
         
-        .delivery-badge {
-            display: inline-block;
-            background: white;
+        /* FILTER TILES */
+        .filter-section {
+            margin-top: 30px;
+        }
+        
+        .filter-section h2 {
             color: #4A4A1F;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 800;
-            margin: 8px 0;
-            box-shadow: 3px 3px 0 rgba(74, 74, 31, 0.2);
-            border: 3px solid #4A4A1F;
+            font-size: 28px;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            text-align: center;
         }
         
-        .order-date {
-            font-size: 14px;
-            font-weight: 700;
-            color: #4A4A1F;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        /* ITEM CARDS - Fun Food Cards */
-        .item-card {
-            background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%);
-            padding: 24px;
-            margin-bottom: 16px;
-            border: 4px solid #B4B85E;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .item-card::before {
-            content: '⭐';
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            font-size: 24px;
-            opacity: 0;
-            transform: rotate(-45deg) scale(0);
-            transition: all 0.3s ease;
-        }
-        
-        .item-card:hover {
-            border-color: #FF9800;
-            transform: translateX(5px);
-            box-shadow: -5px 5px 0 rgba(255, 152, 0, 0.2);
-        }
-        
-        .item-card:hover::before {
-            opacity: 0.3;
-            transform: rotate(0deg) scale(1);
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
         
         @media (max-width: 768px) {
-            .item-card {
-                padding: 18px;
+            .filter-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
             }
         }
         
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 16px;
-            padding-bottom: 14px;
-            border-bottom: 3px solid #FFC107;
+        .filter-tile {
+            background: white;
+            border: 4px solid #B4B85E;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 4px 4px 0 rgba(180, 184, 94, 0.2);
         }
         
-        .item-name {
+        .filter-tile:hover {
+            border-color: #FF9800;
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0 rgba(255, 152, 0, 0.3);
+        }
+        
+        .filter-tile.selected {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            border-color: #4A4A1F;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .filter-tile.random {
+            background: linear-gradient(135deg, #6B6B3D 0%, #5A5A32 100%);
+            border-color: #4A4A1F;
+            color: #FFC107;
+        }
+        
+        .filter-tile.random:hover {
+            transform: scale(1.08) rotate(5deg);
+        }
+        
+        .filter-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .filter-name {
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .filter-btn {
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #6B6B3D 0%, #5A5A32 100%);
+            color: #FFC107;
+            border: 4px solid #4A4A1F;
             font-size: 18px;
             font-weight: 800;
-            color: #4A4A1F;
-            flex: 1;
-            margin-right: 12px;
-            word-wrap: break-word;
-            line-height: 1.4;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 5px 5px 0 rgba(74, 74, 31, 0.3);
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 1px;
+        }
+        
+        .filter-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 6px 6px 0 rgba(74, 74, 31, 0.3);
         }
         
         @media (max-width: 768px) {
-            .item-name {
+            .filter-btn {
+                padding: 14px 30px;
                 font-size: 16px;
             }
         }
         
-        .item-price {
-            font-size: 20px;
-            font-weight: 900;
-            color: #FF9800;
-            white-space: nowrap;
-            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
-        }
-        
-        /* ASSIGNMENT & RATING CONTROLS */
-        .assignment-group, .rating-group {
-            margin: 16px 0;
-        }
-        
-        .assignment-group label, .rating-group label {
-            display: block;
-            font-weight: 700;
-            color: #4A4A1F;
-            margin-bottom: 10px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .assignment-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .assign-btn {
-            flex: 1;
-            padding: 12px;
-            background: #F5F1E8;
-            color: #4A4A1F;
-            border: 3px solid #B4B85E;
-            font-size: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            box-shadow: 3px 3px 0 rgba(180, 184, 94, 0.2);
-        }
-        
-        .assign-btn:hover {
+        /* RECOMMENDATION SCREEN */
+        .recommendation {
             background: white;
-            transform: translateY(-2px);
-            box-shadow: 4px 4px 0 rgba(180, 184, 94, 0.3);
-        }
-        
-        .assign-btn.active {
-            background: #6B6B3D;
-            color: #FFC107;
-            border-color: #4A4A1F;
-            transform: scale(1.05);
-        }
-        
-        .star-rating {
-            display: flex;
-            gap: 8px;
-            font-size: 36px;
-        }
-        
-        @media (max-width: 768px) {
-            .star-rating {
-                font-size: 32px;
-                gap: 6px;
-            }
-        }
-        
-        .star {
-            cursor: pointer;
-            transition: all 0.2s ease;
-            filter: grayscale(100%);
-        }
-        
-        .star:hover,
-        .star.active {
-            filter: grayscale(0%);
-            transform: scale(1.2) rotate(10deg);
-        }
-        
-        .star:active {
-            transform: scale(1.1) rotate(5deg);
-        }
-        
-        /* NOTES TEXTAREA */
-        textarea {
-            width: 100%;
-            padding: 14px;
-            border: 3px solid #B4B85E;
-            font-size: 15px;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 80px;
-            background: white;
-            box-shadow: inset 2px 2px 0 rgba(180, 184, 94, 0.1);
-            transition: all 0.2s ease;
-        }
-        
-        textarea:focus {
-            outline: none;
-            border-color: #FF9800;
-            box-shadow: 
-                inset 2px 2px 0 rgba(255, 152, 0, 0.1),
-                0 0 0 3px rgba(255, 152, 0, 0.2);
-        }
-        
-        /* SUMMARY BOX - Clear Totals */
-        .summary-box {
-            background: linear-gradient(135deg, #F5F1E8 0%, #FFF9E6 100%);
-            padding: 24px;
-            margin-top: 24px;
             border: 4px solid #4A4A1F;
-            box-shadow: 5px 5px 0 rgba(74, 74, 31, 0.2);
+            padding: 40px 30px;
+            box-shadow: 6px 6px 0 rgba(74, 74, 31, 0.2);
+            margin-top: 30px;
         }
         
-        @media (max-width: 768px) {
-            .summary-box {
-                padding: 18px;
-            }
-        }
-        
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            font-size: 16px;
-            font-weight: 700;
-            color: #4A4A1F;
-            border-bottom: 2px solid rgba(74, 74, 31, 0.1);
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        
-        .summary-row:last-child {
-            border-bottom: none;
-        }
-        
-        .summary-row.total {
-            font-size: 22px;
-            font-weight: 900;
-            color: #FF9800;
-            padding-top: 16px;
-            margin-top: 8px;
-            border-top: 4px solid #4A4A1F;
-            border-bottom: none;
-        }
-        
-        @media (max-width: 768px) {
-            .summary-row {
-                font-size: 14px;
-                padding: 10px 0;
-            }
-            
-            .summary-row.total {
-                font-size: 20px;
-            }
-        }
-        
-        /* ORDER HISTORY - List View */
-        .order-history-item {
-            background: white;
-            padding: 20px;
-            margin-bottom: 16px;
-            border: 4px solid #4A4A1F;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 4px 4px 0 rgba(74, 74, 31, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .order-history-item::before {
-            content: '→';
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%) translateX(10px);
+        .rec-title {
             font-size: 32px;
             font-weight: 900;
             color: #FF9800;
-            opacity: 0;
-            transition: all 0.3s ease;
-        }
-        
-        .order-history-item:hover {
-            transform: translateX(5px);
-            box-shadow: -5px 5px 0 rgba(255, 152, 0, 0.3);
-            border-color: #FF9800;
-        }
-        
-        .order-history-item:hover::before {
-            opacity: 1;
-            transform: translateY(-50%) translateX(0);
-        }
-        
-        @media (max-width: 768px) {
-            .order-history-item {
-                padding: 16px;
-            }
-        }
-        
-        .order-restaurant {
-            font-size: 22px;
-            font-weight: 900;
-            color: #4A4A1F;
-            margin: 8px 0;
             text-transform: uppercase;
-            letter-spacing: -0.3px;
+            margin-bottom: 20px;
+            text-align: center;
         }
         
-        @media (max-width: 768px) {
-            .order-restaurant {
-                font-size: 18px;
-            }
+        .rec-content {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 30px;
         }
         
-        .order-total {
-            font-size: 24px;
-            font-weight: 900;
-            color: #FF9800;
-            margin-top: 12px;
-            text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
-        }
-        
-        /* SPECIAL BUTTONS */
-        .delete-btn {
-            background: linear-gradient(135deg, #EF5350 0%, #E53935 100%);
-            color: white;
-            margin-top: 12px;
-            padding: 14px;
-            font-size: 15px;
-            box-shadow: 
-                4px 4px 0 rgba(211, 47, 47, 0.3),
-                0 4px 15px rgba(239, 83, 80, 0.3);
-        }
-        
-        .delete-btn:hover {
-            background: linear-gradient(135deg, #E53935 0%, #D32F2F 100%);
-            box-shadow: 
-                5px 5px 0 rgba(211, 47, 47, 0.3),
-                0 6px 20px rgba(239, 83, 80, 0.4);
-        }
-        
-        .edit-btn {
-            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-            color: white;
-            margin-top: 12px;
-            padding: 14px;
-            font-size: 15px;
-            box-shadow: 
-                4px 4px 0 rgba(245, 124, 0, 0.3),
-                0 4px 15px rgba(255, 152, 0, 0.3);
-        }
-        
-        .edit-btn:hover {
-            background: linear-gradient(135deg, #F57C00 0%, #E65100 100%);
-            box-shadow: 
-                5px 5px 0 rgba(245, 124, 0, 0.3),
-                0 6px 20px rgba(255, 152, 0, 0.4);
+        .rec-details {
+            background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%);
+            border: 3px solid #B4B85E;
+            padding: 20px;
+            margin-bottom: 20px;
         }
         
         .back-btn {
             background: linear-gradient(135deg, #78909C 0%, #607D8B 100%);
-            margin-bottom: 24px;
-            box-shadow: 
-                4px 4px 0 rgba(69, 90, 100, 0.3),
-                0 4px 15px rgba(96, 125, 139, 0.3);
+            color: white;
+            padding: 14px 30px;
+            border: 4px solid #4A4A1F;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 rgba(69, 90, 100, 0.3);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: inline-block;
         }
         
         .back-btn:hover {
-            background: linear-gradient(135deg, #607D8B 0%, #546E7A 100%);
-            box-shadow: 
-                5px 5px 0 rgba(69, 90, 100, 0.3),
-                0 6px 20px rgba(96, 125, 139, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 5px 5px 0 rgba(69, 90, 100, 0.3);
         }
         
-        .button-group {
+        /* FLOATING CHAT BUTTON */
+        .chat-float-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            border: 4px solid #4A4A1F;
+            border-radius: 50%;
+            font-size: 32px;
             display: flex;
-            gap: 12px;
-            margin-top: 12px;
-        }
-        
-        .button-group button {
-            flex: 1;
-        }
-        
-        /* EDIT MODE FIELDS */
-        .edit-field {
-            width: 100%;
-            padding: 14px;
-            border: 3px solid #B4B85E;
-            font-size: 15px;
-            font-family: inherit;
-            margin-bottom: 12px;
-            box-sizing: border-box;
-            background: white;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-        
-        .edit-field:focus {
-            outline: none;
-            border-color: #FF9800;
-            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
-        }
-        
-        select.edit-field {
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                4px 4px 0 rgba(74, 74, 31, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
         }
         
-        /* EMPTY STATE - Friendly Message */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%);
-            border: 4px dashed #B4B85E;
+        .chat-float-btn:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 
+                0 6px 16px rgba(0, 0, 0, 0.4),
+                6px 6px 0 rgba(74, 74, 31, 0.4);
         }
         
-        .empty-state-icon {
-            font-size: 72px;
-            margin-bottom: 20px;
-            animation: floatBounce 3s ease-in-out infinite;
+        @media (max-width: 768px) {
+            .chat-float-btn {
+                width: 56px;
+                height: 56px;
+                font-size: 28px;
+                bottom: 20px;
+                right: 20px;
+            }
         }
         
-        /* CHAT INTERFACE - Groovy Conversation */
-        .chat-container {
+        /* CHAT OVERLAY */
+        .chat-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .chat-overlay.active {
+            display: flex;
+        }
+        
+        .chat-box {
+            background: white;
+            border: 4px solid #4A4A1F;
+            box-shadow: 8px 8px 0 rgba(74, 74, 31, 0.3);
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
             display: flex;
             flex-direction: column;
         }
         
-        .chat-container.has-messages {
-            height: 500px;
+        .chat-header {
+            background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+            border-bottom: 4px solid #4A4A1F;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        @media (max-width: 768px) {
-            .chat-container.has-messages {
-                height: 450px;
-            }
+        .chat-header h3 {
+            font-size: 24px;
+            font-weight: 900;
+            color: #4A4A1F;
+            text-transform: uppercase;
+        }
+        
+        .chat-close {
+            background: #EF5350;
+            border: 3px solid #4A4A1F;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .chat-messages {
@@ -945,105 +559,70 @@
             overflow-y: auto;
             padding: 20px;
             background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%);
-            border: 4px solid #B4B85E;
-            margin-bottom: 16px;
-            box-shadow: inset 3px 3px 0 rgba(180, 184, 94, 0.1);
-            min-height: 120px;
-            max-height: none;
-        }
-        
-        .chat-container:not(.has-messages) .chat-messages {
-            min-height: 120px;
-            max-height: 120px;
-        }
-        
-        @media (max-width: 768px) {
-            .chat-messages {
-                padding: 16px;
-            }
+            min-height: 200px;
+            max-height: 400px;
         }
         
         .chat-message {
-            margin-bottom: 20px;
-            padding: 16px 20px;
-            max-width: 75%;
-            word-wrap: break-word;
-            animation: messageSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            line-height: 1.6;
-            box-sizing: border-box;
+            margin-bottom: 16px;
+            padding: 14px 18px;
             border: 3px solid;
-            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+            box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
             font-weight: 600;
-        }
-        
-        @keyframes messageSlide {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        
-        @media (max-width: 768px) {
-            .chat-message {
-                padding: 14px 16px;
-                max-width: 85%;
-            }
+            max-width: 80%;
         }
         
         .chat-message.user {
             background: linear-gradient(135deg, #4FC3F7 0%, #29B6F6 100%);
             color: white;
-            margin-left: auto;
-            margin-right: 0;
             border-color: #0288D1;
+            margin-left: auto;
         }
         
         .chat-message.assistant {
             background: white;
             color: #333;
             border-color: #4A4A1F;
-            margin-left: 0;
             margin-right: auto;
         }
         
-        .chat-input-group {
+        .chat-input-area {
+            border-top: 4px solid #4A4A1F;
+            padding: 16px;
+            background: white;
             display: flex;
             gap: 12px;
         }
         
         #chatInput {
             flex: 1;
-            padding: 16px;
+            padding: 12px;
             border: 3px solid #B4B85E;
             font-size: 15px;
             font-family: inherit;
-            resize: none;
-            min-height: 56px;
-            max-height: 120px;
-            background: white;
             font-weight: 600;
-            transition: all 0.2s ease;
         }
         
         #chatInput:focus {
             outline: none;
             border-color: #FF9800;
-            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
         }
         
         #sendChatBtn {
-            width: auto;
-            min-width: 100px;
-            padding: 16px 24px;
-            white-space: nowrap;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6B6B3D 0%, #5A5A32 100%);
+            color: #FFC107;
+            border: 3px solid #4A4A1F;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
         }
         
-        @media (max-width: 768px) {
-            #sendChatBtn {
-                min-width: 80px;
-                padding: 16px 20px;
-            }
+        #sendChatBtn:hover {
+            background: linear-gradient(135deg, #5A5A32 0%, #4A4A28 100%);
         }
         
-        /* SPINNER - Groovy Loading */
         .spinner {
             border: 4px solid rgba(74, 74, 31, 0.2);
             border-top: 4px solid #FF9800;
@@ -1051,7 +630,7 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 20px auto;
         }
         
         @keyframes spin {
@@ -1059,1009 +638,245 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* UTILITY CLASSES */
-        h2, h3 {
-            color: #4A4A1F;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        h2 {
-            font-size: 28px;
+        /* CARD */
+        .card {
+            background: white;
+            padding: 28px;
             margin-bottom: 20px;
+            box-shadow: 6px 6px 0 rgba(74, 74, 31, 0.2);
+            border: 4px solid #4A4A1F;
         }
         
-        h3 {
-            font-size: 20px;
-            margin-bottom: 16px;
-        }
-        
-        @media (max-width: 768px) {
-            h2 {
-                font-size: 24px;
-            }
-            
-            h3 {
-                font-size: 18px;
-            }
-        }
-        
-        label {
-            display: block;
-            font-weight: 700;
-            color: #4A4A1F;
-            margin-bottom: 10px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        /* SCROLLBAR STYLING */
-        ::-webkit-scrollbar {
-            width: 12px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #F5F1E8;
-            border: 2px solid #B4B85E;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #6B6B3D;
-            border: 2px solid #4A4A1F;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #5A5A32;
+        /* Utility */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1 style="cursor: pointer;" onclick="goHome()">🍕 Yummy Food Time</h1>
-            <p class="subtitle">Track, Rate & Discover Your Favorites!</p>
+            <h1 onclick="goHome()">🍕 Yummy Food Time</h1>
+            <p class="subtitle">Your food decision helper</p>
             
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('chat')">💬 Chat</button>
-                <button class="tab" onclick="switchTab('history')">📋 History</button>
-                <button class="tab" onclick="switchTab('upload')">📸 Upload</button>
+            <div class="top-buttons">
+                <button class="top-btn" onclick="showUpload()">📸 Upload</button>
+                <button class="top-btn" onclick="showHistory()">📋 History</button>
             </div>
         </div>
         
-        <!-- Upload Tab -->
-        <div id="upload-tab" class="tab-content">
+        <!-- HOME VIEW -->
+        <div id="homeView" class="view active">
+            <div class="choice-cards">
+                <div class="choice-card" onclick="selectChoice('takeout')">
+                    <div class="choice-icon">🍔</div>
+                    <div class="choice-title">Take Out</div>
+                </div>
+                <div class="choice-card" onclick="selectChoice('cooking')">
+                    <div class="choice-icon">👨‍🍳</div>
+                    <div class="choice-title">Cook at Home</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FILTER VIEW -->
+        <div id="filterView" class="view">
+            <button class="back-btn" onclick="goHome()">← Back</button>
+            
+            <div class="filter-section">
+                <h2 id="filterTitle">What are you looking for?</h2>
+                <div class="filter-grid" id="filterGrid"></div>
+                <div class="filter-actions">
+                    <button class="filter-btn" onclick="getRecommendation()">Get Recommendation →</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- RECOMMENDATION VIEW -->
+        <div id="recommendationView" class="view">
+            <button class="back-btn" onclick="backToFilters()">← Back</button>
+            
+            <div class="recommendation">
+                <div class="rec-title" id="recTitle"></div>
+                <div class="rec-content" id="recContent"></div>
+                <div class="filter-actions">
+                    <button class="filter-btn" onclick="getRecommendation()">🎲 Try Again</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- UPLOAD VIEW (placeholder for now) -->
+        <div id="uploadView" class="view">
             <div class="card">
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">📸</div>
-                    <div class="upload-text">Tap to Upload Receipt</div>
-                    <input type="file" id="fileInput" accept="image/*">
-                </div>
-                
-                <div id="preview" style="display: none;">
-                    <img id="previewImage" alt="Preview">
-                </div>
-                
-                <button id="extractBtn" disabled>Extract Order Info</button>
-                
-                <div id="status" style="display: none;"></div>
+                <h2 style="margin-bottom: 20px;">Upload Receipt</h2>
+                <p>Upload functionality coming soon...</p>
             </div>
-            
-            <div id="results" style="display: none;"></div>
         </div>
         
-        <!-- History Tab -->
-        <div id="history-tab" class="tab-content">
-            <div id="ordersList"></div>
-            <div id="orderDetail" style="display: none;"></div>
+        <!-- HISTORY VIEW (placeholder for now) -->
+        <div id="historyView" class="view">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">Order History</h2>
+                <p>History functionality coming soon...</p>
+            </div>
         </div>
-        
-        <!-- Chat Tab -->
-        <div id="chat-tab" class="tab-content active">
-            <!-- Main Chat View -->
-            <div id="chatMainView">
-                <div class="card">
-                    <h2>🤖 Food Recommendations</h2>
-                    <p style="margin-bottom: 20px; color: #666; font-weight: 600;">Ask me what to order based on your favorites!</p>
-                    
-                    <div class="chat-container" id="chatContainer">
-                        <div class="chat-messages" id="chatMessages">
-                            <div id="chatGreeting" class="chat-message assistant" style="max-width: 100%;">
-                                Loading...
-                            </div>
-                        </div>
-                        
-                        <div class="chat-input-group">
-                            <textarea 
-                                id="chatInput" 
-                                placeholder="What should I order tonight?"
-                                rows="1"
-                            ></textarea>
-                            <button id="sendChatBtn" onclick="sendChatMessage()">Send</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Action Buttons Row -->
-                <div class="card" style="padding: 16px;">
-                    <button onclick="rollTheDice()" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); display: flex; align-items: center; justify-content: center; gap: 10px;">
-                        <span style="font-size: 24px;">🎲</span>
-                        <span>Roll the Dice</span>
-                    </button>
+    </div>
+    
+    <!-- FLOATING CHAT BUTTON -->
+    <div class="chat-float-btn" onclick="toggleChat()">💬</div>
+    
+    <!-- CHAT OVERLAY -->
+    <div class="chat-overlay" id="chatOverlay" onclick="closeChat(event)">
+        <div class="chat-box" onclick="event.stopPropagation()">
+            <div class="chat-header">
+                <h3>🤖 Chat</h3>
+                <div class="chat-close" onclick="closeChat()">×</div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-message assistant">
+                    What can I help you find?
                 </div>
             </div>
-            
-            <!-- Dice Roll View -->
-            <div id="diceRollView" style="display: none;">
-                <button class="back-btn" onclick="backToChat()">← Back to Chat</button>
-                
-                <div class="card">
-                    <h2 style="text-align: center;">🎲 Random Pick!</h2>
-                    
-                    <div id="diceAnimation" style="display: none; text-align: center; padding: 60px 20px;">
-                        <div style="font-size: 80px; animation: diceRoll 0.6s ease-in-out;">🎲</div>
-                        <div style="margin-top: 20px; font-size: 18px; font-weight: 700; color: #4A4A1F;">Rolling...</div>
-                    </div>
-                    
-                    <div id="diceResult" style="display: none;">
-                        <div style="text-align: center; padding: 30px 20px; background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%); border: 4px solid #FF9800; margin-bottom: 24px;">
-                            <div style="font-size: 32px; font-weight: 900; color: #FF9800; margin-bottom: 12px; text-transform: uppercase;" id="resultRestaurant"></div>
-                            <div style="font-size: 16px; color: #666; font-weight: 600; margin-bottom: 20px;" id="resultAddress"></div>
-                            <div style="font-size: 18px; font-weight: 700; color: #4A4A1F; margin-bottom: 10px;">Recommended for you:</div>
-                            <div id="resultRecommendation" style="font-size: 16px; line-height: 1.6; color: #333;"></div>
-                        </div>
-                        
-                        <div style="display: flex; gap: 12px;">
-                            <button onclick="rollTheDice()" style="flex: 1; background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);">
-                                🎲 Roll Again
-                            </button>
-                            <button onclick="backToChat()" style="flex: 1; background: linear-gradient(135deg, #6B6B3D 0%, #5A5A32 100%);">
-                                Back to Chat
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Ask me anything..." />
+                <button id="sendChatBtn" onclick="sendChatMessage()">Send</button>
             </div>
         </div>
     </div>
 
     <script>
-        let selectedFile = null;
-        let currentOrder = null;
-        let currentView = 'chat';
+        let currentChoice = null;
+        let selectedFilters = new Set();
+        let chatHistory = [];
         
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            
-            if (tab === 'chat') {
-                document.querySelector('.tab:nth-child(1)').classList.add('active');
-                document.getElementById('chat-tab').classList.add('active');
-                currentView = 'chat';
-            } else if (tab === 'history') {
-                document.querySelector('.tab:nth-child(2)').classList.add('active');
-                document.getElementById('history-tab').classList.add('active');
-                currentView = 'history';
-                loadOrders();
-            } else if (tab === 'upload') {
-                document.querySelector('.tab:nth-child(3)').classList.add('active');
-                document.getElementById('upload-tab').classList.add('active');
-                currentView = 'upload';
-            }
+        const takeoutFilters = [
+            { id: 'cheap', icon: '💰', name: 'Cheap' },
+            { id: 'healthy', icon: '🥗', name: 'Healthy' },
+            { id: 'filling', icon: '🍗', name: 'Filling' },
+            { id: 'fast', icon: '⚡', name: 'Fast' },
+            { id: 'comfort', icon: '🍕', name: 'Comfort' }
+        ];
+        
+        const cookingFilters = [
+            { id: 'healthy', icon: '🥗', name: 'Healthy' },
+            { id: 'quick', icon: '⚡', name: 'Quick' },
+            { id: 'filling', icon: '🍗', name: 'Filling' },
+            { id: 'complex', icon: '🎓', name: 'Complex' },
+            { id: 'comfort', icon: '🧀', name: 'Comfort' }
+        ];
+        
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
         }
         
         function goHome() {
-            // Reset upload tab to clean state
-            selectedFile = null;
-            currentOrder = null;
-            preview.style.display = 'none';
-            results.style.display = 'none';
-            status.style.display = 'none';
-            extractBtn.disabled = true;
-            fileInput.value = '';
-            
-            // Switch to upload tab
-            switchTab('upload');
+            currentChoice = null;
+            selectedFilters.clear();
+            showView('homeView');
         }
         
-        // Upload functionality
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const preview = document.getElementById('preview');
-        const previewImage = document.getElementById('previewImage');
-        const extractBtn = document.getElementById('extractBtn');
-        const status = document.getElementById('status');
-        const results = document.getElementById('results');
-        
-        uploadArea.addEventListener('click', () => fileInput.click());
-        
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                selectedFile = file;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    previewImage.src = e.target.result;
-                    
-                    // Only constrain width, let height be flexible for long receipts
-                    previewImage.style.maxWidth = '90%';
-                    previewImage.style.width = 'auto';
-                    previewImage.style.height = 'auto';
-                    previewImage.style.maxHeight = 'none';
-                    previewImage.style.objectFit = 'contain';
-                    
-                    preview.style.display = 'block';
-                    extractBtn.disabled = false;
-                    results.style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        
-        extractBtn.addEventListener('click', extractOrder);
-        
-        async function extractOrder() {
-            if (!selectedFile) return;
+        function selectChoice(choice) {
+            currentChoice = choice;
+            selectedFilters.clear();
             
-            status.style.display = 'block';
-            status.className = 'status loading';
-            status.innerHTML = '<div class="spinner"></div><div style="margin-top: 10px;">Extracting order info...</div>';
+            const filters = choice === 'takeout' ? takeoutFilters : cookingFilters;
+            const filterGrid = document.getElementById('filterGrid');
             
-            extractBtn.disabled = true;
-            
-            try {
-                const formData = new FormData();
-                formData.append('image', selectedFile);
-                
-                const response = await fetch('/extract-order', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to extract order');
-                }
-                
-                currentOrder = result.data;
-                displayResults(currentOrder);
-                
-                status.className = 'status success';
-                status.textContent = '✅ Order extracted successfully!';
-                
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 2000);
-                
-            } catch (error) {
-                status.className = 'status error';
-                status.textContent = '❌ Error: ' + error.message;
-                extractBtn.disabled = false;
-            }
-        }
-        
-        function displayResults(order) {
-            results.style.display = 'block';
-            results.innerHTML = `
-                <div class="card">
-                    <div class="restaurant-info">
-                        <div class="restaurant-name">${order.restaurant}</div>
-                        ${order.deliveryService && order.deliveryService !== 'Unknown' ? 
-                            `<div class="delivery-badge">${order.deliveryService}</div>` : ''}
-                        <div style="color: #4A4A1F; margin-top: 10px; font-weight: 700;">📍 ${order.address}</div>
-                    </div>
-                    
-                    <h3>Order Items</h3>
-                    
-                    ${order.items.map((item, idx) => `
-                        <div class="item-card">
-                            <div class="item-header">
-                                <div class="item-name">${item.name}</div>
-                                <div class="item-price">$${parseFloat(item.price).toFixed(2)}</div>
-                            </div>
-                            
-                            <div class="assignment-group">
-                                <label>Assign To:</label>
-                                <div class="assignment-buttons">
-                                    <button class="assign-btn" onclick="assignItem(${idx}, 'Collin')">
-                                        👤 Collin
-                                    </button>
-                                    <button class="assign-btn" onclick="assignItem(${idx}, 'Emily')">
-                                        👤 Emily
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div class="rating-group">
-                                <label>Rating:</label>
-                                <div class="star-rating">
-                                    ${[1, 2, 3, 4, 5].map(star => 
-                                        `<span class="star" data-item="${idx}" data-rating="${star}" onclick="rateItem(${idx}, ${star})">⭐</span>`
-                                    ).join('')}
-                                </div>
-                            </div>
-                            
-                            <div style="margin-top: 16px;">
-                                <label>Notes:</label>
-                                <textarea 
-                                    placeholder="Add notes about this item..."
-                                    onchange="updateNotes(${idx}, this.value)"
-                                ></textarea>
-                            </div>
-                        </div>
-                    `).join('')}
-                    
-                    <div class="summary-box">
-                        <div class="summary-row">
-                            <span>Subtotal</span>
-                            <span>$${parseFloat(order.subtotal).toFixed(2)}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Delivery Fee</span>
-                            <span>$${parseFloat(order.deliveryFee).toFixed(2)}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Service Fee</span>
-                            <span>$${parseFloat(order.serviceFee).toFixed(2)}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Tax</span>
-                            <span>$${parseFloat(order.tax).toFixed(2)}</span>
-                        </div>
-                        ${order.discount !== 0 ? `
-                            <div class="summary-row">
-                                <span>Discount</span>
-                                <span>-$${Math.abs(parseFloat(order.discount)).toFixed(2)}</span>
-                            </div>
-                        ` : ''}
-                        <div class="summary-row">
-                            <span>Tip</span>
-                            <span>$${parseFloat(order.tip).toFixed(2)}</span>
-                        </div>
-                        <div class="summary-row total">
-                            <span>Total</span>
-                            <span>$${parseFloat(order.total).toFixed(2)}</span>
-                        </div>
-                    </div>
-                    
-                    <button onclick="saveOrder()" style="margin-top: 20px;">💾 Save Order</button>
+            filterGrid.innerHTML = filters.map(f => `
+                <div class="filter-tile" data-filter="${f.id}" onclick="toggleFilter('${f.id}')">
+                    <div class="filter-icon">${f.icon}</div>
+                    <div class="filter-name">${f.name}</div>
                 </div>
-            `;
-        }
-        
-        function assignItem(itemIdx, person) {
-            if (!currentOrder) return;
-            
-            currentOrder.items[itemIdx].assignedTo = person;
-            
-            // Update button states
-            const buttons = document.querySelectorAll(`[onclick*="assignItem(${itemIdx}"]`);
-            buttons.forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.textContent.includes(person)) {
-                    btn.classList.add('active');
-                }
-            });
-        }
-        
-        function rateItem(itemIdx, rating) {
-            if (!currentOrder) return;
-            
-            currentOrder.items[itemIdx].rating = rating;
-            
-            // Update star states
-            const stars = document.querySelectorAll(`[data-item="${itemIdx}"]`);
-            stars.forEach(star => {
-                const starRating = parseInt(star.getAttribute('data-rating'));
-                if (starRating <= rating) {
-                    star.classList.add('active');
-                } else {
-                    star.classList.remove('active');
-                }
-            });
-        }
-        
-        function updateNotes(itemIdx, notes) {
-            if (!currentOrder) return;
-            currentOrder.items[itemIdx].notes = notes;
-        }
-        
-        async function saveOrder() {
-            if (!currentOrder) return;
-            
-            status.style.display = 'block';
-            status.className = 'status loading';
-            status.innerHTML = '<div class="spinner"></div><div style="margin-top: 10px;">Saving order...</div>';
-            
-            try {
-                const orderToSave = {
-                    restaurant: currentOrder.restaurant,
-                    address: currentOrder.address || 'Not provided',
-                    deliveryService: currentOrder.deliveryService || 'Unknown',
-                    subtotal: parseFloat(currentOrder.subtotal) || 0,
-                    deliveryFee: parseFloat(currentOrder.deliveryFee) || 0,
-                    serviceFee: parseFloat(currentOrder.serviceFee) || 0,
-                    tax: parseFloat(currentOrder.tax) || 0,
-                    discount: parseFloat(currentOrder.discount) || 0,
-                    tip: parseFloat(currentOrder.tip) || 0,
-                    total: parseFloat(currentOrder.total) || 0,
-                    items: currentOrder.items.map(item => ({
-                        name: item.name,
-                        price: parseFloat(item.price) || 0,
-                        assignedTo: item.assignedTo || null,
-                        rating: parseInt(item.rating) || 0,
-                        notes: item.notes || null
-                    }))
-                };
-                
-                console.log('Sending order data:', orderToSave);
-                
-                const response = await fetch('/orders', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderToSave)
-                });
-                
-                const result = await response.json();
-                console.log('Server response:', result);
-                
-                if (!response.ok) {
-                    console.error('Server error:', result);
-                    throw new Error(result.error + (result.details ? '\n\nDetails: ' + result.details : ''));
-                }
-                
-                status.className = 'status success';
-                status.textContent = '✅ Order saved successfully!';
-                
-                setTimeout(() => {
-                    // Reset form
-                    selectedFile = null;
-                    currentOrder = null;
-                    preview.style.display = 'none';
-                    results.style.display = 'none';
-                    status.style.display = 'none';
-                    extractBtn.disabled = true;
-                    fileInput.value = '';
-                    
-                    // Switch to history
-                    switchTab('history');
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Save order error:', error);
-                status.className = 'status error';
-                status.innerHTML = `❌ Error: ${error.message}<br><br><small>Check if database is connected in Railway</small>`;
-            }
-        }
-        
-        // History functionality
-        async function loadOrders() {
-            const ordersList = document.getElementById('ordersList');
-            ordersList.innerHTML = '<div class="status loading"><div class="spinner"></div><div>Loading orders...</div></div>';
-            
-            try {
-                const response = await fetch('/orders');
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to load orders');
-                }
-                
-                if (result.orders.length === 0) {
-                    ordersList.innerHTML = `
-                        <div class="card empty-state">
-                            <div class="empty-state-icon">📭</div>
-                            <div style="font-size: 20px; margin-bottom: 12px; font-weight: 800; color: #4A4A1F; text-transform: uppercase;">No Orders Yet</div>
-                            <div style="color: #666; font-weight: 600;">Upload your first receipt to get started!</div>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                ordersList.innerHTML = result.orders.map(order => `
-                    <div class="order-history-item" onclick="viewOrder(${order.id})">
-                        <div class="order-date">${new Date(order.created_at).toLocaleDateString('en-US', { 
-                            weekday: 'short', 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}</div>
-                        <div class="order-restaurant">${order.restaurant}</div>
-                        ${order.delivery_service && order.delivery_service !== 'Unknown' ? 
-                            `<div class="delivery-badge">${order.delivery_service}</div>` : ''}
-                        <div style="color: #666; font-size: 14px; margin: 8px 0; font-weight: 600;">${order.items.length} items</div>
-                        <div class="order-total">$${parseFloat(order.total).toFixed(2)}</div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                ordersList.innerHTML = `
-                    <div class="card">
-                        <div class="status error">❌ Error: ${error.message}</div>
-                    </div>
-                `;
-            }
-        }
-        
-        async function viewOrder(orderId) {
-            try {
-                const response = await fetch(`/orders/${orderId}`);
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to load order');
-                }
-                
-                const order = result.order;
-                
-                document.getElementById('ordersList').style.display = 'none';
-                const detailDiv = document.getElementById('orderDetail');
-                detailDiv.style.display = 'block';
-                
-                detailDiv.innerHTML = `
-                    <button class="back-btn" onclick="backToList()">← Back to Orders</button>
-                    
-                    <div class="card">
-                        <div class="restaurant-info">
-                            <div class="order-date">${new Date(order.created_at).toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}</div>
-                            <div class="restaurant-name">${order.restaurant}</div>
-                            ${order.delivery_service && order.delivery_service !== 'Unknown' ? 
-                                `<div class="delivery-badge">${order.delivery_service}</div>` : ''}
-                            <div style="color: #4A4A1F; margin-top: 10px; font-weight: 700;">📍 ${order.address}</div>
-                        </div>
-                        
-                        <button class="edit-btn" onclick="enableEditMode(${order.id})" style="width: 100%; margin-bottom: 24px;">✏️ Edit Order</button>
-                        
-                        <h3>Order Items</h3>
-                        
-                        ${order.items.map(item => `
-                            <div class="item-card">
-                                <div class="item-header">
-                                    <div class="item-name">${item.name}</div>
-                                    <div class="item-price">$${parseFloat(item.price).toFixed(2)}</div>
-                                </div>
-                                
-                                ${item.assignedTo ? `
-                                    <div style="margin: 12px 0;">
-                                        <span style="background: ${item.assignedTo === 'Collin' ? '#29B6F6' : '#9C27B0'}; color: white; padding: 6px 14px; font-size: 13px; font-weight: 800; border: 2px solid #4A4A1F; box-shadow: 2px 2px 0 rgba(74, 74, 31, 0.2); text-transform: uppercase;">
-                                            👤 ${item.assignedTo}
-                                        </span>
-                                    </div>
-                                ` : ''}
-                                
-                                ${item.rating > 0 ? `
-                                    <div style="margin: 12px 0;">
-                                        <div style="color: #FFC107; font-size: 24px; text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);">
-                                            ${'⭐'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                
-                                ${item.notes ? `
-                                    <div style="margin: 12px 0; padding: 14px; background: white; font-size: 14px; color: #666; border: 2px solid #B4B85E; font-weight: 600;">
-                                        💭 ${item.notes}
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `).join('')}
-                        
-                        <div class="summary-box">
-                            <div class="summary-row">
-                                <span>Subtotal</span>
-                                <span>$${parseFloat(order.subtotal).toFixed(2)}</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Delivery Fee</span>
-                                <span>$${parseFloat(order.delivery_fee).toFixed(2)}</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Service Fee</span>
-                                <span>$${parseFloat(order.service_fee).toFixed(2)}</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Tax</span>
-                                <span>$${parseFloat(order.tax).toFixed(2)}</span>
-                            </div>
-                            ${order.discount !== 0 ? `
-                                <div class="summary-row">
-                                    <span>Discount</span>
-                                    <span>-$${Math.abs(parseFloat(order.discount)).toFixed(2)}</span>
-                                </div>
-                            ` : ''}
-                            <div class="summary-row">
-                                <span>Tip</span>
-                                <span>$${parseFloat(order.tip).toFixed(2)}</span>
-                            </div>
-                            <div class="summary-row total">
-                                <span>Total</span>
-                                <span>$${parseFloat(order.total).toFixed(2)}</span>
-                            </div>
-                        </div>
-                        
-                        <button class="delete-btn" onclick="deleteOrder(${order.id})">🗑️ Delete Order</button>
-                    </div>
-                `;
-                
-            } catch (error) {
-                alert('Error loading order: ' + error.message);
-            }
-        }
-        
-        let editingOrder = null;
-        
-        async function enableEditMode(orderId) {
-            try {
-                const response = await fetch(`/orders/${orderId}`);
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to load order');
-                }
-                
-                editingOrder = result.order;
-                
-                document.getElementById('ordersList').style.display = 'none';
-                const detailDiv = document.getElementById('orderDetail');
-                detailDiv.style.display = 'block';
-                
-                detailDiv.innerHTML = `
-                    <button class="back-btn" onclick="cancelEdit()">← Cancel</button>
-                    
-                    <div class="card">
-                        <h2>Edit Order</h2>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label>Restaurant Name</label>
-                            <input type="text" id="edit-restaurant" class="edit-field" value="${editingOrder.restaurant}" />
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label>Address</label>
-                            <input type="text" id="edit-address" class="edit-field" value="${editingOrder.address || ''}" />
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label>Delivery Service</label>
-                            <select id="edit-delivery-service" class="edit-field">
-                                <option value="DoorDash" ${editingOrder.delivery_service === 'DoorDash' ? 'selected' : ''}>DoorDash</option>
-                                <option value="Uber Eats" ${editingOrder.delivery_service === 'Uber Eats' ? 'selected' : ''}>Uber Eats</option>
-                                <option value="Grubhub" ${editingOrder.delivery_service === 'Grubhub' ? 'selected' : ''}>Grubhub</option>
-                                <option value="Postmates" ${editingOrder.delivery_service === 'Postmates' ? 'selected' : ''}>Postmates</option>
-                                <option value="Instacart" ${editingOrder.delivery_service === 'Instacart' ? 'selected' : ''}>Instacart</option>
-                                <option value="Unknown" ${!editingOrder.delivery_service || editingOrder.delivery_service === 'Unknown' ? 'selected' : ''}>Unknown</option>
-                            </select>
-                        </div>
-                        
-                        <h3>Order Items</h3>
-                        <div id="edit-items-container">
-                            ${editingOrder.items.map((item, idx) => `
-                                <div class="item-card" style="background: white;">
-                                    <div style="margin-bottom: 15px;">
-                                        <label>Item Name</label>
-                                        <input type="text" class="edit-field" data-item-idx="${idx}" data-field="name" value="${item.name}" />
-                                    </div>
-                                    
-                                    <div style="margin-bottom: 15px;">
-                                        <label>Price</label>
-                                        <input type="number" step="0.01" class="edit-field" data-item-idx="${idx}" data-field="price" value="${parseFloat(item.price).toFixed(2)}" />
-                                    </div>
-                                    
-                                    <div style="margin-bottom: 15px;">
-                                        <label>Assigned To</label>
-                                        <select class="edit-field" data-item-idx="${idx}" data-field="assignedTo">
-                                            <option value="">None</option>
-                                            <option value="Collin" ${item.assignedTo === 'Collin' ? 'selected' : ''}>Collin</option>
-                                            <option value="Emily" ${item.assignedTo === 'Emily' ? 'selected' : ''}>Emily</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div style="margin-bottom: 15px;">
-                                        <label>Rating</label>
-                                        <select class="edit-field" data-item-idx="${idx}" data-field="rating">
-                                            <option value="0" ${!item.rating || item.rating === 0 ? 'selected' : ''}>No rating</option>
-                                            <option value="1" ${item.rating === 1 ? 'selected' : ''}>⭐ 1 Star</option>
-                                            <option value="2" ${item.rating === 2 ? 'selected' : ''}>⭐⭐ 2 Stars</option>
-                                            <option value="3" ${item.rating === 3 ? 'selected' : ''}>⭐⭐⭐ 3 Stars</option>
-                                            <option value="4" ${item.rating === 4 ? 'selected' : ''}>⭐⭐⭐⭐ 4 Stars</option>
-                                            <option value="5" ${item.rating === 5 ? 'selected' : ''}>⭐⭐⭐⭐⭐ 5 Stars</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div style="margin-bottom: 15px;">
-                                        <label>Notes</label>
-                                        <textarea class="edit-field" rows="2" data-item-idx="${idx}" data-field="notes">${item.notes || ''}</textarea>
-                                    </div>
-                                    
-                                    <button class="delete-btn" onclick="removeEditItem(${idx})" style="width: 100%;">Remove Item</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                        
-                        <button onclick="addEditItem()" style="background: linear-gradient(135deg, #6B6B3D 0%, #5A5A32 100%); margin-bottom: 24px;">+ Add Item</button>
-                        
-                        <h3>Order Totals</h3>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label>Subtotal</label>
-                            <input type="number" step="0.01" id="edit-subtotal" class="edit-field" value="${parseFloat(editingOrder.subtotal).toFixed(2)}" />
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label>Delivery Fee</label>
-                            <input type="number" step="0.01" id="edit-delivery-fee" class="edit-field" value="${parseFloat(editingOrder.delivery_fee).toFixed(2)}" />
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label>Service Fee</label>
-                            <input type="number" step="0.01" id="edit-service-fee" class="edit-field" value="${parseFloat(editingOrder.service_fee).toFixed(2)}" />
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label>Tax</label>
-                            <input type="number" step="0.01" id="edit-tax" class="edit-field" value="${parseFloat(editingOrder.tax).toFixed(2)}" />
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label>Discount</label>
-                            <input type="number" step="0.01" id="edit-discount" class="edit-field" value="${parseFloat(editingOrder.discount).toFixed(2)}" />
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label>Tip</label>
-                            <input type="number" step="0.01" id="edit-tip" class="edit-field" value="${parseFloat(editingOrder.tip).toFixed(2)}" />
-                        </div>
-                        
-                        <div style="margin-bottom: 24px;">
-                            <label>Total</label>
-                            <input type="number" step="0.01" id="edit-total" class="edit-field" value="${parseFloat(editingOrder.total).toFixed(2)}" />
-                        </div>
-                        
-                        <div id="edit-status"></div>
-                        
-                        <div class="button-group">
-                            <button onclick="saveEditedOrder()" style="background: linear-gradient(135deg, #6B6B3D 0%, #5A5A32 100%);">💾 Save</button>
-                            <button onclick="cancelEdit()" style="background: linear-gradient(135deg, #78909C 0%, #607D8B 100%);">Cancel</button>
-                        </div>
-                    </div>
-                `;
-                
-            } catch (error) {
-                alert('Error loading order for editing: ' + error.message);
-            }
-        }
-        
-        function addEditItem() {
-            const container = document.getElementById('edit-items-container');
-            const newIdx = editingOrder.items.length;
-            
-            editingOrder.items.push({
-                name: '',
-                price: 0,
-                assignedTo: null,
-                rating: 0,
-                notes: null
-            });
-            
-            const itemHtml = `
-                <div class="item-card" style="background: white;">
-                    <div style="margin-bottom: 15px;">
-                        <label>Item Name</label>
-                        <input type="text" class="edit-field" data-item-idx="${newIdx}" data-field="name" value="" />
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label>Price</label>
-                        <input type="number" step="0.01" class="edit-field" data-item-idx="${newIdx}" data-field="price" value="0.00" />
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label>Assigned To</label>
-                        <select class="edit-field" data-item-idx="${newIdx}" data-field="assignedTo">
-                            <option value="">None</option>
-                            <option value="Collin">Collin</option>
-                            <option value="Emily">Emily</option>
-                        </select>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label>Rating</label>
-                        <select class="edit-field" data-item-idx="${newIdx}" data-field="rating">
-                            <option value="0" selected>No rating</option>
-                            <option value="1">⭐ 1 Star</option>
-                            <option value="2">⭐⭐ 2 Stars</option>
-                            <option value="3">⭐⭐⭐ 3 Stars</option>
-                            <option value="4">⭐⭐⭐⭐ 4 Stars</option>
-                            <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
-                        </select>
-                    </div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label>Notes</label>
-                        <textarea class="edit-field" rows="2" data-item-idx="${newIdx}" data-field="notes"></textarea>
-                    </div>
-                    
-                    <button class="delete-btn" onclick="removeEditItem(${newIdx})" style="width: 100%;">Remove Item</button>
+            `).join('') + `
+                <div class="filter-tile random" onclick="selectRandom()">
+                    <div class="filter-icon">🎲</div>
+                    <div class="filter-name">Random</div>
                 </div>
             `;
             
-            container.insertAdjacentHTML('beforeend', itemHtml);
-        }
-        
-        function removeEditItem(idx) {
-            if (!confirm('Remove this item?')) return;
+            document.getElementById('filterTitle').textContent = 
+                choice === 'takeout' ? 'What type of take out?' : 'What type of meal?';
             
-            editingOrder.items.splice(idx, 1);
-            enableEditMode(editingOrder.id); // Re-render
+            showView('filterView');
         }
         
-        async function saveEditedOrder() {
-            try {
-                const statusDiv = document.getElementById('edit-status');
-                statusDiv.innerHTML = '<div class="status loading"><div class="spinner"></div><div>Saving...</div></div>';
-                
-                // Collect all edited values
-                const restaurant = document.getElementById('edit-restaurant').value.trim();
-                const address = document.getElementById('edit-address').value.trim();
-                const deliveryService = document.getElementById('edit-delivery-service').value;
-                const subtotal = parseFloat(document.getElementById('edit-subtotal').value) || 0;
-                const deliveryFee = parseFloat(document.getElementById('edit-delivery-fee').value) || 0;
-                const serviceFee = parseFloat(document.getElementById('edit-service-fee').value) || 0;
-                const tax = parseFloat(document.getElementById('edit-tax').value) || 0;
-                const discount = parseFloat(document.getElementById('edit-discount').value) || 0;
-                const tip = parseFloat(document.getElementById('edit-tip').value) || 0;
-                const total = parseFloat(document.getElementById('edit-total').value) || 0;
-                
-                // Collect item values
-                const items = [];
-                const itemCount = editingOrder.items.length;
-                
-                for (let i = 0; i < itemCount; i++) {
-                    const nameField = document.querySelector(`[data-item-idx="${i}"][data-field="name"]`);
-                    const priceField = document.querySelector(`[data-item-idx="${i}"][data-field="price"]`);
-                    const assignedField = document.querySelector(`[data-item-idx="${i}"][data-field="assignedTo"]`);
-                    const ratingField = document.querySelector(`[data-item-idx="${i}"][data-field="rating"]`);
-                    const notesField = document.querySelector(`[data-item-idx="${i}"][data-field="notes"]`);
-                    
-                    if (nameField) {
-                        items.push({
-                            name: nameField.value.trim(),
-                            price: parseFloat(priceField.value) || 0,
-                            assignedTo: assignedField.value || null,
-                            rating: parseInt(ratingField.value) || 0,
-                            notes: notesField.value.trim() || null
-                        });
-                    }
-                }
-                
-                if (!restaurant) {
-                    throw new Error('Restaurant name is required');
-                }
-                
-                if (items.length === 0) {
-                    throw new Error('At least one item is required');
-                }
-                
-                const updatedOrder = {
-                    restaurant,
-                    address,
-                    deliveryService,
-                    subtotal,
-                    deliveryFee,
-                    serviceFee,
-                    tax,
-                    discount,
-                    tip,
-                    total,
-                    items
-                };
-                
-                console.log('Sending updated order:', updatedOrder);
-                
-                const response = await fetch(`/orders/${editingOrder.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedOrder)
-                });
-                
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to update order');
-                }
-                
-                statusDiv.innerHTML = '<div class="status success">✅ Order updated successfully!</div>';
-                
-                setTimeout(() => {
-                    editingOrder = null;
-                    backToList();
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Error saving edited order:', error);
-                const statusDiv = document.getElementById('edit-status');
-                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
-            }
-        }
-        
-        function cancelEdit() {
-            if (confirm('Cancel editing? Any unsaved changes will be lost.')) {
-                editingOrder = null;
-                backToList();
-            }
-        }
-        
-        function backToList() {
-            document.getElementById('ordersList').style.display = 'block';
-            document.getElementById('orderDetail').style.display = 'none';
-            loadOrders();
-        }
-        
-        async function deleteOrder(orderId) {
-            if (!confirm('Are you sure you want to delete this order? This cannot be undone.')) {
-                return;
+        function toggleFilter(filterId) {
+            if (selectedFilters.has(filterId)) {
+                selectedFilters.delete(filterId);
+            } else {
+                selectedFilters.add(filterId);
             }
             
-            try {
-                const response = await fetch(`/orders/${orderId}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to delete order');
-                }
-                
-                alert('Order deleted successfully!');
-                backToList();
-                
-            } catch (error) {
-                alert('Error deleting order: ' + error.message);
-            }
-        }
-        
-        // Chat functionality
-        let chatHistory = [];
-        
-        // Load personalized greeting when page loads
-        async function loadChatGreeting() {
-            try {
-                const response = await fetch('/chat-greeting');
-                const result = await response.json();
-                
-                if (response.ok && result.greeting) {
-                    document.getElementById('chatGreeting').textContent = result.greeting;
+            // Update UI
+            document.querySelectorAll('.filter-tile[data-filter]').forEach(tile => {
+                const id = tile.dataset.filter;
+                if (selectedFilters.has(id)) {
+                    tile.classList.add('selected');
                 } else {
-                    // Fallback greeting
-                    const hour = new Date().getHours();
-                    let timeGreeting = 'What can I help you find?';
-                    if (hour < 12) timeGreeting = 'Good morning! What can I help you find for breakfast?';
-                    else if (hour < 17) timeGreeting = 'What are you in the mood for?';
-                    else if (hour < 21) timeGreeting = 'What sounds good for dinner?';
-                    else timeGreeting = 'What can I help you order tonight?';
-                    
-                    document.getElementById('chatGreeting').textContent = timeGreeting;
+                    tile.classList.remove('selected');
                 }
+            });
+        }
+        
+        async function selectRandom() {
+            // Random with current filters applied
+            await getRecommendation(true);
+        }
+        
+        async function getRecommendation(forceRandom = false) {
+            const recTitle = document.getElementById('recTitle');
+            const recContent = document.getElementById('recContent');
+            
+            recTitle.textContent = 'Finding recommendation...';
+            recContent.innerHTML = '<div class="spinner"></div>';
+            showView('recommendationView');
+            
+            try {
+                const params = new URLSearchParams({
+                    type: currentChoice,
+                    filters: Array.from(selectedFilters).join(','),
+                    random: forceRandom
+                });
+                
+                const response = await fetch(`/recommend?${params}`);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to get recommendation');
+                }
+                
+                recTitle.textContent = result.title || (currentChoice === 'takeout' ? 'Order This!' : 'Cook This!');
+                recContent.innerHTML = result.recommendation;
+                
             } catch (error) {
-                console.error('Error loading greeting:', error);
-                document.getElementById('chatGreeting').textContent = 'What can I help you find?';
+                console.error('Recommendation error:', error);
+                recTitle.textContent = 'Oops!';
+                recContent.textContent = error.message || 'Unable to get a recommendation. Please try again.';
             }
         }
         
-        // Load greeting when chat tab is active
-        if (currentView === 'chat') {
-            loadChatGreeting();
+        function backToFilters() {
+            showView('filterView');
+        }
+        
+        function showUpload() {
+            showView('uploadView');
+        }
+        
+        function showHistory() {
+            showView('historyView');
+        }
+        
+        // CHAT FUNCTIONS
+        function toggleChat() {
+            document.getElementById('chatOverlay').classList.add('active');
+        }
+        
+        function closeChat(event) {
+            if (!event || event.target === document.getElementById('chatOverlay')) {
+                document.getElementById('chatOverlay').classList.remove('active');
+            }
         }
         
         async function sendChatMessage() {
@@ -2071,11 +886,6 @@
             if (!message) return;
             
             const messagesDiv = document.getElementById('chatMessages');
-            const chatContainer = document.getElementById('chatContainer');
-            const sendBtn = document.getElementById('sendChatBtn');
-            
-            // Expand container on first message (but keep the greeting visible)
-            chatContainer.classList.add('has-messages');
             
             // Add user message
             const userMsgDiv = document.createElement('div');
@@ -2083,29 +893,20 @@
             userMsgDiv.textContent = message;
             messagesDiv.appendChild(userMsgDiv);
             
-            // Clear input and disable button
             input.value = '';
-            input.style.height = 'auto';
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Thinking...';
             
-            // Add loading message
+            // Add loading
             const loadingDiv = document.createElement('div');
             loadingDiv.className = 'chat-message assistant';
             loadingDiv.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0;"></div>';
             messagesDiv.appendChild(loadingDiv);
-            
-            // Scroll to bottom
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
             
             try {
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        message,
-                        history: chatHistory
-                    })
+                    body: JSON.stringify({ message, history: chatHistory })
                 });
                 
                 const result = await response.json();
@@ -2114,22 +915,18 @@
                     throw new Error(result.error || 'Failed to get response');
                 }
                 
-                // Remove loading
                 messagesDiv.removeChild(loadingDiv);
                 
-                // Add assistant message
                 const assistantMsgDiv = document.createElement('div');
                 assistantMsgDiv.className = 'chat-message assistant';
-                assistantMsgDiv.innerHTML = formatChatMessage(result.response);
+                assistantMsgDiv.innerHTML = result.response.replace(/\n\n/g, '<br><br>');
                 messagesDiv.appendChild(assistantMsgDiv);
                 
-                // Update chat history
                 chatHistory.push(
                     { role: 'user', content: message },
                     { role: 'assistant', content: result.response }
                 );
                 
-                // Keep only last 10 messages
                 if (chatHistory.length > 20) {
                     chatHistory = chatHistory.slice(-20);
                 }
@@ -2141,87 +938,19 @@
                 errorDiv.className = 'chat-message assistant';
                 errorDiv.style.background = '#FFEBEE';
                 errorDiv.style.borderColor = '#EF5350';
-                errorDiv.style.color = '#C62828';
                 errorDiv.textContent = '❌ Error: ' + error.message;
                 messagesDiv.appendChild(errorDiv);
             } finally {
-                sendBtn.disabled = false;
-                sendBtn.textContent = 'Send';
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }
         }
         
-        function formatChatMessage(text) {
-            // Simple markdown-like formatting
-            let formatted = text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\n\n/g, '<br><br>')
-                .replace(/\n- /g, '<br>• ')
-                .replace(/\n\d+\. /g, '<br>$&');
-            
-            return formatted;
-        }
-        
-        // Dice Roll functionality
-        async function rollTheDice() {
-            // Show dice view and hide chat
-            document.getElementById('chatMainView').style.display = 'none';
-            document.getElementById('diceRollView').style.display = 'block';
-            
-            // Show animation
-            document.getElementById('diceAnimation').style.display = 'block';
-            document.getElementById('diceResult').style.display = 'none';
-            
-            try {
-                // Wait for animation (600ms)
-                await new Promise(resolve => setTimeout(resolve, 600));
-                
-                // Fetch random recommendation
-                const response = await fetch('/dice-roll');
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to get recommendation');
-                }
-                
-                // Hide animation, show result
-                document.getElementById('diceAnimation').style.display = 'none';
-                document.getElementById('diceResult').style.display = 'block';
-                
-                // Populate result
-                document.getElementById('resultRestaurant').textContent = result.restaurant;
-                document.getElementById('resultAddress').textContent = result.address || 'Address not available';
-                document.getElementById('resultRecommendation').innerHTML = result.recommendation;
-                
-            } catch (error) {
-                console.error('Dice roll error:', error);
-                document.getElementById('diceAnimation').style.display = 'none';
-                document.getElementById('diceResult').style.display = 'block';
-                document.getElementById('resultRestaurant').textContent = 'Oops!';
-                document.getElementById('resultAddress').textContent = '';
-                document.getElementById('resultRecommendation').textContent = 'Unable to get a recommendation right now. Please try again or check your order history first.';
-            }
-        }
-        
-        function backToChat() {
-            document.getElementById('chatMainView').style.display = 'block';
-            document.getElementById('diceRollView').style.display = 'none';
-        }
-        
-        // Allow Enter to send (Shift+Enter for new line)
-        const chatInput = document.getElementById('chatInput');
-        
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+        // Allow Enter to send
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
                 e.preventDefault();
                 sendChatMessage();
             }
-        });
-        
-        // Auto-expand textarea as user types
-        chatInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
     </script>
 </body>
