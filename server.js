@@ -486,6 +486,92 @@ Keep responses focused and concise.`
   }
 });
 
+// Dice roll - random restaurant recommendation
+app.get('/dice-roll', async (req, res) => {
+  try {
+    // Get all restaurants with their top-rated items
+    const ordersResult = await pool.query(`
+      SELECT DISTINCT ON (o.restaurant) 
+             o.restaurant, 
+             o.address,
+             o.delivery_service,
+             json_agg(
+               json_build_object(
+                 'name', oi.item_name,
+                 'rating', oi.rating,
+                 'assignedTo', oi.assigned_to
+               ) ORDER BY oi.rating DESC NULLS LAST
+             ) FILTER (WHERE oi.rating >= 4) as top_items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      GROUP BY o.restaurant, o.address, o.delivery_service
+      ORDER BY o.restaurant, RANDOM()
+    `);
+    
+    if (ordersResult.rows.length === 0) {
+      return res.status(404).json({ 
+        error: 'No order history found. Upload some orders first!' 
+      });
+    }
+    
+    // Pick a random restaurant
+    const randomRestaurant = ordersResult.rows[Math.floor(Math.random() * ordersResult.rows.length)];
+    
+    // Build recommendation text
+    let recommendation = '';
+    
+    if (randomRestaurant.top_items && randomRestaurant.top_items.length > 0) {
+      const topItems = randomRestaurant.top_items.filter(item => item.rating >= 4);
+      
+      if (topItems.length > 0) {
+        const collinItems = topItems.filter(item => item.assignedTo === 'Collin');
+        const emilyItems = topItems.filter(item => item.assignedTo === 'Emily');
+        
+        recommendation = '<div style="margin-bottom: 12px;">';
+        
+        if (collinItems.length > 0) {
+          recommendation += `<strong>For Collin:</strong> ${collinItems[0].name}`;
+          if (collinItems[0].rating === 5) recommendation += ' ⭐⭐⭐⭐⭐';
+          recommendation += '<br>';
+        }
+        
+        if (emilyItems.length > 0) {
+          recommendation += `<strong>For Emily:</strong> ${emilyItems[0].name}`;
+          if (emilyItems[0].rating === 5) recommendation += ' ⭐⭐⭐⭐⭐';
+        }
+        
+        if (collinItems.length === 0 && emilyItems.length === 0) {
+          // If no specific assignments, just show top items
+          recommendation += `Try: ${topItems[0].name}`;
+          if (topItems[0].rating === 5) recommendation += ' ⭐⭐⭐⭐⭐';
+          if (topItems.length > 1) {
+            recommendation += ` or ${topItems[1].name}`;
+            if (topItems[1].rating === 5) recommendation += ' ⭐⭐⭐⭐⭐';
+          }
+        }
+        
+        recommendation += '</div>';
+      } else {
+        recommendation = '<div>You\'ve ordered from here before. Try something new!</div>';
+      }
+    } else {
+      recommendation = '<div>Give this place another try!</div>';
+    }
+    
+    res.json({
+      success: true,
+      restaurant: randomRestaurant.restaurant,
+      address: randomRestaurant.address,
+      deliveryService: randomRestaurant.delivery_service,
+      recommendation: recommendation
+    });
+    
+  } catch (error) {
+    console.error('Error in dice roll:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Chat greeting endpoint
 app.get('/chat-greeting', async (req, res) => {
   try {
