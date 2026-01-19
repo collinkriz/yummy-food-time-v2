@@ -250,7 +250,7 @@ app.get('/orders/:id', async (req, res) => {
 app.patch('/order-items/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, assigned_to, rating, notes } = req.body;
+    const { name, price, assigned_to, rating, notes, tags } = req.body;
 
     const result = await pool.query(
       `UPDATE order_items 
@@ -258,10 +258,11 @@ app.patch('/order-items/:id', async (req, res) => {
            price = COALESCE($2, price),
            assigned_to = COALESCE($3, assigned_to),
            rating = COALESCE($4, rating),
-           notes = COALESCE($5, notes)
-       WHERE id = $6
+           notes = COALESCE($5, notes),
+           tags = COALESCE($6, tags)
+       WHERE id = $7
        RETURNING *`,
-      [name, price, assigned_to, rating, notes, id]
+      [name, price, assigned_to, rating, notes, tags, id]
     );
 
     if (result.rows.length === 0) {
@@ -1041,6 +1042,78 @@ app.get('/api/recipes', (req, res) => {
   } catch (error) {
     console.error('Error loading recipes:', error);
     res.status(500).json({ error: 'Failed to load recipes' });
+  }
+});
+
+// AI-powered tag suggestion endpoint
+app.post('/suggest-tags', async (req, res) => {
+  try {
+    const { name, ingredients, directions, prep_time, cook_time } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Item name is required' });
+    }
+
+    const prompt = `Analyze this food item and suggest appropriate tags. Choose 4-8 tags that accurately describe it.
+
+**Item Name:** ${name}
+${ingredients ? `\n**Ingredients:**\n${ingredients.substring(0, 800)}` : ''}
+${directions ? `\n**Directions:**\n${directions.substring(0, 800)}` : ''}
+${prep_time ? `\n**Prep Time:** ${prep_time}` : ''}
+${cook_time ? `\n**Cook Time:** ${cook_time}` : ''}
+
+**Available Tags by Category:**
+
+Meal Type: Breakfast, Lunch, Dinner, Brunch, Snack
+Course: Appetizer, Main Dish, Side Dish, Salad, Soup, Dessert, Beverage, Sauce/Condiment
+Dietary: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Nut-Free, Low-Carb, Keto, Paleo
+Cuisine: American, Italian, Mexican, Asian, Indian, Mediterranean, French, Thai, Korean, Japanese, Chinese, Greek, Middle Eastern
+Cooking Method: Baked, Grilled, Fried, Slow Cooker, Instant Pot, One-Pot, No-Cook, Roasted, Sautéed, Steamed
+Time: Quick (< 30 min), Medium (30-60 min), Long (> 60 min)
+Difficulty: Easy, Medium, Hard
+Characteristics: Healthy, Comfort Food, Kid-Friendly, Party Food, Make-Ahead, Meal Prep, Spicy, Sweet, Savory, Fresh, Hearty, Light
+
+Carefully read all details. Return ONLY a JSON array of selected tags. Include at least one from: Course, Time, Difficulty.
+
+Example: ["Main Dish", "Mexican", "Medium (30-60 min)", "Medium", "Spicy", "Comfort Food"]`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'API request failed');
+    }
+
+    const text = data.content[0].text.trim();
+    
+    // Parse the JSON array from response
+    const tagsMatch = text.match(/\[.*\]/s);
+    if (tagsMatch) {
+      const tags = JSON.parse(tagsMatch[0]);
+      res.json({ success: true, tags });
+    } else {
+      res.json({ success: true, tags: [] });
+    }
+    
+  } catch (error) {
+    console.error('Error suggesting tags:', error);
+    res.status(500).json({ error: error.message, tags: [] });
   }
 });
 

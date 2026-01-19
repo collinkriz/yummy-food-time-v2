@@ -37,6 +37,7 @@ async function initializeDatabase() {
         assigned_to VARCHAR(50),
         rating INTEGER CHECK (rating >= 0 AND rating <= 5),
         notes TEXT,
+        tags TEXT[], 
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
