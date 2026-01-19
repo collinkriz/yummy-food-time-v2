@@ -138,6 +138,12 @@
             h1 {
                 font-size: 32px;
             }
+            
+            /* Logo responsive sizing */
+            .header > div[onclick="goHome()"] > div {
+                font-size: 28px !important;
+                letter-spacing: 1px !important;
+            }
         }
         
         .subtitle {
@@ -467,7 +473,10 @@
             color: #4A4A1F;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-top: 4px solid #4A4A1F;
+            border-left: 4px solid #4A4A1F;
+        }
+        
+        .recipe-tab:first-child {
             border-left: 4px solid #4A4A1F;
         }
         
@@ -495,6 +504,7 @@
             border-left: 4px solid #4A4A1F;
             border-right: 4px solid #4A4A1F;
             border-bottom: 4px solid #4A4A1F;
+            margin-bottom: 20px;
         }
         
         .recipe-tab-content.active {
@@ -532,9 +542,10 @@
         
         .rec-details {
             background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%);
-            border: 3px solid #B4B85E;
+            border: 4px solid #4A4A1F;
+            border-bottom: none;
             padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
         
         .back-btn {
@@ -758,8 +769,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 onclick="goHome()">🍕 Yummy Food Time</h1>
-            <p class="subtitle">Your food decision helper</p>
+            <div onclick="goHome()" style="cursor: pointer; text-align: center; margin-bottom: 16px;">
+                <div style="font-size: 36px; font-weight: 900; color: #4A4A1F; text-transform: uppercase; letter-spacing: 2px; text-shadow: 3px 3px 0 rgba(255, 255, 255, 0.4), -1px -1px 0 rgba(0, 0, 0, 0.1); line-height: 1; margin-bottom: 4px;">
+                    YUMMY FOOD TIME
+                </div>
+                <p class="subtitle" style="margin: 0;">Your food decision helper</p>
+            </div>
             
             <div class="top-buttons">
                 <button class="top-btn" onclick="showUpload()">📸 Upload</button>
