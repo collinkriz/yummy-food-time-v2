@@ -1119,9 +1119,10 @@
         const bulkStatus = document.getElementById('bulkStatus');
         let bulkOrders = null;
         
-        csvUploadArea.addEventListener('click', () => csvFileInput.click());
-        
-        csvFileInput.addEventListener('change', async (e) => {
+        if (csvUploadArea && csvFileInput) {
+            csvUploadArea.addEventListener('click', () => csvFileInput.click());
+            
+            csvFileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
                 try {
@@ -1239,20 +1240,6 @@
             a.download = 'bulk-import-template.json';
             a.click();
             URL.revokeObjectURL(url);
-        }
-                    status.style.display = 'none';
-                    extractBtn.disabled = true;
-                    fileInput.value = '';
-                    
-                    // Switch to history
-                    switchTab('history');
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Save order error:', error);
-                status.className = 'status error';
-                status.innerHTML = `❌ Error: ${error.message}<br><br><small>Check if database is connected in Railway</small>`;
-            }
         }
         
         // History functionality
