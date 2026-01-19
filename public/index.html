@@ -488,13 +488,14 @@
             box-shadow: 4px 4px 0 rgba(255, 152, 0, 0.3);
         }
         
-        /* Recipe Content Box (simple bordered box) */
+        /* Recipe Content Box - optimized for mobile */
         .recipe-content-box {
             background: white;
             border: 4px solid #4A4A1F;
-            padding: 24px;
+            padding: 20px 16px;
             box-shadow: 6px 6px 0 rgba(74, 74, 31, 0.2);
             margin-bottom: 20px;
+            border-radius: 8px;
         }
         
         .recipe-section {
@@ -509,22 +510,54 @@
             font-size: 18px;
             font-weight: 800;
             color: #4A4A1F;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             text-transform: uppercase;
         }
         
         .recipe-section ul {
-            margin-left: 20px;
-            margin-bottom: 16px;
+            margin-left: 0;
+            padding-left: 20px;
+            margin-bottom: 0;
         }
         
         .recipe-section li {
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            font-size: 16px;
+            color: #333;
         }
         
         .recipe-section p {
-            margin-bottom: 12px;
+            margin-bottom: 0;
             white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        /* Mobile optimizations for recipe detail */
+        @media (max-width: 768px) {
+            .recipe-content-box {
+                padding: 16px 12px;
+                margin-left: -4px;
+                margin-right: -4px;
+                width: calc(100% + 8px);
+            }
+            
+            .recipe-toggle {
+                font-size: 13px;
+                padding: 12px 16px;
+                max-width: none;
+            }
+            
+            .recipe-section li {
+                font-size: 15px;
+                margin-bottom: 10px;
+            }
+            
+            .recipe-section p {
+                font-size: 15px;
+            }
         }
         
         .rec-content {
@@ -1912,10 +1945,10 @@
             let html = '<div class="rec-details">';
             
             // Info row
-            html += '<div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">';
-            html += `<div style="text-align: center;"><div style="font-size: 24px;">⏱️</div><div style="font-weight: 600; color: #4A4A1F;">Prep: ${recipe.prep_time || 'N/A'}</div></div>`;
-            html += `<div style="text-align: center;"><div style="font-size: 24px;">🔥</div><div style="font-weight: 600; color: #4A4A1F;">Cook: ${recipe.cook_time || 'N/A'}</div></div>`;
-            html += `<div style="text-align: center;"><div style="font-size: 24px;">🍽️</div><div style="font-weight: 600; color: #4A4A1F;">Servings: ${recipe.servings || 'N/A'}</div></div>`;
+            html += '<div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">';
+            html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">⏱️</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Prep: ${recipe.prep_time || 'N/A'}</div></div>`;
+            html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🔥</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Cook: ${recipe.cook_time || 'N/A'}</div></div>`;
+            html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🍽️</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Servings: ${recipe.servings || 'N/A'}</div></div>`;
             html += '</div>';
             
             // Toggle buttons (separate from content box)
