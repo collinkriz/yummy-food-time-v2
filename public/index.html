@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yummy Food Time - Order Extractor</title>
+    <title>Yummy Food Time</title>
     <style>
         * {
             margin: 0;
@@ -15,28 +15,65 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #fff5f0 0%, #ffe5e5 100%);
             min-height: 100vh;
-            padding: 20px;
         }
         
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            padding: 30px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         h1 {
             color: #ff3008;
-            margin-bottom: 10px;
             font-size: 28px;
+            margin-bottom: 10px;
         }
         
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #ff3008;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         .upload-area {
@@ -45,7 +82,6 @@
             padding: 40px 20px;
             text-align: center;
             background: #fff9f8;
-            margin-bottom: 20px;
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -53,11 +89,6 @@
         .upload-area:hover {
             border-color: #ff7a59;
             background: #fff5f4;
-        }
-        
-        .upload-area.dragging {
-            border-color: #ff3008;
-            background: #ffebe8;
         }
         
         input[type="file"] {
@@ -69,20 +100,10 @@
             margin-bottom: 15px;
         }
         
-        .upload-text {
-            color: #666;
-            font-size: 16px;
-        }
-        
-        .preview {
-            margin: 20px 0;
-            text-align: center;
-        }
-        
         .preview img {
             max-width: 100%;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: 20px 0;
         }
         
         button {
@@ -108,32 +129,25 @@
         }
         
         .status {
-            margin: 15px 0;
             padding: 15px;
             border-radius: 10px;
+            margin: 15px 0;
             font-size: 14px;
         }
         
         .status.loading {
             background: #e6f7ff;
             color: #0050b3;
-            border: 1px solid #91d5ff;
         }
         
         .status.error {
             background: #fff2f0;
             color: #cf1322;
-            border: 1px solid #ffccc7;
         }
         
         .status.success {
             background: #f6ffed;
             color: #389e0d;
-            border: 1px solid #b7eb8f;
-        }
-        
-        .results {
-            margin-top: 30px;
         }
         
         .restaurant-info {
@@ -144,48 +158,110 @@
         }
         
         .restaurant-name {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
-            color: #333;
             margin-bottom: 8px;
         }
         
-        .restaurant-address {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .items-section {
-            margin-top: 20px;
-        }
-        
-        .section-title {
-            font-size: 18px;
+        .delivery-badge {
+            display: inline-block;
+            background: #ff3008;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: 600;
-            margin-bottom: 15px;
-            color: #333;
+            margin: 8px 0;
         }
         
-        .item {
+        .item-card {
             background: #f9f9f9;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
         }
         
         .item-name {
-            font-weight: 500;
-            color: #333;
-            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 16px;
+            flex: 1;
         }
         
         .item-price {
             color: #ff3008;
-            font-weight: 600;
-            font-size: 16px;
+            font-weight: bold;
+            font-size: 18px;
+            margin-left: 10px;
         }
         
-        .summary {
+        .assignment-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .assign-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .assign-btn.collin.selected {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+        
+        .assign-btn.emily.selected {
+            background: #722ed1;
+            color: white;
+            border-color: #722ed1;
+        }
+        
+        .stars {
+            display: flex;
+            gap: 5px;
+            margin: 15px 0;
+        }
+        
+        .star {
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .star.filled {
+            color: #faad14;
+        }
+        
+        .star.empty {
+            color: #d9d9d9;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .summary-box {
             background: linear-gradient(135deg, #e6fffb 0%, #b5f5ec 100%);
             padding: 20px;
             border-radius: 12px;
@@ -202,10 +278,82 @@
         .summary-row.total {
             font-size: 18px;
             font-weight: bold;
-            color: #333;
             border-top: 2px solid #52c41a;
             padding-top: 12px;
             margin-top: 8px;
+        }
+        
+        .save-btn {
+            background: #52c41a;
+            margin-top: 20px;
+        }
+        
+        .save-btn:hover:not(:disabled) {
+            background: #389e0d;
+        }
+        
+        .order-history-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .order-history-item:hover {
+            border-color: #ff3008;
+            box-shadow: 0 4px 12px rgba(255, 48, 8, 0.2);
+        }
+        
+        .order-date {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .order-restaurant {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .order-total {
+            color: #ff3008;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .delete-btn {
+            background: #ff4d4f;
+            margin-top: 10px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .delete-btn:hover {
+            background: #cf1322;
+        }
+        
+        .back-btn {
+            background: #8c8c8c;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn:hover {
+            background: #595959;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
         }
         
         .spinner {
@@ -226,27 +374,67 @@
 </head>
 <body>
     <div class="container">
-        <h1>🍕 Yummy Food Time</h1>
-        <p class="subtitle">Upload any food delivery receipt to extract order details</p>
-        
-        <div class="upload-area" id="uploadArea">
-            <div class="upload-icon">📸</div>
-            <div class="upload-text">Tap to upload food delivery receipt</div>
-            <input type="file" id="fileInput" accept="image/*">
+        <div class="header">
+            <h1>🍕 Yummy Food Time</h1>
+            <p style="color: #666; font-size: 14px;">Track your food orders with ratings & notes</p>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('upload')">📸 Upload</button>
+                <button class="tab" onclick="switchTab('history')">📋 History</button>
+            </div>
         </div>
         
-        <div class="preview" id="preview" style="display: none;">
-            <img id="previewImage" alt="Preview">
+        <!-- Upload Tab -->
+        <div id="upload-tab" class="tab-content active">
+            <div class="card">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📸</div>
+                    <div style="color: #666;">Tap to upload food delivery receipt</div>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+                
+                <div id="preview" style="display: none;">
+                    <img id="previewImage" alt="Preview">
+                </div>
+                
+                <button id="extractBtn" disabled>Extract Order Info</button>
+                
+                <div id="status" style="display: none;"></div>
+            </div>
+            
+            <div id="results" style="display: none;"></div>
         </div>
         
-        <button id="extractBtn" disabled>Extract Order Info</button>
-        
-        <div id="status" style="display: none;"></div>
-        
-        <div id="results" class="results" style="display: none;"></div>
+        <!-- History Tab -->
+        <div id="history-tab" class="tab-content">
+            <div id="ordersList"></div>
+            <div id="orderDetail" style="display: none;"></div>
+        </div>
     </div>
 
     <script>
+        let currentOrder = null;
+        let selectedFile = null;
+        let currentView = 'upload';
+        
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'upload') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('upload-tab').classList.add('active');
+                currentView = 'upload';
+            } else {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('history-tab').classList.add('active');
+                currentView = 'history';
+                loadOrders();
+            }
+        }
+        
+        // Upload functionality
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const preview = document.getElementById('preview');
@@ -255,54 +443,32 @@
         const status = document.getElementById('status');
         const results = document.getElementById('results');
         
-        let selectedFile = null;
-
         uploadArea.addEventListener('click', () => fileInput.click());
-        
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragging');
-        });
-        
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragging');
-        });
-        
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragging');
-            const file = e.dataTransfer.files[0];
-            if (file && file.type.startsWith('image/')) {
-                handleFile(file);
-            }
-        });
         
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                handleFile(file);
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    preview.style.display = 'block';
+                    extractBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
             }
         });
         
-        function handleFile(file) {
-            selectedFile = file;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                previewImage.src = e.target.result;
-                preview.style.display = 'block';
-                extractBtn.disabled = false;
-            };
-            reader.readAsDataURL(file);
-        }
+        extractBtn.addEventListener('click', extractOrder);
         
-        extractBtn.addEventListener('click', async () => {
+        async function extractOrder() {
             if (!selectedFile) return;
             
             extractBtn.disabled = true;
             results.style.display = 'none';
             status.style.display = 'block';
             status.className = 'status loading';
-            status.innerHTML = '<div class="spinner"></div><div>Analyzing receipt with AI...</div>';
+            status.innerHTML = '<div class="spinner"></div><div>Analyzing receipt...</div>';
             
             try {
                 const formData = new FormData();
@@ -320,9 +486,18 @@
                 }
                 
                 status.className = 'status success';
-                status.textContent = '✅ Order extracted successfully!';
+                status.textContent = '✅ Order extracted! Add ratings and save.';
                 
-                displayResults(result.data);
+                currentOrder = result.data;
+                currentOrder.items = currentOrder.items.map((item, i) => ({
+                    ...item,
+                    id: i,
+                    assignedTo: null,
+                    rating: 0,
+                    notes: ''
+                }));
+                
+                displayOrderForRating(currentOrder);
                 
             } catch (error) {
                 status.className = 'status error';
@@ -330,64 +505,354 @@
             } finally {
                 extractBtn.disabled = false;
             }
-        });
+        }
         
-        function displayResults(data) {
+        function displayOrderForRating(order) {
             results.style.display = 'block';
             results.innerHTML = `
-                <div class="restaurant-info">
-                    <div class="restaurant-name">${data.restaurant}</div>
-                    ${data.deliveryService && data.deliveryService !== 'Unknown' ? `
-                        <div style="color: #ff3008; font-weight: 600; margin: 8px 0;">
-                            via ${data.deliveryService}
-                        </div>
-                    ` : ''}
-                    <div class="restaurant-address">📍 ${data.address}</div>
-                </div>
-                
-                <div class="items-section">
-                    <div class="section-title">Order Items</div>
-                    ${data.items.map(item => `
-                        <div class="item">
-                            <div class="item-name">${item.name}</div>
-                            <div class="item-price">$${item.price.toFixed(2)}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div class="summary">
-                    <div class="summary-row">
-                        <span>Subtotal</span>
-                        <span>$${data.subtotal.toFixed(2)}</span>
+                <div class="card">
+                    <div class="restaurant-info">
+                        <div class="restaurant-name">${order.restaurant}</div>
+                        ${order.deliveryService && order.deliveryService !== 'Unknown' ? 
+                            `<div class="delivery-badge">${order.deliveryService}</div>` : ''}
+                        <div style="color: #666; margin-top: 8px;">📍 ${order.address}</div>
                     </div>
-                    <div class="summary-row">
-                        <span>Delivery Fee</span>
-                        <span>$${data.deliveryFee.toFixed(2)}</span>
+                    
+                    <h3 style="margin-bottom: 15px;">Rate Your Items</h3>
+                    
+                    <div id="itemsList">
+                        ${order.items.map((item, i) => `
+                            <div class="item-card">
+                                <div class="item-header">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-price">$${item.price.toFixed(2)}</div>
+                                </div>
+                                
+                                <div style="margin-bottom: 10px; font-size: 14px; color: #666;">Who ate this?</div>
+                                <div class="assignment-buttons">
+                                    <button class="assign-btn collin" onclick="assignItem(${i}, 'Collin')">
+                                        👤 Collin
+                                    </button>
+                                    <button class="assign-btn emily" onclick="assignItem(${i}, 'Emily')">
+                                        👤 Emily
+                                    </button>
+                                </div>
+                                
+                                <div style="margin-bottom: 10px; font-size: 14px; color: #666;">Rating</div>
+                                <div class="stars" id="stars-${i}">
+                                    ${[1,2,3,4,5].map(star => 
+                                        `<span class="star empty" onclick="rateItem(${i}, ${star})">★</span>`
+                                    ).join('')}
+                                </div>
+                                
+                                <div style="margin-bottom: 10px; font-size: 14px; color: #666;">Notes</div>
+                                <textarea 
+                                    placeholder="Add your thoughts about this item..."
+                                    onchange="updateNotes(${i}, this.value)"
+                                ></textarea>
+                            </div>
+                        `).join('')}
                     </div>
-                    <div class="summary-row">
-                        <span>Service Fee</span>
-                        <span>$${data.serviceFee.toFixed(2)}</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Tax</span>
-                        <span>$${data.tax.toFixed(2)}</span>
-                    </div>
-                    ${data.discount !== 0 ? `
+                    
+                    <div class="summary-box">
                         <div class="summary-row">
-                            <span>Discount</span>
-                            <span>-$${Math.abs(data.discount).toFixed(2)}</span>
+                            <span>Subtotal</span>
+                            <span>$${order.subtotal.toFixed(2)}</span>
                         </div>
-                    ` : ''}
-                    <div class="summary-row">
-                        <span>Tip</span>
-                        <span>$${data.tip.toFixed(2)}</span>
+                        <div class="summary-row">
+                            <span>Delivery Fee</span>
+                            <span>$${order.deliveryFee.toFixed(2)}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Service Fee</span>
+                            <span>$${order.serviceFee.toFixed(2)}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax</span>
+                            <span>$${order.tax.toFixed(2)}</span>
+                        </div>
+                        ${order.discount !== 0 ? `
+                            <div class="summary-row">
+                                <span>Discount</span>
+                                <span>-$${Math.abs(order.discount).toFixed(2)}</span>
+                            </div>
+                        ` : ''}
+                        <div class="summary-row">
+                            <span>Tip</span>
+                            <span>$${order.tip.toFixed(2)}</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span>$${order.total.toFixed(2)}</span>
+                        </div>
                     </div>
-                    <div class="summary-row total">
-                        <span>Total</span>
-                        <span>$${data.total.toFixed(2)}</span>
-                    </div>
+                    
+                    <button class="save-btn" onclick="saveOrder()">💾 Save Order</button>
                 </div>
             `;
+        }
+        
+        function assignItem(itemId, person) {
+            currentOrder.items[itemId].assignedTo = person;
+            
+            // Update UI
+            const buttons = document.querySelectorAll(`.item-card:nth-child(${itemId + 1}) .assign-btn`);
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            if (person === 'Collin') {
+                buttons[0].classList.add('selected');
+            } else {
+                buttons[1].classList.add('selected');
+            }
+        }
+        
+        function rateItem(itemId, rating) {
+            currentOrder.items[itemId].rating = rating;
+            
+            // Update stars UI
+            const stars = document.querySelectorAll(`#stars-${itemId} .star`);
+            stars.forEach((star, i) => {
+                if (i < rating) {
+                    star.className = 'star filled';
+                } else {
+                    star.className = 'star empty';
+                }
+            });
+        }
+        
+        function updateNotes(itemId, notes) {
+            currentOrder.items[itemId].notes = notes;
+        }
+        
+        async function saveOrder() {
+            try {
+                status.style.display = 'block';
+                status.className = 'status loading';
+                status.textContent = 'Saving order...';
+                
+                const response = await fetch('/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentOrder)
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to save order');
+                }
+                
+                status.className = 'status success';
+                status.textContent = '✅ Order saved successfully!';
+                
+                setTimeout(() => {
+                    // Reset form
+                    selectedFile = null;
+                    currentOrder = null;
+                    preview.style.display = 'none';
+                    results.style.display = 'none';
+                    status.style.display = 'none';
+                    extractBtn.disabled = true;
+                    fileInput.value = '';
+                    
+                    // Switch to history
+                    switchTab('history');
+                }, 1500);
+                
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ Error: ' + error.message;
+            }
+        }
+        
+        // History functionality
+        async function loadOrders() {
+            const ordersList = document.getElementById('ordersList');
+            ordersList.innerHTML = '<div class="status loading"><div class="spinner"></div><div>Loading orders...</div></div>';
+            
+            try {
+                const response = await fetch('/orders');
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to load orders');
+                }
+                
+                if (result.orders.length === 0) {
+                    ordersList.innerHTML = `
+                        <div class="card empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div style="font-size: 18px; margin-bottom: 10px;">No orders yet</div>
+                            <div>Upload your first receipt to get started!</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                ordersList.innerHTML = result.orders.map(order => `
+                    <div class="order-history-item" onclick="viewOrder(${order.id})">
+                        <div class="order-date">${new Date(order.created_at).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</div>
+                        <div class="order-restaurant">${order.restaurant}</div>
+                        ${order.delivery_service && order.delivery_service !== 'Unknown' ? 
+                            `<div class="delivery-badge">${order.delivery_service}</div>` : ''}
+                        <div style="color: #666; font-size: 14px; margin: 8px 0;">${order.items.length} items</div>
+                        <div class="order-total">$${parseFloat(order.total).toFixed(2)}</div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                ordersList.innerHTML = `
+                    <div class="card">
+                        <div class="status error">❌ Error: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        async function viewOrder(orderId) {
+            try {
+                const response = await fetch(`/orders/${orderId}`);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to load order');
+                }
+                
+                const order = result.order;
+                
+                document.getElementById('ordersList').style.display = 'none';
+                const detailDiv = document.getElementById('orderDetail');
+                detailDiv.style.display = 'block';
+                
+                detailDiv.innerHTML = `
+                    <button class="back-btn" onclick="backToList()">← Back to Orders</button>
+                    
+                    <div class="card">
+                        <div class="restaurant-info">
+                            <div class="order-date">${new Date(order.created_at).toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</div>
+                            <div class="restaurant-name">${order.restaurant}</div>
+                            ${order.delivery_service && order.delivery_service !== 'Unknown' ? 
+                                `<div class="delivery-badge">${order.delivery_service}</div>` : ''}
+                            <div style="color: #666; margin-top: 8px;">📍 ${order.address}</div>
+                        </div>
+                        
+                        <h3 style="margin: 20px 0 15px 0;">Order Items</h3>
+                        
+                        ${order.items.map(item => `
+                            <div class="item-card">
+                                <div class="item-header">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-price">$${parseFloat(item.price).toFixed(2)}</div>
+                                </div>
+                                
+                                ${item.assignedTo ? `
+                                    <div style="margin: 10px 0;">
+                                        <span style="background: ${item.assignedTo === 'Collin' ? '#1890ff' : '#722ed1'}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+                                            👤 ${item.assignedTo}
+                                        </span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${item.rating > 0 ? `
+                                    <div style="margin: 10px 0;">
+                                        <div style="color: #faad14; font-size: 20px;">
+                                            ${'★'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${item.notes ? `
+                                    <div style="margin: 10px 0; padding: 12px; background: white; border-radius: 8px; font-size: 14px; color: #666;">
+                                        💭 ${item.notes}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                        
+                        <div class="summary-box">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span>$${parseFloat(order.subtotal).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Delivery Fee</span>
+                                <span>$${parseFloat(order.delivery_fee).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Service Fee</span>
+                                <span>$${parseFloat(order.service_fee).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tax</span>
+                                <span>$${parseFloat(order.tax).toFixed(2)}</span>
+                            </div>
+                            ${order.discount !== 0 ? `
+                                <div class="summary-row">
+                                    <span>Discount</span>
+                                    <span>-$${Math.abs(parseFloat(order.discount)).toFixed(2)}</span>
+                                </div>
+                            ` : ''}
+                            <div class="summary-row">
+                                <span>Tip</span>
+                                <span>$${parseFloat(order.tip).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total</span>
+                                <span>$${parseFloat(order.total).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <button class="delete-btn" onclick="deleteOrder(${order.id})">🗑️ Delete Order</button>
+                    </div>
+                `;
+                
+            } catch (error) {
+                alert('Error loading order: ' + error.message);
+            }
+        }
+        
+        function backToList() {
+            document.getElementById('ordersList').style.display = 'block';
+            document.getElementById('orderDetail').style.display = 'none';
+            loadOrders();
+        }
+        
+        async function deleteOrder(orderId) {
+            if (!confirm('Are you sure you want to delete this order? This cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/orders/${orderId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to delete order');
+                }
+                
+                alert('Order deleted successfully!');
+                backToList();
+                
+            } catch (error) {
+                alert('Error deleting order: ' + error.message);
+            }
         }
     </script>
 </body>

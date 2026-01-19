@@ -1,7 +1,7 @@
 {
   "name": "yummy-food-time-v2",
-  "version": "1.0.0",
-  "description": "Backend for food delivery order extraction (DoorDash, Uber Eats, Grubhub, etc.)",
+  "version": "2.0.0",
+  "description": "Backend for food delivery order extraction with database and ratings",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,7 +10,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "pg": "^8.11.3"
   },
   "engines": {
     "node": ">=18.0.0"

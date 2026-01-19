@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
-const path = require('path');
+const { pool, initializeDatabase } = require('./database');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -9,6 +9,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+
+// Initialize database on startup
+initializeDatabase().catch(console.error);
 
 // Extract order info endpoint
 app.post('/extract-order', upload.single('image'), async (req, res) => {
@@ -110,16 +113,179 @@ Be precise and extract all visible fields. If a field is not visible, use 0.00 f
   }
 });
 
+// Save order to database
+app.post('/orders', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { restaurant, address, deliveryService, subtotal, deliveryFee, serviceFee, tax, discount, tip, total, items } = req.body;
+
+    await client.query('BEGIN');
+
+    // Insert order
+    const orderResult = await client.query(
+      `INSERT INTO orders (restaurant, address, delivery_service, subtotal, delivery_fee, service_fee, tax, discount, tip, total)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING id`,
+      [restaurant, address, deliveryService, subtotal, deliveryFee, serviceFee, tax, discount, tip, total]
+    );
+
+    const orderId = orderResult.rows[0].id;
+
+    // Insert items
+    for (const item of items) {
+      await client.query(
+        `INSERT INTO order_items (order_id, item_name, price, assigned_to, rating, notes)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [orderId, item.name, item.price, item.assignedTo || null, item.rating || 0, item.notes || null]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    res.json({ success: true, orderId });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error saving order:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// Get all orders
+app.get('/orders', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT o.*, 
+             json_agg(
+               json_build_object(
+                 'id', oi.id,
+                 'name', oi.item_name,
+                 'price', oi.price,
+                 'assignedTo', oi.assigned_to,
+                 'rating', oi.rating,
+                 'notes', oi.notes
+               ) ORDER BY oi.id
+             ) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+    `);
+
+    res.json({ success: true, orders: result.rows });
+
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single order
+app.get('/orders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(`
+      SELECT o.*, 
+             json_agg(
+               json_build_object(
+                 'id', oi.id,
+                 'name', oi.item_name,
+                 'price', oi.price,
+                 'assignedTo', oi.assigned_to,
+                 'rating', oi.rating,
+                 'notes', oi.notes
+               ) ORDER BY oi.id
+             ) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      WHERE o.id = $1
+      GROUP BY o.id
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({ success: true, order: result.rows[0] });
+
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update order item (rating, assignment, notes)
+app.patch('/order-items/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { assignedTo, rating, notes } = req.body;
+
+    const result = await pool.query(
+      `UPDATE order_items 
+       SET assigned_to = COALESCE($1, assigned_to),
+           rating = COALESCE($2, rating),
+           notes = COALESCE($3, notes)
+       WHERE id = $4
+       RETURNING *`,
+      [assignedTo, rating, notes, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    res.json({ success: true, item: result.rows[0] });
+
+  } catch (error) {
+    console.error('Error updating item:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete order
+app.delete('/orders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query('DELETE FROM orders WHERE id = $1 RETURNING id', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({ success: true, message: 'Order deleted' });
+
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    hasApiKey: !!process.env.ANTHROPIC_API_KEY 
-  });
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ 
+      status: 'ok', 
+      hasApiKey: !!process.env.ANTHROPIC_API_KEY,
+      database: 'connected'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error', 
+      hasApiKey: !!process.env.ANTHROPIC_API_KEY,
+      database: 'disconnected',
+      error: error.message
+    });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`API Key configured: ${!!process.env.ANTHROPIC_API_KEY}`);
+  console.log(`Database URL configured: ${!!process.env.DATABASE_URL}`);
 });
