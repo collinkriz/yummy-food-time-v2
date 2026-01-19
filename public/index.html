@@ -725,7 +725,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🍕 Yummy Food Time</h1>
+            <h1 style="cursor: pointer;" onclick="goHome()">🍕 Yummy Food Time</h1>
             <p class="subtitle">Track, rate & discover your favorite foods!</p>
             
             <div class="tabs">
@@ -821,6 +821,20 @@
                 document.getElementById('chat-tab').classList.add('active');
                 currentView = 'chat';
             }
+        }
+        
+        function goHome() {
+            // Reset upload tab to clean state
+            selectedFile = null;
+            currentOrder = null;
+            preview.style.display = 'none';
+            results.style.display = 'none';
+            status.style.display = 'none';
+            extractBtn.disabled = true;
+            fileInput.value = '';
+            
+            // Switch to upload tab
+            switchTab('upload');
         }
         
         // Upload functionality
@@ -1174,6 +1188,8 @@
                             <div style="color: #666; margin-top: 8px;">📍 ${order.address}</div>
                         </div>
                         
+                        <button class="edit-btn" onclick="enableEditMode(${order.id})" style="width: 100%; margin-bottom: 20px;">✏️ Edit Order</button>
+                        
                         <h3 style="margin: 20px 0 15px 0;">Order Items</h3>
                         
                         ${order.items.map(item => `
@@ -1240,10 +1256,7 @@
                             </div>
                         </div>
                         
-                        <div class="button-group">
-                            <button class="edit-btn" onclick="enableEditMode(${order.id})">✏️ Edit Order</button>
-                            <button class="delete-btn" onclick="deleteOrder(${order.id})">🗑️ Delete</button>
-                        </div>
+                        <button class="delete-btn" onclick="deleteOrder(${order.id})">🗑️ Delete Order</button>
                     </div>
                 `;
                 
