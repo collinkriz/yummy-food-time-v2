@@ -996,6 +996,25 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// Get all recipes endpoint
+app.get('/api/recipes', (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const recipesPath = path.join(__dirname, 'recipes.json');
+    
+    if (!fs.existsSync(recipesPath)) {
+      return res.status(404).json({ error: 'Recipes file not found' });
+    }
+    
+    const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
+    res.json(recipes);
+  } catch (error) {
+    console.error('Error loading recipes:', error);
+    res.status(500).json({ error: 'Failed to load recipes' });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
