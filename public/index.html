@@ -449,7 +449,7 @@
         .recipe-tabs {
             display: flex;
             gap: 0;
-            margin-bottom: 24px;
+            margin-bottom: 0;
             border-bottom: 4px solid #4A4A1F;
         }
         
@@ -487,10 +487,14 @@
         
         .recipe-tab-content {
             display: none;
-            padding: 20px 0;
+            padding: 20px;
             font-size: 16px;
             line-height: 1.8;
             color: #333;
+            background: white;
+            border-left: 4px solid #4A4A1F;
+            border-right: 4px solid #4A4A1F;
+            border-bottom: 4px solid #4A4A1F;
         }
         
         .recipe-tab-content.active {
@@ -759,6 +763,7 @@
             
             <div class="top-buttons">
                 <button class="top-btn" onclick="showUpload()">📸 Upload</button>
+                <button class="top-btn" onclick="showRecipeList()">📖 Recipes</button>
                 <button class="top-btn" onclick="showHistory()">📋 History</button>
             </div>
         </div>
@@ -816,6 +821,32 @@
             <div class="card">
                 <h2 style="margin-bottom: 20px;">Order History</h2>
                 <p>History functionality coming soon...</p>
+            </div>
+        </div>
+        
+        <!-- RECIPE LIST VIEW -->
+        <div id="recipeListView" class="view">
+            <button class="back-btn" onclick="goHome()">← Back</button>
+            
+            <div class="card">
+                <h2 style="margin-bottom: 20px; text-align: center; color: #FF9800;">📖 Recipe Library</h2>
+                
+                <!-- Search Bar -->
+                <div style="margin-bottom: 24px;">
+                    <input 
+                        type="text" 
+                        id="recipeSearch" 
+                        placeholder="🔍 Search recipes..." 
+                        style="width: 100%; padding: 16px; font-size: 16px; border: 4px solid #4A4A1F; border-radius: 12px; font-weight: 600; background: white;"
+                        oninput="filterRecipes()"
+                    />
+                </div>
+                
+                <!-- Recipe Count -->
+                <div id="recipeCount" style="margin-bottom: 16px; font-weight: 600; color: #6B6B3D; text-align: center;"></div>
+                
+                <!-- Recipe List -->
+                <div id="recipeListContainer" style="display: grid; gap: 12px;"></div>
             </div>
         </div>
     </div>
@@ -986,6 +1017,134 @@
         
         function showHistory() {
             showView('historyView');
+        }
+        
+        // RECIPE LIST FUNCTIONS
+        let allRecipes = [];
+        
+        async function showRecipeList() {
+            showView('recipeListView');
+            
+            // Load recipes if not already loaded
+            if (allRecipes.length === 0) {
+                try {
+                    const response = await fetch('/recipes.json');
+                    allRecipes = await response.json();
+                } catch (error) {
+                    console.error('Error loading recipes:', error);
+                    document.getElementById('recipeListContainer').innerHTML = '<p style="text-align: center; color: #999;">Unable to load recipes.</p>';
+                    return;
+                }
+            }
+            
+            displayRecipes(allRecipes);
+        }
+        
+        function filterRecipes() {
+            const searchTerm = document.getElementById('recipeSearch').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                displayRecipes(allRecipes);
+                return;
+            }
+            
+            const filtered = allRecipes.filter(recipe => {
+                return recipe.name.toLowerCase().includes(searchTerm) ||
+                       (recipe.category && recipe.category.some(cat => cat.toLowerCase().includes(searchTerm))) ||
+                       (recipe.ingredients && recipe.ingredients.toLowerCase().includes(searchTerm));
+            });
+            
+            displayRecipes(filtered);
+        }
+        
+        function displayRecipes(recipes) {
+            const container = document.getElementById('recipeListContainer');
+            const countDiv = document.getElementById('recipeCount');
+            
+            countDiv.textContent = `${recipes.length} recipe${recipes.length !== 1 ? 's' : ''}`;
+            
+            if (recipes.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px 0;">No recipes found.</p>';
+                return;
+            }
+            
+            container.innerHTML = recipes.map(recipe => `
+                <div style="background: white; border: 4px solid #4A4A1F; padding: 16px; cursor: pointer; transition: all 0.2s ease; border-radius: 8px;" 
+                     onclick="showRecipeDetail('${recipe.name.replace(/'/g, "\\'")}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 800; font-size: 18px; color: #4A4A1F; margin-bottom: 4px;">
+                                ${recipe.name}
+                            </div>
+                            <div style="font-size: 14px; color: #6B6B3D;">
+                                ${recipe.category ? recipe.category.map(c => `<span style="background: #FFE082; padding: 2px 8px; border-radius: 4px; margin-right: 4px; display: inline-block; margin-bottom: 4px;">${c}</span>`).join('') : ''}
+                            </div>
+                        </div>
+                        <div style="font-size: 24px;">→</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function showRecipeDetail(recipeName) {
+            const recipe = allRecipes.find(r => r.name === recipeName);
+            if (!recipe) return;
+            
+            // Simulate getting recommendation by directly setting the content
+            currentChoice = 'cooking';
+            const recTitle = document.getElementById('recTitle');
+            const recContent = document.getElementById('recContent');
+            
+            recTitle.textContent = recipe.name;
+            
+            // Build the recipe HTML similar to server response
+            let html = '<div class="rec-details">';
+            
+            // Info row
+            html += '<div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">';
+            html += `<div style="text-align: center;"><div style="font-size: 24px;">⏱️</div><div style="font-weight: 600; color: #4A4A1F;">Prep: ${recipe.prep_time || 'N/A'}</div></div>`;
+            html += `<div style="text-align: center;"><div style="font-size: 24px;">🔥</div><div style="font-weight: 600; color: #4A4A1F;">Cook: ${recipe.cook_time || 'N/A'}</div></div>`;
+            html += `<div style="text-align: center;"><div style="font-size: 24px;">🍽️</div><div style="font-weight: 600; color: #4A4A1F;">Servings: ${recipe.servings || 'N/A'}</div></div>`;
+            html += '</div>';
+            
+            // Tabs
+            html += '<div class="recipe-tabs">';
+            html += '<button class="recipe-tab active" onclick="switchRecipeTab(\'ingredients\')">📝 Ingredients</button>';
+            html += '<button class="recipe-tab" onclick="switchRecipeTab(\'instructions\')">👩🏻‍🍳 Instructions</button>';
+            html += '</div>';
+            
+            // Ingredients tab
+            html += '<div id="ingredients-tab" class="recipe-tab-content active">';
+            if (recipe.ingredients) {
+                const ingredients = recipe.ingredients.split('\n').filter(i => i.trim());
+                html += '<ul>';
+                ingredients.forEach(ing => {
+                    html += `<li>${ing.trim()}</li>`;
+                });
+                html += '</ul>';
+            } else {
+                html += '<p>No ingredients listed.</p>';
+            }
+            html += '</div>';
+            
+            // Instructions tab
+            html += '<div id="instructions-tab" class="recipe-tab-content">';
+            if (recipe.directions) {
+                html += `<p>${recipe.directions.replace(/\n/g, '<br><br>')}</p>`;
+            } else {
+                html += '<p>No instructions available.</p>';
+            }
+            html += '</div>';
+            
+            // Source button
+            if (recipe.source_url) {
+                html += `<div style="margin-top: 24px; text-align: center;"><a href="${recipe.source_url}" target="_blank" style="display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; font-weight: 800; border-radius: 8px; border: 4px solid #4A4A1F; transition: all 0.2s ease;">🌐 View Original Recipe</a></div>`;
+            }
+            
+            html += '</div>';
+            
+            recContent.innerHTML = html;
+            showView('recommendationView');
         }
         
         // CHAT FUNCTIONS
