@@ -844,10 +844,10 @@
                 
                 <!-- Recipe Count -->
                 <div id="recipeCount" style="margin-bottom: 16px; font-weight: 600; color: #6B6B3D; text-align: center;"></div>
-                
-                <!-- Recipe List -->
-                <div id="recipeListContainer" style="display: grid; gap: 12px;"></div>
             </div>
+            
+            <!-- Recipe List (cards outside main card for spacing) -->
+            <div id="recipeListContainer"></div>
         </div>
     </div>
     
@@ -1028,11 +1028,14 @@
             // Load recipes if not already loaded
             if (allRecipes.length === 0) {
                 try {
-                    const response = await fetch('/recipes.json');
+                    const response = await fetch('/api/recipes');
+                    if (!response.ok) {
+                        throw new Error('Failed to load recipes');
+                    }
                     allRecipes = await response.json();
                 } catch (error) {
                     console.error('Error loading recipes:', error);
-                    document.getElementById('recipeListContainer').innerHTML = '<p style="text-align: center; color: #999;">Unable to load recipes.</p>';
+                    document.getElementById('recipeListContainer').innerHTML = '<div class="card"><p style="text-align: center; color: #999;">Unable to load recipes. Please try again.</p></div>';
                     return;
                 }
             }
@@ -1064,23 +1067,48 @@
             countDiv.textContent = `${recipes.length} recipe${recipes.length !== 1 ? 's' : ''}`;
             
             if (recipes.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px 0;">No recipes found.</p>';
+                container.innerHTML = '<div class="card"><p style="text-align: center; color: #999; padding: 40px 0;">No recipes found.</p></div>';
                 return;
             }
             
             container.innerHTML = recipes.map(recipe => `
-                <div style="background: white; border: 4px solid #4A4A1F; padding: 16px; cursor: pointer; transition: all 0.2s ease; border-radius: 8px;" 
-                     onclick="showRecipeDetail('${recipe.name.replace(/'/g, "\\'")}')">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card" style="cursor: pointer; transition: all 0.2s ease; position: relative;" 
+                     onclick="showRecipeDetail('${recipe.name.replace(/'/g, "\\'")}')"
+                     onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='8px 8px 0 rgba(74, 74, 31, 0.3)'"
+                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='6px 6px 0 rgba(74, 74, 31, 0.2)'">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: start; gap: 16px;">
                         <div style="flex: 1;">
-                            <div style="font-weight: 800; font-size: 18px; color: #4A4A1F; margin-bottom: 4px;">
+                            <h3 style="font-size: 20px; font-weight: 900; color: #4A4A1F; margin-bottom: 8px; text-transform: uppercase;">
                                 ${recipe.name}
-                            </div>
-                            <div style="font-size: 14px; color: #6B6B3D;">
-                                ${recipe.category ? recipe.category.map(c => `<span style="background: #FFE082; padding: 2px 8px; border-radius: 4px; margin-right: 4px; display: inline-block; margin-bottom: 4px;">${c}</span>`).join('') : ''}
+                            </h3>
+                            
+                            ${recipe.category ? `
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+                                    ${recipe.category.map(c => `
+                                        <span style="background: linear-gradient(135deg, #FFE082 0%, #FFD54F 100%); 
+                                                     padding: 4px 10px; 
+                                                     border-radius: 6px; 
+                                                     font-size: 12px; 
+                                                     font-weight: 700; 
+                                                     color: #4A4A1F; 
+                                                     text-transform: uppercase; 
+                                                     letter-spacing: 0.5px;
+                                                     border: 2px solid #4A4A1F;">
+                                            ${c}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 14px; color: #6B6B3D; font-weight: 600;">
+                                ${recipe.prep_time && recipe.prep_time !== 'N/A' ? `<span>⏱️ Prep: ${recipe.prep_time}</span>` : ''}
+                                ${recipe.cook_time && recipe.cook_time !== 'N/A' ? `<span>🔥 Cook: ${recipe.cook_time}</span>` : ''}
+                                ${recipe.servings && recipe.servings !== 'N/A' ? `<span>🍽️ Servings: ${recipe.servings}</span>` : ''}
                             </div>
                         </div>
-                        <div style="font-size: 24px;">→</div>
+                        
+                        <div style="font-size: 32px; color: #FF9800; font-weight: 900;">→</div>
                     </div>
                 </div>
             `).join('');
