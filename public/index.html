@@ -18,8 +18,8 @@
         }
         
         body {
-            font-family: 'Comic Sans MS', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #FFE5E5 0%, #FFF4E5 50%, #E5F5FF 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: #F5F1E8;
             min-height: 100vh;
             padding-bottom: 40px;
             position: relative;
@@ -41,11 +41,12 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #FF6B6B 0%, #FFD93D 100%);
-            border-radius: 25px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            background: #FFC107;
+            border-radius: 20px;
+            padding: 28px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border: 3px solid #4A4A1F;
             position: relative;
             overflow: hidden;
             box-sizing: border-box;
@@ -53,79 +54,77 @@
         
         @media (max-width: 768px) {
             .header {
-                padding: 12px;
-                border-radius: 15px;
-                margin-bottom: 10px;
+                padding: 20px 16px;
+                border-radius: 16px;
+                margin-bottom: 12px;
             }
         }
         
         .header::before {
-            content: '🍕🍔🌮🍜🍱';
-            position: absolute;
-            top: -10px;
-            right: -20px;
-            font-size: 80px;
-            opacity: 0.15;
-            transform: rotate(15deg);
+            content: '';
+            display: none;
         }
         
         h1 {
-            color: white;
-            font-size: 32px;
-            margin-bottom: 8px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            color: #4A4A1F;
+            font-size: 34px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            text-shadow: none;
             position: relative;
+            letter-spacing: -0.5px;
         }
         
         .subtitle {
-            color: rgba(255,255,255,0.95);
-            font-size: 14px;
+            color: #4A4A1F;
+            font-size: 15px;
+            font-weight: 600;
             position: relative;
         }
         
         .tabs {
             display: flex;
-            gap: 8px;
-            margin-top: 20px;
+            gap: 10px;
+            margin-top: 22px;
+            background: white;
+            padding: 6px;
+            border-radius: 12px;
+            border: 3px solid #4A4A1F;
             position: relative;
         }
         
         @media (max-width: 768px) {
             .tabs {
-                gap: 5px;
-                margin-top: 12px;
+                gap: 8px;
+                margin-top: 16px;
             }
         }
         
         .tab {
             flex: 1;
-            padding: 14px 8px;
-            background: rgba(255,255,255,0.3);
+            padding: 12px 8px;
+            background: white;
             border: none;
-            border-radius: 15px;
-            font-size: 14px;
-            font-weight: bold;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
-            color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+            color: #4A4A1F;
+            text-shadow: none;
         }
         
         @media (max-width: 768px) {
             .tab {
                 padding: 10px 6px;
-                font-size: 13px;
-                border-radius: 12px;
+                font-size: 14px;
             }
         }
         
         .tab.active {
-            background: white;
-            color: #FF6B6B;
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            text-shadow: none;
+            background: #6B6B3D;
+            color: white;
+            transform: scale(1.02);
         }
         
         .tab-content {
@@ -144,11 +143,11 @@
         
         .card {
             background: white;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            border: 3px solid #FFD93D;
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            border: 3px solid #4A4A1F;
             width: 100%;
             max-width: 100%;
             overflow-x: hidden;
@@ -157,15 +156,14 @@
         
         @media (max-width: 768px) {
             .card {
-                padding: 12px;
-                border-radius: 15px;
-                border-width: 2px;
-                margin-bottom: 10px;
+                padding: 16px;
+                border-radius: 14px;
+                margin-bottom: 12px;
             }
         }
         
         .upload-area {
-            border: 4px dashed #FF6B6B;
+            border: 4px dashed #FF9800;
             border-radius: 20px;
             padding: 50px 20px;
             text-align: center;
@@ -176,7 +174,7 @@
         }
         
         .upload-area:hover {
-            border-color: #FFD93D;
+            border-color: #FFC107;
             background: linear-gradient(135deg, #FFFAED 0%, #FFF5F5 100%);
             transform: scale(1.02);
         }
@@ -211,7 +209,7 @@
         }
         
         .upload-text {
-            color: #FF6B6B;
+            color: #FF9800;
             font-weight: bold;
             font-size: 18px;
         }
@@ -232,28 +230,29 @@
             object-fit: contain;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border: 3px solid #FFD93D;
+            border: 3px solid #FFC107;
         }
         
         button {
             width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            padding: 17px;
+            background: #6B6B3D;
             color: white;
-            border: none;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: bold;
+            border: 3px solid #4A4A1F;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         
         button:hover:not(:disabled) {
+            background: #5A5A32;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
         }
         
         button:active:not(:disabled) {
@@ -264,6 +263,7 @@
             background: #ccc;
             cursor: not-allowed;
             box-shadow: none;
+            border-color: #999;
         }
         
         .status {
@@ -297,7 +297,7 @@
             padding: 25px;
             border-radius: 20px;
             margin-bottom: 20px;
-            border: 3px solid #FFD93D;
+            border: 3px solid #FFC107;
             position: relative;
         }
         
@@ -314,14 +314,14 @@
             font-size: 26px;
             font-weight: bold;
             margin-bottom: 10px;
-            color: #FF6B6B;
+            color: #FF9800;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
         
         .delivery-badge {
             display: inline-block;
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            background: linear-gradient(135deg, #FF9800 0%, #FF8E53 100%);
             color: white;
             padding: 6px 14px;
             border-radius: 20px;
@@ -341,7 +341,7 @@
         }
         
         .item-card:hover {
-            border-color: #FFD93D;
+            border-color: #FFC107;
             transform: translateX(5px);
             box-shadow: -5px 5px 15px rgba(0,0,0,0.1);
         }
@@ -363,7 +363,7 @@
         }
         
         .item-price {
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            background: linear-gradient(135deg, #FF9800 0%, #FF8E53 100%);
             color: white;
             padding: 8px 16px;
             border-radius: 20px;
@@ -393,7 +393,7 @@
         }
         
         .assign-btn:hover {
-            border-color: #FFD93D;
+            border-color: #FFC107;
             transform: scale(1.05);
         }
         
@@ -430,7 +430,7 @@
         }
         
         .star.filled {
-            color: #FFD93D;
+            color: #FFC107;
         }
         
         .star.empty {
@@ -451,7 +451,7 @@
         
         textarea:focus {
             outline: none;
-            border-color: #FFD93D;
+            border-color: #FFC107;
             box-shadow: 0 0 0 3px rgba(255, 217, 61, 0.2);
         }
         
@@ -511,7 +511,7 @@
         }
         
         .order-history-item:hover {
-            border-color: #FFD93D;
+            border-color: #FFC107;
             transform: translateX(10px);
             box-shadow: -5px 5px 20px rgba(255, 217, 61, 0.3);
         }
@@ -527,7 +527,7 @@
             font-size: 20px;
             font-weight: bold;
             margin-bottom: 8px;
-            color: #FF6B6B;
+            color: #FF9800;
         }
         
         .order-total {
@@ -577,7 +577,7 @@
         
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #FF6B6B;
+            border-top: 4px solid #FF9800;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -632,7 +632,7 @@
         }
         
         .chat-message.assistant strong {
-            color: #FF6B6B;
+            color: #FF9800;
         }
         
         .chat-message.assistant ul, .chat-message.assistant ol {
