@@ -920,11 +920,14 @@
         .chat-container {
             display: flex;
             flex-direction: column;
+        }
+        
+        .chat-container.has-messages {
             height: 500px;
         }
         
         @media (max-width: 768px) {
-            .chat-container {
+            .chat-container.has-messages {
                 height: 450px;
             }
         }
@@ -937,6 +940,13 @@
             border: 4px solid #B4B85E;
             margin-bottom: 16px;
             box-shadow: inset 3px 3px 0 rgba(180, 184, 94, 0.1);
+            min-height: 120px;
+            max-height: none;
+        }
+        
+        .chat-container:not(.has-messages) .chat-messages {
+            min-height: 120px;
+            max-height: 120px;
         }
         
         @media (max-width: 768px) {
@@ -1145,10 +1155,10 @@
                 <h2>🤖 Food Recommendations</h2>
                 <p style="margin-bottom: 20px; color: #666; font-weight: 600;">Ask me what to order based on your favorites!</p>
                 
-                <div class="chat-container">
+                <div class="chat-container" id="chatContainer">
                     <div class="chat-messages" id="chatMessages">
-                        <div style="text-align: center; padding: 40px 20px; color: #999; font-weight: 700;">
-                            👋 Start chatting! Ask me anything about food recommendations.
+                        <div id="chatGreeting" class="chat-message assistant" style="max-width: 100%;">
+                            Loading...
                         </div>
                     </div>
                     
@@ -1973,6 +1983,36 @@
         // Chat functionality
         let chatHistory = [];
         
+        // Load personalized greeting when page loads
+        async function loadChatGreeting() {
+            try {
+                const response = await fetch('/chat-greeting');
+                const result = await response.json();
+                
+                if (response.ok && result.greeting) {
+                    document.getElementById('chatGreeting').textContent = result.greeting;
+                } else {
+                    // Fallback greeting
+                    const hour = new Date().getHours();
+                    let timeGreeting = 'Hey!';
+                    if (hour < 12) timeGreeting = 'Morning!';
+                    else if (hour < 17) timeGreeting = 'Hey!';
+                    else if (hour < 21) timeGreeting = 'Evening!';
+                    else timeGreeting = 'Late night cravings?';
+                    
+                    document.getElementById('chatGreeting').textContent = timeGreeting + ' What sounds good?';
+                }
+            } catch (error) {
+                console.error('Error loading greeting:', error);
+                document.getElementById('chatGreeting').textContent = 'Hey! What sounds good?';
+            }
+        }
+        
+        // Load greeting when chat tab is active
+        if (currentView === 'chat') {
+            loadChatGreeting();
+        }
+        
         async function sendChatMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
@@ -1980,12 +2020,15 @@
             if (!message) return;
             
             const messagesDiv = document.getElementById('chatMessages');
+            const chatContainer = document.getElementById('chatContainer');
             const sendBtn = document.getElementById('sendChatBtn');
             
-            // Clear empty state if present
-            if (messagesDiv.querySelector('div[style*="text-align: center"]')) {
-                messagesDiv.innerHTML = '';
+            // Expand container and clear greeting on first message
+            const greeting = document.getElementById('chatGreeting');
+            if (greeting) {
+                greeting.remove();
             }
+            chatContainer.classList.add('has-messages');
             
             // Add user message
             const userMsgDiv = document.createElement('div');
