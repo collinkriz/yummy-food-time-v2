@@ -117,16 +117,34 @@ Be precise and extract all visible fields. If a field is not visible, use 0.00 f
 app.post('/orders', async (req, res) => {
   const client = await pool.connect();
   try {
+    console.log('Received order data:', JSON.stringify(req.body, null, 2));
+    
     const { restaurant, address, deliveryService, subtotal, deliveryFee, serviceFee, tax, discount, tip, total, items } = req.body;
+
+    // Validate required fields
+    if (!restaurant || !items || items.length === 0) {
+      throw new Error('Restaurant and items are required');
+    }
 
     await client.query('BEGIN');
 
-    // Insert order
+    // Insert order (use 0 as default for missing numeric values)
     const orderResult = await client.query(
       `INSERT INTO orders (restaurant, address, delivery_service, subtotal, delivery_fee, service_fee, tax, discount, tip, total)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
-      [restaurant, address, deliveryService, subtotal, deliveryFee, serviceFee, tax, discount, tip, total]
+      [
+        restaurant, 
+        address || 'Not provided', 
+        deliveryService || 'Unknown', 
+        subtotal || 0, 
+        deliveryFee || 0, 
+        serviceFee || 0, 
+        tax || 0, 
+        discount || 0, 
+        tip || 0, 
+        total || 0
+      ]
     );
 
     const orderId = orderResult.rows[0].id;
@@ -136,18 +154,20 @@ app.post('/orders', async (req, res) => {
       await client.query(
         `INSERT INTO order_items (order_id, item_name, price, assigned_to, rating, notes)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [orderId, item.name, item.price, item.assignedTo || null, item.rating || 0, item.notes || null]
+        [orderId, item.name, item.price || 0, item.assignedTo || null, item.rating || 0, item.notes || null]
       );
     }
 
     await client.query('COMMIT');
+    
+    console.log('Order saved successfully with ID:', orderId);
 
     res.json({ success: true, orderId });
 
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error saving order:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, details: error.stack });
   } finally {
     client.release();
   }
