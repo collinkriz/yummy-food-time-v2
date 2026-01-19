@@ -9,6 +9,7 @@ A food delivery order tracker with AI extraction, ratings, assignments, order hi
 - ✅ **Assignment** - Track who ate what (Collin or Emily)
 - ✅ **Notes** - Add personal notes for each item
 - ✅ **Order History** - View all past orders
+- ✅ **Edit Orders** - Fix any mistakes in restaurant, items, prices, ratings, or totals
 - ✅ **Delete Orders** - Remove orders you don't want
 - ✅ **AI Chatbot** - Get personalized food recommendations based on your history
 
@@ -60,7 +61,11 @@ Make sure you have both:
 
 1. Open your Railway URL
 2. **Upload Tab**: Upload a receipt, rate items, assign them, add notes, save
-3. **History Tab**: View all saved orders, click to see details, delete if needed
+3. **History Tab**: View all saved orders, click to see details
+   - Click "Edit Order" to modify any field (restaurant, address, items, prices, ratings, notes, totals)
+   - Add or remove items as needed
+   - Click "Save Changes" when done
+   - Or click "Delete" to remove the order entirely
 4. **Chat Tab**: Ask the AI chatbot for food recommendations!
    - Try: "What should I order tonight?"
    - Try: "Recommend something based on my favorites"
@@ -127,6 +132,7 @@ The app creates two tables automatically:
 - `POST /orders` - Save order with ratings
 - `GET /orders` - Get all orders
 - `GET /orders/:id` - Get single order
+- `PUT /orders/:id` - Update entire order (all fields)
 - `PATCH /order-items/:id` - Update item rating/assignment/notes
 - `DELETE /orders/:id` - Delete order
 - `POST /chat` - Chat with AI for food recommendations

@@ -274,6 +274,71 @@ app.patch('/order-items/:id', async (req, res) => {
   }
 });
 
+// Update entire order
+app.put('/orders/:id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const { restaurant, address, deliveryService, subtotal, deliveryFee, serviceFee, tax, discount, tip, total, items } = req.body;
+
+    console.log('Updating order:', id, JSON.stringify(req.body, null, 2));
+
+    // Validate required fields
+    if (!restaurant || !items || items.length === 0) {
+      throw new Error('Restaurant and items are required');
+    }
+
+    await client.query('BEGIN');
+
+    // Update order
+    await client.query(
+      `UPDATE orders 
+       SET restaurant = $1, address = $2, delivery_service = $3, 
+           subtotal = $4, delivery_fee = $5, service_fee = $6, 
+           tax = $7, discount = $8, tip = $9, total = $10
+       WHERE id = $11`,
+      [
+        restaurant,
+        address || 'Not provided',
+        deliveryService || 'Unknown',
+        subtotal || 0,
+        deliveryFee || 0,
+        serviceFee || 0,
+        tax || 0,
+        discount || 0,
+        tip || 0,
+        total || 0,
+        id
+      ]
+    );
+
+    // Delete existing items
+    await client.query('DELETE FROM order_items WHERE order_id = $1', [id]);
+
+    // Insert updated items
+    for (const item of items) {
+      await client.query(
+        `INSERT INTO order_items (order_id, item_name, price, assigned_to, rating, notes)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [id, item.name, item.price || 0, item.assignedTo || null, item.rating || 0, item.notes || null]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    console.log('Order updated successfully:', id);
+
+    res.json({ success: true, orderId: id });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error updating order:', error);
+    res.status(500).json({ error: error.message, details: error.stack });
+  } finally {
+    client.release();
+  }
+});
+
 // Delete order
 app.delete('/orders/:id', async (req, res) => {
   try {
