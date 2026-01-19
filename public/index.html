@@ -817,20 +817,31 @@
             </div>
         </div>
         
-        <!-- UPLOAD VIEW (placeholder for now) -->
-        <div id="uploadView" class="view">
+<!-- Upload Tab -->
+        <div id="upload-tab" class="tab-content active">
             <div class="card">
-                <h2 style="margin-bottom: 20px;">Upload Receipt</h2>
-                <p>Upload functionality coming soon...</p>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📸</div>
+                    <div style="color: #666;">Tap to upload food delivery receipt</div>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+                
+                <div id="preview" style="display: none;">
+                    <img id="previewImage" alt="Preview">
+                </div>
+                
+                <button id="extractBtn" disabled>Extract Order Info</button>
+                
+                <div id="status" style="display: none;"></div>
             </div>
+            
+            <div id="results" style="display: none;"></div>
         </div>
         
-        <!-- HISTORY VIEW (placeholder for now) -->
-        <div id="historyView" class="view">
-            <div class="card">
-                <h2 style="margin-bottom: 20px;">Order History</h2>
-                <p>History functionality coming soon...</p>
-            </div>
+<!-- History Tab -->
+        <div id="history-tab" class="tab-content">
+            <div id="ordersList"></div>
+            <div id="orderDetail" style="display: none;"></div>
         </div>
         
         <!-- RECIPE LIST VIEW -->
@@ -857,7 +868,40 @@
             
             <!-- Recipe List (cards outside main card for spacing) -->
             <div id="recipeListContainer"></div>
-        </div>
+        
+        
+        <!-- Chat Tab -->
+        <div id="chat-tab" class="tab-content">
+            <div class="card" style="padding: 0; overflow: hidden; max-width: 800px; margin: 0 auto;">
+                <div style="padding: 25px 25px 15px 25px; border-bottom: 2px solid #FFE082;">
+                    <h2 style="margin-bottom: 10px;">🤖 Food Recommendation Assistant</h2>
+                    <p style="color: #666; font-size: 14px;">
+                        Ask me for food recommendations based on your order history!
+                    </p>
+                </div>
+                
+                <div id="chatMessages" style="height: 400px; overflow-y: auto; padding: 20px; background: #FAFAFA;">
+                    <div style="text-align: center; padding: 80px 20px; color: #999;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">💬</div>
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Start a conversation!</div>
+                        <div style="font-size: 13px;">Try: "What should I order tonight?" or "Recommend something based on my favorites"</div>
+                    </div>
+                </div>
+                
+                <div style="padding: 20px; background: white; border-top: 2px solid #FFE082;">
+                    <div style="display: flex; gap: 10px; align-items: flex-end;">
+                        <textarea 
+                            id="chatInput" 
+                            placeholder="Message Food Assistant..."
+                            style="flex: 1; padding: 14px; border: 2px solid #E0E0E0; border-radius: 12px; resize: none; font-family: inherit; font-size: 15px; max-height: 120px; line-height: 1.5;"
+                            rows="1"
+                        ></textarea>
+                        <button id="sendChatBtn" onclick="sendChatMessage()" style="width: auto; padding: 14px 28px; min-width: 80px;">
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div></div>
     </div>
     
     <!-- FLOATING CHAT BUTTON -->
@@ -883,150 +927,603 @@
     </div>
 
     <script>
-        let currentChoice = null;
-        let selectedFilters = new Set();
-        let chatHistory = [];
+        let currentOrder = null;
+        let selectedFile = null;
+        let currentView = 'upload';
         
-        const takeoutFilters = [
-            { id: 'cheap', icon: '💰', name: 'Cheap' },
-            { id: 'healthy', icon: '🥗', name: 'Healthy' },
-            { id: 'filling', icon: '🍗', name: 'Filling' },
-            { id: 'fast', icon: '⚡', name: 'Fast' },
-            { id: 'comfort', icon: '🍕', name: 'Comfort' }
-        ];
-        
-        const cookingFilters = [
-            // Style filters
-            { id: 'healthy', icon: '🥗', name: 'Healthy' },
-            { id: 'quick', icon: '⚡', name: 'Quick' },
-            { id: 'filling', icon: '🍗', name: 'Filling' },
-            { id: 'complex', icon: '🎓', name: 'Complex' },
-            { id: 'comfort', icon: '🧀', name: 'Comfort' },
-            // Category filters
-            { id: 'main', icon: '🍽️', name: 'Main Dish' },
-            { id: 'salad', icon: '🥗', name: 'Salad' },
-            { id: 'soup', icon: '🍜', name: 'Soup' },
-            { id: 'breakfast', icon: '🍳', name: 'Breakfast' },
-            { id: 'dessert', icon: '🍰', name: 'Dessert' },
-            { id: 'side', icon: '🥔', name: 'Side Dish' },
-            { id: 'sauce', icon: '🥫', name: 'Sauce' },
-            { id: 'appetizer', icon: '🍤', name: 'Appetizer' }
-        ];
-        
-        function showView(viewId) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'upload') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('upload-tab').classList.add('active');
+                currentView = 'upload';
+            } else if (tab === 'history') {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('history-tab').classList.add('active');
+                currentView = 'history';
+                loadOrders();
+            } else if (tab === 'chat') {
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.getElementById('chat-tab').classList.add('active');
+                currentView = 'chat';
+            }
         }
         
-        function goHome() {
-            currentChoice = null;
-            selectedFilters.clear();
-            showView('homeView');
+        // Upload functionality
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const previewImage = document.getElementById('previewImage');
+        const extractBtn = document.getElementById('extractBtn');
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    
+                    // Only constrain width, let height be flexible for long receipts
+                    previewImage.style.maxWidth = '90%';
+                    previewImage.style.width = 'auto';
+                    previewImage.style.height = 'auto';
+                    previewImage.style.maxHeight = 'none';
+                    previewImage.style.objectFit = 'contain';
+                    
+                    preview.style.display = 'block';
+                    extractBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        extractBtn.addEventListener('click', extractOrder);
+        
+        async function extractOrder() {
+            if (!selectedFile) return;
+            
+            extractBtn.disabled = true;
+            results.style.display = 'none';
+            status.style.display = 'block';
+            status.className = 'status loading';
+            status.innerHTML = '<div class="spinner"></div><div>Analyzing receipt...</div>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+                
+                const response = await fetch('/extract-order', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to extract order');
+                }
+                
+                status.className = 'status success';
+                status.textContent = '✅ Order extracted! Add ratings and save.';
+                
+                currentOrder = result.data;
+                currentOrder.items = currentOrder.items.map((item, i) => ({
+                    ...item,
+                    id: i,
+                    assignedTo: null,
+                    rating: 0,
+                    notes: ''
+                }));
+                
+                displayOrderForRating(currentOrder);
+                
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ Error: ' + error.message;
+            } finally {
+                extractBtn.disabled = false;
+            }
         }
         
-        function selectChoice(choice) {
-            currentChoice = choice;
-            selectedFilters.clear();
-            
-            const filters = choice === 'takeout' ? takeoutFilters : cookingFilters;
-            const filterGrid = document.getElementById('filterGrid');
-            
-            filterGrid.innerHTML = filters.map(f => `
-                <div class="filter-tile" data-filter="${f.id}" onclick="toggleFilter('${f.id}')">
-                    <div class="filter-icon">${f.icon}</div>
-                    <div class="filter-name">${f.name}</div>
-                </div>
-            `).join('') + `
-                <div class="filter-tile random" onclick="selectRandom()">
-                    <div class="filter-icon">🎲</div>
-                    <div class="filter-name">Random</div>
+        function displayOrderForRating(order) {
+            results.style.display = 'block';
+            results.innerHTML = `
+                <div class="card">
+                    <div class="restaurant-info">
+                        <div class="restaurant-name">${order.restaurant}</div>
+                        ${order.deliveryService && order.deliveryService !== 'Unknown' ? 
+                            `<div class="delivery-badge">${order.deliveryService}</div>` : ''}
+                        <div style="color: #666; margin-top: 8px;">📍 ${order.address}</div>
+                    </div>
+                    
+                    <h3 style="margin-bottom: 15px;">Rate Your Items</h3>
+                    
+                    <div id="itemsList">
+                        ${order.items.map((item, i) => `
+                            <div class="item-card">
+                                <div class="item-header">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-price">$${item.price.toFixed(2)}</div>
+                                </div>
+                                
+                                <div class="label-text">Who ate this?</div>
+                                <div class="assignment-buttons">
+                                    <button class="assign-btn collin" onclick="assignItem(${i}, 'Collin')">
+                                        👤 Collin
+                                    </button>
+                                    <button class="assign-btn emily" onclick="assignItem(${i}, 'Emily')">
+                                        👤 Emily
+                                    </button>
+                                </div>
+                                
+                                <div class="label-text">Rating</div>
+                                <div class="stars" id="stars-${i}">
+                                    ${[1,2,3,4,5].map(star => 
+                                        `<span class="star empty" onclick="rateItem(${i}, ${star})">★</span>`
+                                    ).join('')}
+                                </div>
+                                
+                                <div class="label-text">Notes</div>
+                                <textarea 
+                                    placeholder="Add your thoughts about this item..."
+                                    onchange="updateNotes(${i}, this.value)"
+                                ></textarea>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="summary-box">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>$${order.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Delivery Fee</span>
+                            <span>$${order.deliveryFee.toFixed(2)}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Service Fee</span>
+                            <span>$${order.serviceFee.toFixed(2)}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax</span>
+                            <span>$${order.tax.toFixed(2)}</span>
+                        </div>
+                        ${order.discount !== 0 ? `
+                            <div class="summary-row">
+                                <span>Discount</span>
+                                <span>-$${Math.abs(order.discount).toFixed(2)}</span>
+                            </div>
+                        ` : ''}
+                        <div class="summary-row">
+                            <span>Tip</span>
+                            <span>$${order.tip.toFixed(2)}</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span>$${order.total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    <button class="save-btn" onclick="saveOrder()">💾 Save Order</button>
                 </div>
             `;
-            
-            document.getElementById('filterTitle').textContent = 
-                choice === 'takeout' ? 'What type of take out?' : 'What type of meal?';
-            
-            showView('filterView');
         }
         
-        function toggleFilter(filterId) {
-            if (selectedFilters.has(filterId)) {
-                selectedFilters.delete(filterId);
-            } else {
-                selectedFilters.add(filterId);
-            }
+        function assignItem(itemId, person) {
+            currentOrder.items[itemId].assignedTo = person;
             
             // Update UI
-            document.querySelectorAll('.filter-tile[data-filter]').forEach(tile => {
-                const id = tile.dataset.filter;
-                if (selectedFilters.has(id)) {
-                    tile.classList.add('selected');
+            const buttons = document.querySelectorAll(`.item-card:nth-child(${itemId + 1}) .assign-btn`);
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            if (person === 'Collin') {
+                buttons[0].classList.add('selected');
+            } else {
+                buttons[1].classList.add('selected');
+            }
+        }
+        
+        function rateItem(itemId, rating) {
+            currentOrder.items[itemId].rating = rating;
+            
+            // Update stars UI
+            const stars = document.querySelectorAll(`#stars-${itemId} .star`);
+            stars.forEach((star, i) => {
+                if (i < rating) {
+                    star.className = 'star filled';
                 } else {
-                    tile.classList.remove('selected');
+                    star.className = 'star empty';
                 }
             });
         }
         
-        async function selectRandom() {
-            // Random with current filters applied
-            await getRecommendation(true);
+        function updateNotes(itemId, notes) {
+            currentOrder.items[itemId].notes = notes;
         }
         
-        async function getRecommendation(forceRandom = false) {
-            const recTitle = document.getElementById('recTitle');
-            const recContent = document.getElementById('recContent');
-            
-            recTitle.textContent = 'Finding recommendation...';
-            recContent.innerHTML = '<div class="spinner"></div>';
-            showView('recommendationView');
-            
+        async function saveOrder() {
             try {
-                const params = new URLSearchParams({
-                    type: currentChoice,
-                    filters: Array.from(selectedFilters).join(','),
-                    random: forceRandom
+                status.style.display = 'block';
+                status.className = 'status loading';
+                status.textContent = 'Saving order...';
+                
+                // Prepare order data with correct structure
+                const orderToSave = {
+                    restaurant: currentOrder.restaurant,
+                    address: currentOrder.address,
+                    deliveryService: currentOrder.deliveryService,
+                    subtotal: parseFloat(currentOrder.subtotal) || 0,
+                    deliveryFee: parseFloat(currentOrder.deliveryFee) || 0,
+                    serviceFee: parseFloat(currentOrder.serviceFee) || 0,
+                    tax: parseFloat(currentOrder.tax) || 0,
+                    discount: parseFloat(currentOrder.discount) || 0,
+                    tip: parseFloat(currentOrder.tip) || 0,
+                    total: parseFloat(currentOrder.total) || 0,
+                    items: currentOrder.items.map(item => ({
+                        name: item.name,
+                        price: parseFloat(item.price) || 0,
+                        assignedTo: item.assignedTo || null,
+                        rating: parseInt(item.rating) || 0,
+                        notes: item.notes || null
+                    }))
+                };
+                
+                console.log('Sending order data:', orderToSave);
+                
+                const response = await fetch('/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderToSave)
                 });
                 
-                const response = await fetch(`/recommend?${params}`);
                 const result = await response.json();
+                console.log('Server response:', result);
                 
                 if (!response.ok) {
-                    throw new Error(result.error || 'Failed to get recommendation');
+                    console.error('Server error:', result);
+                    // Show detailed error
+                    throw new Error(result.error + (result.details ? '\n\nDetails: ' + result.details : ''));
                 }
                 
-                recTitle.textContent = result.title || (currentChoice === 'takeout' ? 'Order This!' : 'Cook This!');
-                recContent.innerHTML = result.recommendation;
+                status.className = 'status success';
+                status.textContent = '✅ Order saved successfully!';
+                
+                setTimeout(() => {
+                    // Reset form
+                    selectedFile = null;
+                    currentOrder = null;
+                    preview.style.display = 'none';
+                    results.style.display = 'none';
+                    status.style.display = 'none';
+                    extractBtn.disabled = true;
+                    fileInput.value = '';
+                    
+                    // Switch to history
+                    switchTab('history');
+                }, 1500);
                 
             } catch (error) {
-                console.error('Recommendation error:', error);
-                recTitle.textContent = 'Oops!';
-                recContent.textContent = error.message || 'Unable to get a recommendation. Please try again.';
+                console.error('Save order error:', error);
+                status.className = 'status error';
+                status.innerHTML = `❌ Error: ${error.message}<br><br><small>Check if database is connected in Railway</small>`;
             }
         }
         
-        function backToFilters() {
-            showView('filterView');
-        }
-        
-        function switchRecipeTab(sectionName) {
-            // Remove active from all toggles and sections
-            document.querySelectorAll('.recipe-toggle').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.recipe-section').forEach(section => section.classList.remove('active'));
+        // History functionality
+        async function loadOrders() {
+            const ordersList = document.getElementById('ordersList');
+            ordersList.innerHTML = '<div class="status loading"><div class="spinner"></div><div>Loading orders...</div></div>';
             
-            // Add active to clicked toggle
-            event.target.classList.add('active');
+            try {
+                const response = await fetch('/orders');
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to load orders');
+                }
+                
+                if (result.orders.length === 0) {
+                    ordersList.innerHTML = `
+                        <div class="card empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div style="font-size: 18px; margin-bottom: 10px;">No orders yet</div>
+                            <div>Upload your first receipt to get started!</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                ordersList.innerHTML = result.orders.map(order => `
+                    <div class="order-history-item" onclick="viewOrder(${order.id})">
+                        <div class="order-date">${new Date(order.created_at).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</div>
+                        <div class="order-restaurant">${order.restaurant}</div>
+                        ${order.delivery_service && order.delivery_service !== 'Unknown' ? 
+                            `<div class="delivery-badge">${order.delivery_service}</div>` : ''}
+                        <div style="color: #666; font-size: 14px; margin: 8px 0;">${order.items.length} items</div>
+                        <div class="order-total">$${parseFloat(order.total).toFixed(2)}</div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                ordersList.innerHTML = `
+                    <div class="card">
+                        <div class="status error">❌ Error: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        async function viewOrder(orderId) {
+            try {
+                const response = await fetch(`/orders/${orderId}`);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to load order');
+                }
+                
+                const order = result.order;
+                
+                document.getElementById('ordersList').style.display = 'none';
+                const detailDiv = document.getElementById('orderDetail');
+                detailDiv.style.display = 'block';
+                
+                detailDiv.innerHTML = `
+                    <button class="back-btn" onclick="backToList()">← Back to Orders</button>
+                    
+                    <div class="card">
+                        <div class="restaurant-info">
+                            <div class="order-date">${new Date(order.created_at).toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</div>
+                            <div class="restaurant-name">${order.restaurant}</div>
+                            ${order.delivery_service && order.delivery_service !== 'Unknown' ? 
+                                `<div class="delivery-badge">${order.delivery_service}</div>` : ''}
+                            <div style="color: #666; margin-top: 8px;">📍 ${order.address}</div>
+                        </div>
+                        
+                        <h3 style="margin: 20px 0 15px 0;">Order Items</h3>
+                        
+                        ${order.items.map(item => `
+                            <div class="item-card">
+                                <div class="item-header">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-price">$${parseFloat(item.price).toFixed(2)}</div>
+                                </div>
+                                
+                                ${item.assignedTo ? `
+                                    <div style="margin: 10px 0;">
+                                        <span style="background: ${item.assignedTo === 'Collin' ? '#1890ff' : '#722ed1'}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+                                            👤 ${item.assignedTo}
+                                        </span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${item.rating > 0 ? `
+                                    <div style="margin: 10px 0;">
+                                        <div style="color: #faad14; font-size: 20px;">
+                                            ${'★'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${item.notes ? `
+                                    <div style="margin: 10px 0; padding: 12px; background: white; border-radius: 8px; font-size: 14px; color: #666;">
+                                        💭 ${item.notes}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                        
+                        <div class="summary-box">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span>$${parseFloat(order.subtotal).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Delivery Fee</span>
+                                <span>$${parseFloat(order.delivery_fee).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Service Fee</span>
+                                <span>$${parseFloat(order.service_fee).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tax</span>
+                                <span>$${parseFloat(order.tax).toFixed(2)}</span>
+                            </div>
+                            ${order.discount !== 0 ? `
+                                <div class="summary-row">
+                                    <span>Discount</span>
+                                    <span>-$${Math.abs(parseFloat(order.discount)).toFixed(2)}</span>
+                                </div>
+                            ` : ''}
+                            <div class="summary-row">
+                                <span>Tip</span>
+                                <span>$${parseFloat(order.tip).toFixed(2)}</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total</span>
+                                <span>$${parseFloat(order.total).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <button class="delete-btn" onclick="deleteOrder(${order.id})">🗑️ Delete Order</button>
+                    </div>
+                `;
+                
+            } catch (error) {
+                alert('Error loading order: ' + error.message);
+            }
+        }
+        
+        function backToList() {
+            document.getElementById('ordersList').style.display = 'block';
+            document.getElementById('orderDetail').style.display = 'none';
+            loadOrders();
+        }
+        
+        async function deleteOrder(orderId) {
+            if (!confirm('Are you sure you want to delete this order? This cannot be undone.')) {
+                return;
+            }
             
-            // Show corresponding section
-            document.getElementById(sectionName + '-section').classList.add('active');
+            try {
+                const response = await fetch(`/orders/${orderId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to delete order');
+                }
+                
+                alert('Order deleted successfully!');
+                backToList();
+                
+            } catch (error) {
+                alert('Error deleting order: ' + error.message);
+            }
         }
         
-        function showUpload() {
-            showView('uploadView');
+        // Chat functionality
+        let chatHistory = [];
+        
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            const messagesDiv = document.getElementById('chatMessages');
+            const sendBtn = document.getElementById('sendChatBtn');
+            
+            // Clear empty state if present
+            if (messagesDiv.querySelector('.empty-state, div[style*="text-align: center"]')) {
+                messagesDiv.innerHTML = '';
+            }
+            
+            // Add user message
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'chat-message user';
+            userMsgDiv.textContent = message;
+            messagesDiv.appendChild(userMsgDiv);
+            
+            // Clear input and disable button
+            input.value = '';
+            input.style.height = 'auto'; // Reset height
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Thinking...';
+            
+            // Add loading message
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'chat-message assistant';
+            loadingDiv.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0;"></div>';
+            messagesDiv.appendChild(loadingDiv);
+            
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message,
+                        history: chatHistory
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to get response');
+                }
+                
+                // Remove loading
+                messagesDiv.removeChild(loadingDiv);
+                
+                // Add assistant message
+                const assistantMsgDiv = document.createElement('div');
+                assistantMsgDiv.className = 'chat-message assistant';
+                assistantMsgDiv.innerHTML = formatChatMessage(result.response);
+                messagesDiv.appendChild(assistantMsgDiv);
+                
+                // Update chat history
+                chatHistory.push(
+                    { role: 'user', content: message },
+                    { role: 'assistant', content: result.response }
+                );
+                
+                // Keep only last 10 messages
+                if (chatHistory.length > 20) {
+                    chatHistory = chatHistory.slice(-20);
+                }
+                
+            } catch (error) {
+                messagesDiv.removeChild(loadingDiv);
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'chat-message assistant';
+                errorDiv.style.background = '#fff2f0';
+                errorDiv.style.borderColor = '#ffccc7';
+                errorDiv.textContent = '❌ Error: ' + error.message;
+                messagesDiv.appendChild(errorDiv);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
         }
         
-        function showHistory() {
-            showView('historyView');
+        function formatChatMessage(text) {
+            // Simple markdown-like formatting
+            let formatted = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n\n/g, '<br><br>')
+                .replace(/\n- /g, '<br>• ')
+                .replace(/\n\d+\. /g, '<br>$&');
+            
+            return formatted;
         }
+        
+        // Allow Enter to send (Shift+Enter for new line)
+        const chatInput = document.getElementById('chatInput');
+        
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+        
+        // Auto-expand textarea as user types
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
         
         // RECIPE LIST FUNCTIONS
         let allRecipes = [];
