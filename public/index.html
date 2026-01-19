@@ -451,6 +451,13 @@
             font-size: 20px;
         }
         
+        /* Recipe Tabs Container - One complete box */
+        .recipe-tabs-wrapper {
+            border: 4px solid #4A4A1F;
+            background: white;
+            margin-bottom: 20px;
+        }
+        
         /* Recipe Tabs */
         .recipe-tabs {
             display: flex;
@@ -461,27 +468,24 @@
         
         .recipe-tab {
             flex: 1;
-            padding: 16px;
+            padding: 16px 8px;
             background: #F5F1E8;
             border: none;
+            border-right: 4px solid #4A4A1F;
             border-bottom: 4px solid transparent;
             margin-bottom: -4px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 800;
             cursor: pointer;
             transition: all 0.2s ease;
             color: #4A4A1F;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-left: 4px solid #4A4A1F;
-        }
-        
-        .recipe-tab:first-child {
-            border-left: 4px solid #4A4A1F;
+            text-align: center;
         }
         
         .recipe-tab:last-child {
-            border-right: 4px solid #4A4A1F;
+            border-right: none;
         }
         
         .recipe-tab:hover {
@@ -501,10 +505,6 @@
             line-height: 1.8;
             color: #333;
             background: white;
-            border-left: 4px solid #4A4A1F;
-            border-right: 4px solid #4A4A1F;
-            border-bottom: 4px solid #4A4A1F;
-            margin-bottom: 20px;
         }
         
         .recipe-tab-content.active {
@@ -1150,6 +1150,9 @@
             html += `<div style="text-align: center;"><div style="font-size: 24px;">🍽️</div><div style="font-weight: 600; color: #4A4A1F;">Servings: ${recipe.servings || 'N/A'}</div></div>`;
             html += '</div>';
             
+            // Wrap tabs in bordered container
+            html += '<div class="recipe-tabs-wrapper">';
+            
             // Tabs
             html += '<div class="recipe-tabs">';
             html += '<button class="recipe-tab active" onclick="switchRecipeTab(\'ingredients\')">📝 Ingredients</button>';
@@ -1178,6 +1181,8 @@
                 html += '<p>No instructions available.</p>';
             }
             html += '</div>';
+            
+            html += '</div>'; // Close recipe-tabs-wrapper
             
             // Source button
             if (recipe.source_url) {
