@@ -415,26 +415,26 @@ app.post('/chat', async (req, res) => {
     const messages = [
       {
         role: 'user',
-        content: `You're a friendly foodie buddy helping decide what to order. Keep it casual and brief - text like you're messaging a friend (1-2 short paragraphs max, often just 2-3 sentences).
+        content: `You're a helpful food recommendation assistant. Be conversational but professional - like a useful app, not a casual friend. Keep responses brief (1-2 short paragraphs maximum, ideally 2-4 sentences).
 
 ${orderContext}
 
-Style:
-- Super casual and conversational
-- Brief and to the point
-- Excited about food but not over the top
-- Reference their order history naturally
+Guidelines:
+- Professional but friendly tone
+- Brief and direct responses
+- Reference order history when relevant
 - Ask follow-up questions when helpful
-- Use casual language ("you should totally try", "that sounds fire", "honestly", etc.)
+- Suggest specific dishes or restaurants
+- Use complete sentences, proper grammar
 
 Examples of good responses:
-"Ooh based on that 5-star rating for the Hot Honey Chicken, you'd probably love the Nashville Hot sandwich from that new spot on John R. Similar vibe, super crispy."
+"Based on your 5-star rating for the Hot Honey Chicken, I'd recommend trying the Nashville Hot sandwich at the new spot on John R. Similar flavors with great spice."
 
-"What are you feeling? I see you haven't done Thai in a while and there's a solid spot nearby."
+"I notice you haven't ordered Thai food recently. There's a highly-rated Thai place nearby if you're interested in trying something different."
 
-"Honestly? Get the birria tacos. You rated the carnitas highly last time and these are even better."
+"The birria tacos would be a great choice. You gave the carnitas a high rating last time, and these are even more flavorful."
 
-Keep it SHORT and friendly!`
+Keep responses focused and concise.`
       }
     ];
 
@@ -511,15 +511,15 @@ app.get('/chat-greeting', async (req, res) => {
     
     // Time-based greetings
     if (hour >= 5 && hour < 11) {
-      greeting = "Morning! Thinking breakfast or brunch?";
+      greeting = "Good morning! What can I help you find for breakfast?";
     } else if (hour >= 11 && hour < 14) {
-      greeting = "Lunch time! What sounds good?";
+      greeting = "It's lunch time. What are you in the mood for?";
     } else if (hour >= 14 && hour < 17) {
-      greeting = "Afternoon! Hungry for a snack or early dinner?";
+      greeting = "Looking for a snack or early dinner?";
     } else if (hour >= 17 && hour < 21) {
-      greeting = "Dinner time! What are you craving?";
+      greeting = "What sounds good for dinner?";
     } else {
-      greeting = "Late night vibes! What sounds good?";
+      greeting = "What can I help you order tonight?";
     }
     
     // Add context if they have recent orders
@@ -529,14 +529,14 @@ app.get('/chat-greeting', async (req, res) => {
       
       if (daysSinceOrder === 0) {
         const greetings = [
-          `Already ordered today! Want something different?`,
-          `Back for more? What sounds good?`,
-          `Hungry again? I got you!`
+          `You've already ordered today. Looking for something else?`,
+          `Ready to order again? What sounds good?`,
+          `What can I help you find?`
         ];
         greeting = greetings[Math.floor(Math.random() * greetings.length)];
       } else if (daysSinceOrder < 3) {
         // Don't suggest same restaurant
-        greeting = greeting.replace('What sounds good?', `Maybe try something new?`);
+        greeting = greeting.replace('What sounds good?', `Any preferences?`);
       }
     }
     
