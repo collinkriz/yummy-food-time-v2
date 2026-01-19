@@ -902,9 +902,127 @@
     <script>
         let currentOrder = null;
         let selectedFile = null;
-        let currentView = 'upload';
+        let currentView = 'home';
+        let currentChoice = null;
+        let selectedFilters = new Set();
+        let chatHistory = [];
         
-        // Tab switching
+        const takeoutFilters = [
+            { id: 'cheap', icon: '💰', name: 'Cheap' },
+            { id: 'healthy', icon: '🥗', name: 'Healthy' },
+            { id: 'filling', icon: '🍗', name: 'Filling' },
+            { id: 'fast', icon: '⚡', name: 'Fast' },
+            { id: 'comfort', icon: '🍕', name: 'Comfort' }
+        ];
+        
+        const cookingFilters = [
+            { id: 'healthy', icon: '🥗', name: 'Healthy' },
+            { id: 'quick', icon: '⚡', name: 'Quick' },
+            { id: 'filling', icon: '🍗', name: 'Filling' },
+            { id: 'complex', icon: '🎓', name: 'Complex' },
+            { id: 'comfort', icon: '🧀', name: 'Comfort' },
+            { id: 'main', icon: '🍽️', name: 'Main Dish' },
+            { id: 'salad', icon: '🥗', name: 'Salad' },
+            { id: 'soup', icon: '🍜', name: 'Soup' },
+            { id: 'breakfast', icon: '🍳', name: 'Breakfast' },
+            { id: 'dessert', icon: '🍰', name: 'Dessert' },
+            { id: 'side', icon: '🥔', name: 'Side Dish' },
+            { id: 'sauce', icon: '🥫', name: 'Sauce' },
+            { id: 'appetizer', icon: '🍤', name: 'Appetizer' }
+        ];
+        
+        // View navigation functions
+        function showView(viewName) {
+            document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+            const targetView = document.getElementById(viewName);
+            if (targetView) {
+                targetView.classList.add('active');
+            }
+        }
+        
+        function goHome() {
+            currentChoice = null;
+            selectedFilters.clear();
+            showView('homeView');
+        }
+        
+        function selectChoice(choice) {
+            currentChoice = choice;
+            selectedFilters.clear();
+            
+            const filters = choice === 'takeout' ? takeoutFilters : cookingFilters;
+            const filterGrid = document.getElementById('filterGrid');
+            const filterTitle = document.getElementById('filterTitle');
+            
+            filterTitle.textContent = choice === 'takeout' ? 'What kind of takeout?' : 'What style of cooking?';
+            
+            filterGrid.innerHTML = filters.map(f => `
+                <div class="filter-tile" data-filter="${f.id}" onclick="toggleFilter('${f.id}')">
+                    <div class="filter-icon">${f.icon}</div>
+                    <div class="filter-name">${f.name}</div>
+                </div>
+            `).join('');
+            
+            showView('filterView');
+        }
+        
+        function toggleFilter(filterId) {
+            const tile = document.querySelector(`[data-filter="${filterId}"]`);
+            
+            if (selectedFilters.has(filterId)) {
+                selectedFilters.delete(filterId);
+                tile.classList.remove('active');
+            } else {
+                selectedFilters.add(filterId);
+                tile.classList.add('active');
+            }
+        }
+        
+        async function getRecommendation(forceRandom = false) {
+            const recTitle = document.getElementById('recTitle');
+            const recContent = document.getElementById('recContent');
+            
+            recTitle.textContent = 'Finding recommendation...';
+            recContent.innerHTML = '<div class="spinner"></div>';
+            showView('recommendationView');
+            
+            try {
+                const params = new URLSearchParams({
+                    type: currentChoice,
+                    filters: Array.from(selectedFilters).join(','),
+                    random: forceRandom
+                });
+                
+                const response = await fetch(`/recommend?${params}`);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to get recommendation');
+                }
+                
+                recTitle.textContent = result.title || (currentChoice === 'takeout' ? 'Order This!' : 'Cook This!');
+                recContent.innerHTML = result.recommendation;
+                
+            } catch (error) {
+                console.error('Recommendation error:', error);
+                recTitle.textContent = 'Oops!';
+                recContent.textContent = error.message || 'Unable to get a recommendation. Please try again.';
+            }
+        }
+        
+        function backToFilters() {
+            showView('filterView');
+        }
+        
+        function switchRecipeTab(tabName) {
+            document.querySelectorAll('.recipe-toggle').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.recipe-section').forEach(section => section.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-section').classList.add('active');
+        }
+        
+        // Tab switching (legacy - not used in new design)
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
