@@ -312,30 +312,6 @@ app.post('/bulk-import', express.json({ limit: '50mb' }), async (req, res) => {
   }
 });
 
-    // Insert items
-    for (const item of items) {
-      await client.query(
-        `INSERT INTO order_items (order_id, item_name, price, assigned_to, rating, notes)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [orderId, item.name, item.price || 0, item.assignedTo || null, item.rating || 0, item.notes || null]
-      );
-    }
-
-    await client.query('COMMIT');
-    
-    console.log('Order saved successfully with ID:', orderId);
-
-    res.json({ success: true, orderId });
-
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error saving order:', error);
-    res.status(500).json({ error: error.message, details: error.stack });
-  } finally {
-    client.release();
-  }
-});
-
 // Get all orders
 app.get('/orders', async (req, res) => {
   try {
