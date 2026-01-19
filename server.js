@@ -250,16 +250,18 @@ app.get('/orders/:id', async (req, res) => {
 app.patch('/order-items/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { assignedTo, rating, notes } = req.body;
+    const { name, price, assigned_to, rating, notes } = req.body;
 
     const result = await pool.query(
       `UPDATE order_items 
-       SET assigned_to = COALESCE($1, assigned_to),
-           rating = COALESCE($2, rating),
-           notes = COALESCE($3, notes)
-       WHERE id = $4
+       SET item_name = COALESCE($1, item_name),
+           price = COALESCE($2, price),
+           assigned_to = COALESCE($3, assigned_to),
+           rating = COALESCE($4, rating),
+           notes = COALESCE($5, notes)
+       WHERE id = $6
        RETURNING *`,
-      [assignedTo, rating, notes, id]
+      [name, price, assigned_to, rating, notes, id]
     );
 
     if (result.rows.length === 0) {
@@ -270,6 +272,28 @@ app.patch('/order-items/:id', async (req, res) => {
 
   } catch (error) {
     console.error('Error updating item:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete individual order item
+app.delete('/order-items/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'DELETE FROM order_items WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    res.json({ success: true, message: 'Item deleted successfully' });
+
+  } catch (error) {
+    console.error('Error deleting item:', error);
     res.status(500).json({ error: error.message });
   }
 });
