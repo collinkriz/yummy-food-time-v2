@@ -758,17 +758,11 @@ app.get('/recommend', async (req, res) => {
       // Pick random
       const selected = candidates[Math.floor(Math.random() * candidates.length)];
       
-      // Build info header
+      // Build info header - always show all three fields
       let recommendation = `<div class="rec-info-header">`;
-      if (selected.prep_time) {
-        recommendation += `<div class="rec-info-item"><span>⏱️</span> Prep: ${selected.prep_time}</div>`;
-      }
-      if (selected.cook_time) {
-        recommendation += `<div class="rec-info-item"><span>🔥</span> Cook: ${selected.cook_time}</div>`;
-      }
-      if (selected.servings) {
-        recommendation += `<div class="rec-info-item"><span>🍽️</span> ${selected.servings}</div>`;
-      }
+      recommendation += `<div class="rec-info-item"><span>⏱️</span> Prep: ${selected.prep_time || 'N/A'}</div>`;
+      recommendation += `<div class="rec-info-item"><span>🔥</span> Cook: ${selected.cook_time || 'N/A'}</div>`;
+      recommendation += `<div class="rec-info-item"><span>🍽️</span> Servings: ${selected.servings || 'N/A'}</div>`;
       recommendation += `</div>`;
       
       // Build tabs for ingredients and instructions
