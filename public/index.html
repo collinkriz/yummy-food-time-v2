@@ -102,8 +102,11 @@
         
         .preview img {
             max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
             border-radius: 10px;
             margin: 20px 0;
+            display: block;
         }
         
         button {
@@ -212,6 +215,7 @@
             padding: 10px;
             border: 2px solid #ddd;
             background: white;
+            color: #333;
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
@@ -370,6 +374,36 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .chat-message.user {
+            background: #1890ff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .chat-message.assistant {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            margin-right: auto;
+        }
+        
+        .chat-message.assistant ul, .chat-message.assistant ol {
+            margin: 10px 0 10px 20px;
+        }
+        
+        .chat-message.assistant li {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -381,6 +415,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('upload')">📸 Upload</button>
                 <button class="tab" onclick="switchTab('history')">📋 History</button>
+                <button class="tab" onclick="switchTab('chat')">💬 Chat</button>
             </div>
         </div>
         
@@ -410,6 +445,36 @@
             <div id="ordersList"></div>
             <div id="orderDetail" style="display: none;"></div>
         </div>
+        
+        <!-- Chat Tab -->
+        <div id="chat-tab" class="tab-content">
+            <div class="card">
+                <h2 style="margin-bottom: 15px;">🤖 Food Recommendation Assistant</h2>
+                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                    Ask me for food recommendations based on your order history, dietary preferences, or what you're craving!
+                </p>
+                
+                <div id="chatMessages" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; padding: 10px; background: #f9f9f9; border-radius: 10px;">
+                    <div style="text-align: center; padding: 40px 20px; color: #999;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">💬</div>
+                        <div>Start a conversation!</div>
+                        <div style="font-size: 12px; margin-top: 10px;">Try: "What should I order tonight?" or "Recommend something based on my favorites"</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <textarea 
+                        id="chatInput" 
+                        placeholder="Ask for food recommendations..."
+                        style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 10px; resize: none; font-family: inherit; font-size: 14px;"
+                        rows="2"
+                    ></textarea>
+                    <button id="sendChatBtn" onclick="sendChatMessage()" style="width: auto; padding: 12px 24px;">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -426,11 +491,15 @@
                 document.querySelector('.tab:nth-child(1)').classList.add('active');
                 document.getElementById('upload-tab').classList.add('active');
                 currentView = 'upload';
-            } else {
+            } else if (tab === 'history') {
                 document.querySelector('.tab:nth-child(2)').classList.add('active');
                 document.getElementById('history-tab').classList.add('active');
                 currentView = 'history';
                 loadOrders();
+            } else if (tab === 'chat') {
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.getElementById('chat-tab').classList.add('active');
+                currentView = 'chat';
             }
         }
         
@@ -854,6 +923,114 @@
                 alert('Error deleting order: ' + error.message);
             }
         }
+        
+        // Chat functionality
+        let chatHistory = [];
+        
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            const messagesDiv = document.getElementById('chatMessages');
+            const sendBtn = document.getElementById('sendChatBtn');
+            
+            // Clear empty state if present
+            if (messagesDiv.querySelector('.empty-state, div[style*="text-align: center"]')) {
+                messagesDiv.innerHTML = '';
+            }
+            
+            // Add user message
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'chat-message user';
+            userMsgDiv.textContent = message;
+            messagesDiv.appendChild(userMsgDiv);
+            
+            // Clear input and disable button
+            input.value = '';
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Thinking...';
+            
+            // Add loading message
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'chat-message assistant';
+            loadingDiv.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0;"></div>';
+            messagesDiv.appendChild(loadingDiv);
+            
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message,
+                        history: chatHistory
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to get response');
+                }
+                
+                // Remove loading
+                messagesDiv.removeChild(loadingDiv);
+                
+                // Add assistant message
+                const assistantMsgDiv = document.createElement('div');
+                assistantMsgDiv.className = 'chat-message assistant';
+                assistantMsgDiv.innerHTML = formatChatMessage(result.response);
+                messagesDiv.appendChild(assistantMsgDiv);
+                
+                // Update chat history
+                chatHistory.push(
+                    { role: 'user', content: message },
+                    { role: 'assistant', content: result.response }
+                );
+                
+                // Keep only last 10 messages
+                if (chatHistory.length > 20) {
+                    chatHistory = chatHistory.slice(-20);
+                }
+                
+            } catch (error) {
+                messagesDiv.removeChild(loadingDiv);
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'chat-message assistant';
+                errorDiv.style.background = '#fff2f0';
+                errorDiv.style.borderColor = '#ffccc7';
+                errorDiv.textContent = '❌ Error: ' + error.message;
+                messagesDiv.appendChild(errorDiv);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        }
+        
+        function formatChatMessage(text) {
+            // Simple markdown-like formatting
+            let formatted = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n\n/g, '<br><br>')
+                .replace(/\n- /g, '<br>• ')
+                .replace(/\n\d+\. /g, '<br>$&');
+            
+            return formatted;
+        }
+        
+        // Allow Enter to send (Shift+Enter for new line)
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
     </script>
 </body>
 </html>

@@ -264,6 +264,127 @@ app.delete('/orders/:id', async (req, res) => {
   }
 });
 
+// Chat endpoint for food recommendations
+app.post('/chat', async (req, res) => {
+  try {
+    const { message, history } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Get user's order history for context
+    const ordersResult = await pool.query(`
+      SELECT o.restaurant, o.delivery_service, o.total, o.created_at,
+             json_agg(
+               json_build_object(
+                 'name', oi.item_name,
+                 'price', oi.price,
+                 'assignedTo', oi.assigned_to,
+                 'rating', oi.rating,
+                 'notes', oi.notes
+               ) ORDER BY oi.rating DESC NULLS LAST
+             ) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+      LIMIT 20
+    `);
+
+    // Build context from order history
+    let orderContext = '';
+    if (ordersResult.rows.length > 0) {
+      orderContext = '\n\nUser\'s recent order history:\n';
+      ordersResult.rows.forEach((order, i) => {
+        orderContext += `\n${i + 1}. ${order.restaurant}`;
+        if (order.delivery_service && order.delivery_service !== 'Unknown') {
+          orderContext += ` (via ${order.delivery_service})`;
+        }
+        orderContext += `\n   Items ordered:\n`;
+        order.items.forEach(item => {
+          orderContext += `   - ${item.name} ($${parseFloat(item.price).toFixed(2)})`;
+          if (item.rating > 0) {
+            orderContext += ` - Rated: ${item.rating}/5 stars`;
+          }
+          if (item.notes) {
+            orderContext += ` - Notes: "${item.notes}"`;
+          }
+          orderContext += '\n';
+        });
+      });
+    } else {
+      orderContext = '\n\nThe user has no order history yet.';
+    }
+
+    // Build conversation messages
+    const messages = [
+      {
+        role: 'user',
+        content: `You are a helpful food recommendation assistant. Your job is to help users decide what to order for their next meal based on their preferences, past orders, and cravings.
+
+${orderContext}
+
+When making recommendations:
+- Consider their past orders and ratings
+- Ask clarifying questions if needed (cuisine type, dietary restrictions, budget, etc.)
+- Be enthusiastic and descriptive about food
+- Suggest specific dishes when possible
+- Consider variety if they've been ordering similar things
+- Reference their order history when relevant
+
+Keep responses conversational and concise (2-4 paragraphs max).`
+      }
+    ];
+
+    // Add conversation history
+    if (history && history.length > 0) {
+      messages.push(...history);
+    }
+
+    // Add current message
+    messages.push({ role: 'user', content: message });
+
+    // Call Claude API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: messages
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Claude API error:', data);
+      return res.status(response.status).json({ 
+        error: data.error?.message || 'Claude API error',
+        details: data
+      });
+    }
+
+    // Extract text from response
+    const text = data.content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join('\n')
+      .trim();
+
+    res.json({ success: true, response: text });
+
+  } catch (error) {
+    console.error('Error in chat:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check
 app.get('/health', async (req, res) => {
   try {

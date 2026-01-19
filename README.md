@@ -1,14 +1,16 @@
-# Yummy Food Time v2
+# Yummy Food Time v2 - Complete
 
-A food delivery order tracker with AI extraction, ratings, assignments, and order history.
+A food delivery order tracker with AI extraction, ratings, assignments, order history, and AI chatbot for personalized recommendations.
 
-## New Features in v2
+## All Features
+- ✅ **AI Image Extraction** - Upload any food delivery receipt
 - ✅ **Database Storage** - All orders saved permanently
 - ✅ **Ratings** - Rate each item 1-5 stars
 - ✅ **Assignment** - Track who ate what (Collin or Emily)
 - ✅ **Notes** - Add personal notes for each item
 - ✅ **Order History** - View all past orders
 - ✅ **Delete Orders** - Remove orders you don't want
+- ✅ **AI Chatbot** - Get personalized food recommendations based on your history
 
 ## Supported Apps
 - DoorDash, Uber Eats, Grubhub, Postmates, Instacart, and more!
@@ -57,12 +59,26 @@ Make sure you have both:
 ### Step 5: Test Your New Features!
 
 1. Open your Railway URL
-2. Upload a receipt
-3. Rate items, assign them, add notes
-4. Click "Save Order"
-5. Go to "History" tab to see your saved order!
-6. Click any order to view details
-7. Delete orders you don't want
+2. **Upload Tab**: Upload a receipt, rate items, assign them, add notes, save
+3. **History Tab**: View all saved orders, click to see details, delete if needed
+4. **Chat Tab**: Ask the AI chatbot for food recommendations!
+   - Try: "What should I order tonight?"
+   - Try: "Recommend something based on my favorites"
+   - Try: "I'm craving Italian food, any suggestions?"
+   - The AI knows your entire order history and ratings!
+
+## How the Chatbot Works
+
+The AI chatbot has access to:
+- All your past orders and restaurants
+- Your ratings for each item
+- Your notes and preferences
+- Who ate what (Collin vs Emily preferences)
+
+It uses this to give personalized recommendations like:
+- "Based on your 5-star rating of the Hot Honey Chicken, you might love..."
+- "You haven't tried Thai food yet, want to explore?"
+- "Collin seems to prefer spicy items, how about..."
 
 ## Alternative: Fresh Deployment
 
@@ -113,15 +129,8 @@ The app creates two tables automatically:
 - `GET /orders/:id` - Get single order
 - `PATCH /order-items/:id` - Update item rating/assignment/notes
 - `DELETE /orders/:id` - Delete order
+- `POST /chat` - Chat with AI for food recommendations
 - `GET /health` - Health check
-
-## What's Next?
-
-Phase 2 will add:
-- 🤖 AI Chatbot for food recommendations
-- 📊 Analytics (favorite restaurants, spending trends)
-- 🔍 Search orders by restaurant or date
-- 📱 Native iOS app
 
 ## Troubleshooting
 
