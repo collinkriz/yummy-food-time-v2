@@ -1052,31 +1052,35 @@
         const status = document.getElementById('status');
         const results = document.getElementById('results');
         
-        uploadArea.addEventListener('click', () => fileInput.click());
+        if (uploadArea && fileInput) {
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    selectedFile = file;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewImage.src = e.target.result;
+                        
+                        // Only constrain width, let height be flexible for long receipts
+                        previewImage.style.maxWidth = '90%';
+                        previewImage.style.width = 'auto';
+                        previewImage.style.height = 'auto';
+                        previewImage.style.maxHeight = 'none';
+                        previewImage.style.objectFit = 'contain';
+                        
+                        preview.style.display = 'block';
+                        extractBtn.disabled = false;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
         
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                selectedFile = file;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    previewImage.src = e.target.result;
-                    
-                    // Only constrain width, let height be flexible for long receipts
-                    previewImage.style.maxWidth = '90%';
-                    previewImage.style.width = 'auto';
-                    previewImage.style.height = 'auto';
-                    previewImage.style.maxHeight = 'none';
-                    previewImage.style.objectFit = 'contain';
-                    
-                    preview.style.display = 'block';
-                    extractBtn.disabled = false;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        
-        extractBtn.addEventListener('click', extractOrder);
+        if (extractBtn) {
+            extractBtn.addEventListener('click', extractOrder);
+        }
         
         async function extractOrder() {
             if (!selectedFile) return;
