@@ -11,17 +11,26 @@
             box-sizing: border-box;
         }
         
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+        
         body {
             font-family: 'Comic Sans MS', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #FFE5E5 0%, #FFF4E5 50%, #E5F5FF 100%);
             min-height: 100vh;
             padding-bottom: 40px;
+            position: relative;
         }
         
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 15px;
+            width: 100%;
+            overflow-x: hidden;
         }
         
         .header {
@@ -109,6 +118,9 @@
             margin-bottom: 20px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             border: 3px solid #FFD93D;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
         }
         
         .upload-area {
@@ -262,6 +274,8 @@
             font-weight: bold;
             margin-bottom: 10px;
             color: #FF6B6B;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .delivery-badge {
@@ -303,6 +317,8 @@
             font-size: 17px;
             flex: 1;
             color: #333;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .item-price {
@@ -534,12 +550,13 @@
         }
         
         .chat-message {
-            margin-bottom: 15px;
-            padding: 15px 18px;
-            border-radius: 20px;
-            max-width: 85%;
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            border-radius: 16px;
+            max-width: 75%;
             word-wrap: break-word;
             animation: slideIn 0.3s ease-out;
+            line-height: 1.6;
         }
         
         @keyframes slideIn {
@@ -551,44 +568,52 @@
             background: linear-gradient(135deg, #4FC3F7 0%, #29B6F6 100%);
             color: white;
             margin-left: auto;
-            text-align: right;
-            border: 3px solid #29B6F6;
-            box-shadow: 0 4px 15px rgba(41, 182, 246, 0.3);
+            margin-right: 0;
+            border: none;
+            box-shadow: 0 2px 8px rgba(41, 182, 246, 0.3);
         }
         
         .chat-message.assistant {
             background: white;
             color: #333;
-            border: 3px solid #FFD93D;
+            border: 2px solid #E0E0E0;
+            margin-left: 0;
             margin-right: auto;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .chat-message.assistant strong {
+            color: #FF6B6B;
         }
         
         .chat-message.assistant ul, .chat-message.assistant ol {
-            margin: 10px 0 10px 20px;
+            margin: 12px 0 12px 24px;
         }
         
         .chat-message.assistant li {
-            margin: 5px 0;
+            margin: 8px 0;
         }
         
         #chatMessages {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: linear-gradient(135deg, #F5F5F5 0%, #FAFAFA 100%);
-            border-radius: 20px;
-            border: 3px solid #E0E0E0;
+            scroll-behavior: smooth;
         }
         
-        #chatInput {
-            border: 3px solid #E0E0E0;
+        #chatMessages::-webkit-scrollbar {
+            width: 8px;
         }
         
-        #chatInput:focus {
-            border-color: #4FC3F7;
-            box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+        #chatMessages::-webkit-scrollbar-track {
+            background: #F0F0F0;
+            border-radius: 10px;
+        }
+        
+        #chatMessages::-webkit-scrollbar-thumb {
+            background: #D0D0D0;
+            border-radius: 10px;
+        }
+        
+        #chatMessages::-webkit-scrollbar-thumb:hover {
+            background: #B0B0B0;
         }
         
         .label-text {
@@ -642,30 +667,34 @@
         
         <!-- Chat Tab -->
         <div id="chat-tab" class="tab-content">
-            <div class="card">
-                <h2 style="margin-bottom: 15px;">🤖 Food Recommendation Assistant</h2>
-                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
-                    Ask me for food recommendations based on your order history, dietary preferences, or what you're craving!
-                </p>
+            <div class="card" style="padding: 0; overflow: hidden; max-width: 800px; margin: 0 auto;">
+                <div style="padding: 25px 25px 15px 25px; border-bottom: 2px solid #FFE082;">
+                    <h2 style="margin-bottom: 10px;">🤖 Food Recommendation Assistant</h2>
+                    <p style="color: #666; font-size: 14px;">
+                        Ask me for food recommendations based on your order history!
+                    </p>
+                </div>
                 
-                <div id="chatMessages" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; padding: 10px; background: #f9f9f9; border-radius: 10px;">
-                    <div style="text-align: center; padding: 40px 20px; color: #999;">
+                <div id="chatMessages" style="height: 400px; overflow-y: auto; padding: 20px; background: #FAFAFA;">
+                    <div style="text-align: center; padding: 80px 20px; color: #999;">
                         <div style="font-size: 48px; margin-bottom: 15px;">💬</div>
-                        <div>Start a conversation!</div>
-                        <div style="font-size: 12px; margin-top: 10px;">Try: "What should I order tonight?" or "Recommend something based on my favorites"</div>
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Start a conversation!</div>
+                        <div style="font-size: 13px;">Try: "What should I order tonight?" or "Recommend something based on my favorites"</div>
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 10px;">
-                    <textarea 
-                        id="chatInput" 
-                        placeholder="Ask for food recommendations..."
-                        style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 10px; resize: none; font-family: inherit; font-size: 14px;"
-                        rows="2"
-                    ></textarea>
-                    <button id="sendChatBtn" onclick="sendChatMessage()" style="width: auto; padding: 12px 24px;">
-                        Send
-                    </button>
+                <div style="padding: 20px; background: white; border-top: 2px solid #FFE082;">
+                    <div style="display: flex; gap: 10px; align-items: flex-end;">
+                        <textarea 
+                            id="chatInput" 
+                            placeholder="Message Food Assistant..."
+                            style="flex: 1; padding: 14px; border: 2px solid #E0E0E0; border-radius: 12px; resize: none; font-family: inherit; font-size: 15px; max-height: 120px; line-height: 1.5;"
+                            rows="1"
+                        ></textarea>
+                        <button id="sendChatBtn" onclick="sendChatMessage()" style="width: auto; padding: 14px 28px; min-width: 80px;">
+                            Send
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1178,6 +1207,7 @@
             
             // Clear input and disable button
             input.value = '';
+            input.style.height = 'auto'; // Reset height
             sendBtn.disabled = true;
             sendBtn.textContent = 'Thinking...';
             
@@ -1254,11 +1284,19 @@
         }
         
         // Allow Enter to send (Shift+Enter for new line)
-        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+        const chatInput = document.getElementById('chatInput');
+        
+        chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendChatMessage();
             }
+        });
+        
+        // Auto-expand textarea as user types
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
     </script>
 </body>
