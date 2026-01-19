@@ -395,21 +395,30 @@ app.post('/chat', async (req, res) => {
     if (fs.existsSync(recipesPath)) {
       const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
       recipeContext = `\n\nUser's Home Recipe Library (${recipes.length} recipes from Paprika):\n`;
-      recipeContext += 'When the user asks about cooking at home, ALWAYS recommend from these recipes:\n\n';
+      recipeContext += 'You have access to full recipe details including ingredients and directions. When user asks about cooking at home, recommend from these recipes.\n\n';
       
-      // List all recipe names
-      recipes.forEach((recipe, i) => {
-        recipeContext += `${i + 1}. ${recipe.name}`;
-        if (recipe.prep_time || recipe.cook_time) {
+      // For efficiency, just list recipe names in the main prompt
+      // Full details will be provided when specifically asked
+      const recipeList = recipes.map((r, i) => {
+        let info = `${i + 1}. ${r.name}`;
+        if (r.prep_time || r.cook_time) {
           const times = [];
-          if (recipe.prep_time) times.push(`prep: ${recipe.prep_time}`);
-          if (recipe.cook_time) times.push(`cook: ${recipe.cook_time}`);
-          recipeContext += ` (${times.join(', ')})`;
+          if (r.prep_time) times.push(`${r.prep_time}`);
+          if (r.cook_time) times.push(`${r.cook_time}`);
+          info += ` (${times.join(' + ')})`;
         }
-        recipeContext += '\n';
-      });
+        return info;
+      }).join('\n');
       
-      recipeContext += '\nIMPORTANT: When user asks about cooking at home, always suggest recipes from this list by name. Do not say you don\'t have access to recipes.';
+      recipeContext += recipeList;
+      recipeContext += '\n\nIMPORTANT: ';
+      recipeContext += '- When user asks about cooking, recommend specific recipes from this list by name\n';
+      recipeContext += '- If user asks for ingredients or directions for a recipe, provide the full details\n';
+      recipeContext += '- You have access to complete ingredients lists and step-by-step directions for all recipes\n';
+      recipeContext += '- Never say you don\'t have access to recipes or their details\n';
+      
+      // Store full recipes in a global for easy access
+      global.recipeLibrary = recipes;
     }
 
     // Build context from order history
@@ -437,6 +446,31 @@ app.post('/chat', async (req, res) => {
       orderContext = '\n\nThe user has no takeout order history yet.';
     }
 
+    // Check if user is asking for specific recipe details
+    let recipeDetails = '';
+    const lowerMessage = message.toLowerCase();
+    
+    // Keywords that indicate they want recipe details
+    if ((lowerMessage.includes('ingredient') || lowerMessage.includes('direction') || 
+         lowerMessage.includes('how to make') || lowerMessage.includes('how do i make') ||
+         lowerMessage.includes('recipe for') || lowerMessage.includes('steps')) && 
+        global.recipeLibrary) {
+      
+      // Try to find matching recipe
+      const matchedRecipe = global.recipeLibrary.find(r => 
+        lowerMessage.includes(r.name.toLowerCase())
+      );
+      
+      if (matchedRecipe) {
+        recipeDetails = `\n\nFULL RECIPE DETAILS FOR: ${matchedRecipe.name}\n`;
+        recipeDetails += `\nINGREDIENTS:\n${matchedRecipe.ingredients}\n`;
+        recipeDetails += `\nDIRECTIONS:\n${matchedRecipe.directions}\n`;
+        if (matchedRecipe.notes) {
+          recipeDetails += `\nNOTES:\n${matchedRecipe.notes}\n`;
+        }
+      }
+    }
+
     // Build conversation messages
     const messages = [
       {
@@ -447,11 +481,14 @@ ${recipeContext}
 
 ${orderContext}
 
+${recipeDetails}
+
 Guidelines:
 - Professional but friendly tone
 - Brief and direct responses
 - For COOKING AT HOME questions: recommend specific recipes from the recipe library above by name
-- For TAKEOUT questions: reference their order history
+- For TAKEOUT questions: reference their order history  
+- When user asks for ingredients or directions, provide the full details from the recipe data above
 - Ask follow-up questions when helpful
 - Use complete sentences, proper grammar
 
@@ -613,9 +650,10 @@ app.get('/recommend', async (req, res) => {
       
       const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
       
-      // Simple filter logic for cooking
+      // Filter logic for cooking
       let candidates = recipes;
       
+      // Style filters
       if (filterList.includes('quick')) {
         candidates = candidates.filter(r => 
           (r.prep_time && r.prep_time.includes('min') && parseInt(r.prep_time) <= 30) ||
@@ -650,6 +688,65 @@ app.get('/recommend', async (req, res) => {
           r.name.toLowerCase().includes('pasta') ||
           r.name.toLowerCase().includes('bread') ||
           r.name.toLowerCase().includes('pizza')
+        );
+      }
+      
+      if (filterList.includes('filling')) {
+        candidates = candidates.filter(r =>
+          r.name.toLowerCase().includes('pasta') ||
+          r.name.toLowerCase().includes('rice') ||
+          r.name.toLowerCase().includes('burrito') ||
+          r.name.toLowerCase().includes('bowl') ||
+          r.name.toLowerCase().includes('stew')
+        );
+      }
+      
+      // AI Category filters
+      if (filterList.includes('main')) {
+        candidates = candidates.filter(r => 
+          r.ai_category && r.ai_category.includes('Main Dish')
+        );
+      }
+      
+      if (filterList.includes('salad')) {
+        candidates = candidates.filter(r => 
+          r.ai_category && r.ai_category.includes('Salad')
+        );
+      }
+      
+      if (filterList.includes('soup')) {
+        candidates = candidates.filter(r => 
+          r.ai_category && r.ai_category.includes('Soup')
+        );
+      }
+      
+      if (filterList.includes('breakfast')) {
+        candidates = candidates.filter(r => 
+          r.ai_category && r.ai_category.includes('Breakfast')
+        );
+      }
+      
+      if (filterList.includes('dessert')) {
+        candidates = candidates.filter(r => 
+          r.ai_category && r.ai_category.includes('Dessert')
+        );
+      }
+      
+      if (filterList.includes('side')) {
+        candidates = candidates.filter(r => 
+          r.ai_category && r.ai_category.includes('Side Dish')
+        );
+      }
+      
+      if (filterList.includes('sauce')) {
+        candidates = candidates.filter(r => 
+          r.ai_category && r.ai_category.includes('Sauce')
+        );
+      }
+      
+      if (filterList.includes('appetizer')) {
+        candidates = candidates.filter(r => 
+          r.ai_category && r.ai_category.includes('Appetizer')
         );
       }
       
