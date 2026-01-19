@@ -50,15 +50,24 @@ app.post('/extract-order', upload.single('image'), async (req, res) => {
               },
               {
                 type: 'text',
-                text: `Extract the following information from this food delivery order receipt (DoorDash, Uber Eats, Grubhub, etc.) and respond ONLY with a JSON object (no markdown, no backticks, no preamble):
+                text: `You are extracting order information from a food delivery receipt image. Look very carefully at ALL text in the image.
+
+CRITICAL: Look for the restaurant address in these common locations:
+- Near the restaurant name at the top
+- In a section labeled "Address:", "Location:", "Delivered to:", or "Restaurant address:"
+- Near map icons or location pins
+- In the delivery details section
+- Sometimes it's in smaller text below the restaurant name
+
+Extract this information and respond with ONLY a JSON object (no markdown, no backticks, no preamble):
 
 {
-  "restaurant": "restaurant name",
-  "address": "restaurant address or 'Not visible' if not shown",
-  "deliveryService": "name of delivery service (DoorDash, Uber Eats, Grubhub, etc.) or 'Unknown'",
+  "restaurant": "exact restaurant name from receipt",
+  "address": "full street address of the restaurant if visible, or 'Not visible' only if you truly cannot find it anywhere",
+  "deliveryService": "DoorDash, Uber Eats, Grubhub, Postmates, etc. - check the logo/branding",
   "items": [
     {
-      "name": "item name with any customizations",
+      "name": "item name with customizations",
       "price": 0.00
     }
   ],
@@ -71,7 +80,7 @@ app.post('/extract-order', upload.single('image'), async (req, res) => {
   "total": 0.00
 }
 
-Be precise and extract all visible fields. If a field is not visible, use 0.00 for numbers or "Not visible" for text.`
+Look at EVERY section of the receipt carefully. The address is often near the top with the restaurant name, or in a delivery details section. Search thoroughly before saying "Not visible".`
               }
             ]
           }
