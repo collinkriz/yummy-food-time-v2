@@ -168,12 +168,15 @@
             text-align: center;
             max-width: 100%;
             overflow: hidden;
+            display: flex;
+            justify-content: center;
         }
         
         .preview img {
-            width: 100%;
             max-width: 100%;
+            width: auto;
             max-height: 300px;
+            height: auto;
             object-fit: contain;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -891,15 +894,39 @@
                 status.className = 'status loading';
                 status.textContent = 'Saving order...';
                 
+                // Prepare order data with correct structure
+                const orderToSave = {
+                    restaurant: currentOrder.restaurant,
+                    address: currentOrder.address,
+                    deliveryService: currentOrder.deliveryService,
+                    subtotal: parseFloat(currentOrder.subtotal) || 0,
+                    deliveryFee: parseFloat(currentOrder.deliveryFee) || 0,
+                    serviceFee: parseFloat(currentOrder.serviceFee) || 0,
+                    tax: parseFloat(currentOrder.tax) || 0,
+                    discount: parseFloat(currentOrder.discount) || 0,
+                    tip: parseFloat(currentOrder.tip) || 0,
+                    total: parseFloat(currentOrder.total) || 0,
+                    items: currentOrder.items.map(item => ({
+                        name: item.name,
+                        price: parseFloat(item.price) || 0,
+                        assignedTo: item.assignedTo || null,
+                        rating: parseInt(item.rating) || 0,
+                        notes: item.notes || null
+                    }))
+                };
+                
+                console.log('Sending order data:', orderToSave);
+                
                 const response = await fetch('/orders', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(currentOrder)
+                    body: JSON.stringify(orderToSave)
                 });
                 
                 const result = await response.json();
                 
                 if (!response.ok) {
+                    console.error('Server error:', result);
                     throw new Error(result.error || 'Failed to save order');
                 }
                 
@@ -921,6 +948,7 @@
                 }, 1500);
                 
             } catch (error) {
+                console.error('Save order error:', error);
                 status.className = 'status error';
                 status.textContent = '❌ Error: ' + error.message;
             }
