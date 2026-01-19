@@ -1994,17 +1994,17 @@
                 } else {
                     // Fallback greeting
                     const hour = new Date().getHours();
-                    let timeGreeting = 'Hey!';
-                    if (hour < 12) timeGreeting = 'Morning!';
-                    else if (hour < 17) timeGreeting = 'Hey!';
-                    else if (hour < 21) timeGreeting = 'Evening!';
-                    else timeGreeting = 'Late night cravings?';
+                    let timeGreeting = 'What can I help you find?';
+                    if (hour < 12) timeGreeting = 'Good morning! What can I help you find for breakfast?';
+                    else if (hour < 17) timeGreeting = 'What are you in the mood for?';
+                    else if (hour < 21) timeGreeting = 'What sounds good for dinner?';
+                    else timeGreeting = 'What can I help you order tonight?';
                     
-                    document.getElementById('chatGreeting').textContent = timeGreeting + ' What sounds good?';
+                    document.getElementById('chatGreeting').textContent = timeGreeting;
                 }
             } catch (error) {
                 console.error('Error loading greeting:', error);
-                document.getElementById('chatGreeting').textContent = 'Hey! What sounds good?';
+                document.getElementById('chatGreeting').textContent = 'What can I help you find?';
             }
         }
         
@@ -2023,11 +2023,7 @@
             const chatContainer = document.getElementById('chatContainer');
             const sendBtn = document.getElementById('sendChatBtn');
             
-            // Expand container and clear greeting on first message
-            const greeting = document.getElementById('chatGreeting');
-            if (greeting) {
-                greeting.remove();
-            }
+            // Expand container on first message (but keep the greeting visible)
             chatContainer.classList.add('has-messages');
             
             // Add user message
