@@ -1106,14 +1106,14 @@
             <p class="subtitle">Track, Rate & Discover Your Favorites!</p>
             
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('upload')">📸 Upload</button>
+                <button class="tab" onclick="switchTab('upload')">📸 Upload</button>
                 <button class="tab" onclick="switchTab('history')">📋 History</button>
-                <button class="tab" onclick="switchTab('chat')">💬 Chat</button>
+                <button class="tab active" onclick="switchTab('chat')">💬 Chat</button>
             </div>
         </div>
         
         <!-- Upload Tab -->
-        <div id="upload-tab" class="tab-content active">
+        <div id="upload-tab" class="tab-content">
             <div class="card">
                 <div class="upload-area" id="uploadArea">
                     <div class="upload-icon">📸</div>
@@ -1140,7 +1140,7 @@
         </div>
         
         <!-- Chat Tab -->
-        <div id="chat-tab" class="tab-content">
+        <div id="chat-tab" class="tab-content active">
             <div class="card">
                 <h2>🤖 Food Recommendations</h2>
                 <p style="margin-bottom: 20px; color: #666; font-weight: 600;">Ask me what to order based on your favorites!</p>
@@ -1168,7 +1168,7 @@
     <script>
         let selectedFile = null;
         let currentOrder = null;
-        let currentView = 'upload';
+        let currentView = 'chat';
         
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
