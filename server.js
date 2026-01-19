@@ -486,6 +486,187 @@ Keep responses focused and concise.`
   }
 });
 
+// Recommendation endpoint
+app.get('/recommend', async (req, res) => {
+  try {
+    const { type, filters, random } = req.query;
+    const filterList = filters ? filters.split(',').filter(f => f) : [];
+    const isRandom = random === 'true';
+    
+    if (type === 'takeout') {
+      // Get orders from database with filter matching
+      const ordersResult = await pool.query(`
+        SELECT o.restaurant, o.address, o.delivery_service,
+               json_agg(
+                 json_build_object(
+                   'name', oi.item_name,
+                   'price', oi.price,
+                   'rating', oi.rating,
+                   'assignedTo', oi.assigned_to
+                 ) ORDER BY oi.rating DESC NULLS LAST
+               ) as items
+        FROM orders o
+        LEFT JOIN order_items oi ON o.id = oi.order_id
+        GROUP BY o.restaurant, o.address, o.delivery_service
+        ORDER BY RANDOM()
+        LIMIT 50
+      `);
+      
+      if (ordersResult.rows.length === 0) {
+        return res.status(404).json({ error: 'No order history found. Upload some orders first!' });
+      }
+      
+      // Simple filter logic for takeout
+      let candidates = ordersResult.rows;
+      
+      if (filterList.includes('cheap')) {
+        // Filter for restaurants with average order < $30
+        candidates = candidates.filter(o => {
+          const avgPrice = o.items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0) / o.items.length;
+          return avgPrice < 15;
+        });
+      }
+      
+      if (filterList.includes('healthy')) {
+        // Look for salad, bowl, veggie keywords
+        candidates = candidates.filter(o => 
+          o.restaurant.toLowerCase().includes('salad') ||
+          o.restaurant.toLowerCase().includes('bowl') ||
+          o.items.some(item => 
+            item.name.toLowerCase().includes('salad') ||
+            item.name.toLowerCase().includes('veggie') ||
+            item.name.toLowerCase().includes('healthy')
+          )
+        );
+      }
+      
+      // If no matches after filtering, use all
+      if (candidates.length === 0) {
+        candidates = ordersResult.rows;
+      }
+      
+      // Pick random from candidates
+      const selected = candidates[Math.floor(Math.random() * candidates.length)];
+      const topItems = selected.items.filter(item => (item.rating || 0) >= 4).slice(0, 3);
+      
+      let recommendation = `<div class="rec-details">`;
+      recommendation += `<h3 style="font-size: 24px; font-weight: 900; color: #4A4A1F; margin-bottom: 12px;">${selected.restaurant}</h3>`;
+      if (selected.address) {
+        recommendation += `<p style="color: #666; margin-bottom: 16px;">📍 ${selected.address}</p>`;
+      }
+      
+      if (topItems.length > 0) {
+        recommendation += `<p style="font-weight: 700; margin-bottom: 10px;">Try these:</p><ul style="margin-left: 20px;">`;
+        topItems.forEach(item => {
+          recommendation += `<li style="margin-bottom: 8px;"><strong>${item.name}</strong>`;
+          if (item.rating === 5) recommendation += ` ⭐⭐⭐⭐⭐`;
+          else if (item.rating === 4) recommendation += ` ⭐⭐⭐⭐`;
+          recommendation += `</li>`;
+        });
+        recommendation += `</ul>`;
+      }
+      recommendation += `</div>`;
+      
+      return res.json({
+        success: true,
+        title: selected.restaurant,
+        recommendation: recommendation
+      });
+      
+    } else if (type === 'cooking') {
+      // Load recipes from JSON file
+      const fs = require('fs');
+      const path = require('path');
+      const recipesPath = path.join(__dirname, 'recipes.json');
+      
+      if (!fs.existsSync(recipesPath)) {
+        return res.status(404).json({ error: 'No recipes found. Please upload your recipe collection.' });
+      }
+      
+      const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
+      
+      // Simple filter logic for cooking
+      let candidates = recipes;
+      
+      if (filterList.includes('quick')) {
+        candidates = candidates.filter(r => 
+          (r.prep_time && r.prep_time.includes('min') && parseInt(r.prep_time) <= 30) ||
+          (r.cook_time && r.cook_time.includes('min') && parseInt(r.cook_time) <= 30) ||
+          r.name.toLowerCase().includes('quick') ||
+          r.name.toLowerCase().includes('easy')
+        );
+      }
+      
+      if (filterList.includes('healthy')) {
+        candidates = candidates.filter(r =>
+          r.name.toLowerCase().includes('salad') ||
+          r.name.toLowerCase().includes('veggie') ||
+          r.name.toLowerCase().includes('healthy') ||
+          r.name.toLowerCase().includes('salmon') ||
+          r.name.toLowerCase().includes('tofu')
+        );
+      }
+      
+      if (filterList.includes('complex')) {
+        candidates = candidates.filter(r =>
+          r.difficulty.toLowerCase().includes('hard') ||
+          r.difficulty.toLowerCase().includes('complex') ||
+          (r.cook_time && parseInt(r.cook_time) > 60)
+        );
+      }
+      
+      if (filterList.includes('comfort')) {
+        candidates = candidates.filter(r =>
+          r.name.toLowerCase().includes('mac') ||
+          r.name.toLowerCase().includes('cheese') ||
+          r.name.toLowerCase().includes('pasta') ||
+          r.name.toLowerCase().includes('bread') ||
+          r.name.toLowerCase().includes('pizza')
+        );
+      }
+      
+      // If no matches, use all
+      if (candidates.length === 0) {
+        candidates = recipes;
+      }
+      
+      // Pick random
+      const selected = candidates[Math.floor(Math.random() * candidates.length)];
+      
+      let recommendation = `<div class="rec-details">`;
+      recommendation += `<h3 style="font-size: 24px; font-weight: 900; color: #4A4A1F; margin-bottom: 12px;">${selected.name}</h3>`;
+      
+      const details = [];
+      if (selected.prep_time) details.push(`⏱️ Prep: ${selected.prep_time}`);
+      if (selected.cook_time) details.push(`🔥 Cook: ${selected.cook_time}`);
+      if (selected.servings) details.push(`🍽️ Serves: ${selected.servings}`);
+      
+      if (details.length > 0) {
+        recommendation += `<p style="color: #666; margin-bottom: 12px;">${details.join(' • ')}</p>`;
+      }
+      
+      if (selected.categories && selected.categories.length > 0) {
+        recommendation += `<p style="margin-bottom: 12px;"><strong>Category:</strong> ${selected.categories.join(', ')}</p>`;
+      }
+      
+      recommendation += `</div>`;
+      recommendation += `<p style="font-size: 16px; line-height: 1.6;">This recipe matches your filters and looks delicious! Check your Paprika app for the full recipe.</p>`;
+      
+      return res.json({
+        success: true,
+        title: selected.name,
+        recommendation: recommendation
+      });
+    }
+    
+    return res.status(400).json({ error: 'Invalid type. Must be "takeout" or "cooking"' });
+    
+  } catch (error) {
+    console.error('Recommendation error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Dice roll - random restaurant recommendation
 app.get('/dice-roll', async (req, res) => {
   try {
