@@ -323,6 +323,14 @@
             50% { transform: translateY(-10px); }
         }
         
+        @keyframes diceRoll {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.2); }
+            50% { transform: rotate(180deg) scale(1); }
+            75% { transform: rotate(270deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        
         @media (max-width: 768px) {
             .upload-icon {
                 font-size: 64px;
@@ -1151,24 +1159,67 @@
         
         <!-- Chat Tab -->
         <div id="chat-tab" class="tab-content active">
-            <div class="card">
-                <h2>🤖 Food Recommendations</h2>
-                <p style="margin-bottom: 20px; color: #666; font-weight: 600;">Ask me what to order based on your favorites!</p>
-                
-                <div class="chat-container" id="chatContainer">
-                    <div class="chat-messages" id="chatMessages">
-                        <div id="chatGreeting" class="chat-message assistant" style="max-width: 100%;">
-                            Loading...
+            <!-- Main Chat View -->
+            <div id="chatMainView">
+                <div class="card">
+                    <h2>🤖 Food Recommendations</h2>
+                    <p style="margin-bottom: 20px; color: #666; font-weight: 600;">Ask me what to order based on your favorites!</p>
+                    
+                    <div class="chat-container" id="chatContainer">
+                        <div class="chat-messages" id="chatMessages">
+                            <div id="chatGreeting" class="chat-message assistant" style="max-width: 100%;">
+                                Loading...
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-group">
+                            <textarea 
+                                id="chatInput" 
+                                placeholder="What should I order tonight?"
+                                rows="1"
+                            ></textarea>
+                            <button id="sendChatBtn" onclick="sendChatMessage()">Send</button>
                         </div>
                     </div>
+                </div>
+                
+                <!-- Action Buttons Row -->
+                <div class="card" style="padding: 16px;">
+                    <button onclick="rollTheDice()" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <span style="font-size: 24px;">🎲</span>
+                        <span>Roll the Dice</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Dice Roll View -->
+            <div id="diceRollView" style="display: none;">
+                <button class="back-btn" onclick="backToChat()">← Back to Chat</button>
+                
+                <div class="card">
+                    <h2 style="text-align: center;">🎲 Random Pick!</h2>
                     
-                    <div class="chat-input-group">
-                        <textarea 
-                            id="chatInput" 
-                            placeholder="What should I order tonight?"
-                            rows="1"
-                        ></textarea>
-                        <button id="sendChatBtn" onclick="sendChatMessage()">Send</button>
+                    <div id="diceAnimation" style="display: none; text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 80px; animation: diceRoll 0.6s ease-in-out;">🎲</div>
+                        <div style="margin-top: 20px; font-size: 18px; font-weight: 700; color: #4A4A1F;">Rolling...</div>
+                    </div>
+                    
+                    <div id="diceResult" style="display: none;">
+                        <div style="text-align: center; padding: 30px 20px; background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%); border: 4px solid #FF9800; margin-bottom: 24px;">
+                            <div style="font-size: 32px; font-weight: 900; color: #FF9800; margin-bottom: 12px; text-transform: uppercase;" id="resultRestaurant"></div>
+                            <div style="font-size: 16px; color: #666; font-weight: 600; margin-bottom: 20px;" id="resultAddress"></div>
+                            <div style="font-size: 18px; font-weight: 700; color: #4A4A1F; margin-bottom: 10px;">Recommended for you:</div>
+                            <div id="resultRecommendation" style="font-size: 16px; line-height: 1.6; color: #333;"></div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <button onclick="rollTheDice()" style="flex: 1; background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);">
+                                🎲 Roll Again
+                            </button>
+                            <button onclick="backToChat()" style="flex: 1; background: linear-gradient(135deg, #6B6B3D 0%, #5A5A32 100%);">
+                                Back to Chat
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2109,6 +2160,52 @@
                 .replace(/\n\d+\. /g, '<br>$&');
             
             return formatted;
+        }
+        
+        // Dice Roll functionality
+        async function rollTheDice() {
+            // Show dice view and hide chat
+            document.getElementById('chatMainView').style.display = 'none';
+            document.getElementById('diceRollView').style.display = 'block';
+            
+            // Show animation
+            document.getElementById('diceAnimation').style.display = 'block';
+            document.getElementById('diceResult').style.display = 'none';
+            
+            try {
+                // Wait for animation (600ms)
+                await new Promise(resolve => setTimeout(resolve, 600));
+                
+                // Fetch random recommendation
+                const response = await fetch('/dice-roll');
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to get recommendation');
+                }
+                
+                // Hide animation, show result
+                document.getElementById('diceAnimation').style.display = 'none';
+                document.getElementById('diceResult').style.display = 'block';
+                
+                // Populate result
+                document.getElementById('resultRestaurant').textContent = result.restaurant;
+                document.getElementById('resultAddress').textContent = result.address || 'Address not available';
+                document.getElementById('resultRecommendation').innerHTML = result.recommendation;
+                
+            } catch (error) {
+                console.error('Dice roll error:', error);
+                document.getElementById('diceAnimation').style.display = 'none';
+                document.getElementById('diceResult').style.display = 'block';
+                document.getElementById('resultRestaurant').textContent = 'Oops!';
+                document.getElementById('resultAddress').textContent = '';
+                document.getElementById('resultRecommendation').textContent = 'Unable to get a recommendation right now. Please try again or check your order history first.';
+            }
+        }
+        
+        function backToChat() {
+            document.getElementById('chatMainView').style.display = 'block';
+            document.getElementById('diceRollView').style.display = 'none';
         }
         
         // Allow Enter to send (Shift+Enter for new line)
