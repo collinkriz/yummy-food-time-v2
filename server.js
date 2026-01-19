@@ -386,10 +386,36 @@ app.post('/chat', async (req, res) => {
       LIMIT 20
     `);
 
+    // Load recipe library from Paprika export
+    const fs = require('fs');
+    const path = require('path');
+    const recipesPath = path.join(__dirname, 'recipes.json');
+    let recipeContext = '';
+    
+    if (fs.existsSync(recipesPath)) {
+      const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
+      recipeContext = `\n\nUser's Home Recipe Library (${recipes.length} recipes from Paprika):\n`;
+      recipeContext += 'When the user asks about cooking at home, ALWAYS recommend from these recipes:\n\n';
+      
+      // List all recipe names
+      recipes.forEach((recipe, i) => {
+        recipeContext += `${i + 1}. ${recipe.name}`;
+        if (recipe.prep_time || recipe.cook_time) {
+          const times = [];
+          if (recipe.prep_time) times.push(`prep: ${recipe.prep_time}`);
+          if (recipe.cook_time) times.push(`cook: ${recipe.cook_time}`);
+          recipeContext += ` (${times.join(', ')})`;
+        }
+        recipeContext += '\n';
+      });
+      
+      recipeContext += '\nIMPORTANT: When user asks about cooking at home, always suggest recipes from this list by name. Do not say you don\'t have access to recipes.';
+    }
+
     // Build context from order history
     let orderContext = '';
     if (ordersResult.rows.length > 0) {
-      orderContext = '\n\nUser\'s recent order history:\n';
+      orderContext = '\n\nUser\'s Recent Takeout Order History:\n';
       ordersResult.rows.forEach((order, i) => {
         orderContext += `\n${i + 1}. ${order.restaurant}`;
         if (order.delivery_service && order.delivery_service !== 'Unknown') {
@@ -408,7 +434,7 @@ app.post('/chat', async (req, res) => {
         });
       });
     } else {
-      orderContext = '\n\nThe user has no order history yet.';
+      orderContext = '\n\nThe user has no takeout order history yet.';
     }
 
     // Build conversation messages
@@ -417,22 +443,24 @@ app.post('/chat', async (req, res) => {
         role: 'user',
         content: `You're a helpful food recommendation assistant. Be conversational but professional - like a useful app, not a casual friend. Keep responses brief (1-2 short paragraphs maximum, ideally 2-4 sentences).
 
+${recipeContext}
+
 ${orderContext}
 
 Guidelines:
 - Professional but friendly tone
 - Brief and direct responses
-- Reference order history when relevant
+- For COOKING AT HOME questions: recommend specific recipes from the recipe library above by name
+- For TAKEOUT questions: reference their order history
 - Ask follow-up questions when helpful
-- Suggest specific dishes or restaurants
 - Use complete sentences, proper grammar
 
 Examples of good responses:
-"Based on your 5-star rating for the Hot Honey Chicken, I'd recommend trying the Nashville Hot sandwich at the new spot on John R. Similar flavors with great spice."
+"For a healthy main dish, I'd recommend the Avocado Lime Salmon or Baked Sesame-Ginger Salmon in Parchment from your recipe library. Both are quick to prepare and packed with flavor."
 
-"I notice you haven't ordered Thai food recently. There's a highly-rated Thai place nearby if you're interested in trying something different."
+"Based on your 5-star rating for the Hot Honey Chicken, I'd recommend trying the Nashville Hot sandwich at the new spot on John R."
 
-"The birria tacos would be a great choice. You gave the carnitas a high rating last time, and these are even more flavorful."
+"Looking at your recipes, the Chili Garlic Noodles with Crispy Tofu would be perfect - it's bold, flavorful, and comes together quickly."
 
 Keep responses focused and concise.`
       }
