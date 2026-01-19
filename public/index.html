@@ -785,6 +785,336 @@
             margin-bottom: 20px;
             box-shadow: 6px 6px 0 rgba(74, 74, 31, 0.2);
             border: 4px solid #4A4A1F;
+            border-radius: 8px;
+        }
+        
+        /* Item Cards - Retro Style */
+        .item-card {
+            background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%);
+            border: 3px solid #B4B85E;
+            padding: 16px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            box-shadow: 3px 3px 0 rgba(180, 184, 94, 0.2);
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+        
+        .item-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: #4A4A1F;
+            flex: 1;
+            line-height: 1.3;
+        }
+        
+        .item-name input {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            border: 2px solid #B4B85E;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .item-price {
+            font-size: 17px;
+            font-weight: 800;
+            color: #FF9800;
+            white-space: nowrap;
+        }
+        
+        .item-price input {
+            width: 80px;
+            padding: 6px;
+            font-size: 16px;
+            font-weight: 700;
+            border: 2px solid #B4B85E;
+            border-radius: 4px;
+            text-align: right;
+            background: white;
+        }
+        
+        .label-text {
+            font-size: 12px;
+            font-weight: 800;
+            color: #6B6B3D;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            margin-top: 12px;
+        }
+        
+        /* Assignment Buttons */
+        .assignment-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .assign-btn {
+            flex: 1;
+            padding: 10px;
+            border: 3px solid #B4B85E;
+            background: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .assign-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 2px 2px 0 rgba(74, 74, 31, 0.2);
+        }
+        
+        .assign-btn.collin {
+            color: #1890ff;
+            border-color: #1890ff;
+        }
+        
+        .assign-btn.collin.selected {
+            background: #1890ff;
+            color: white;
+            border-color: #4A4A1F;
+        }
+        
+        .assign-btn.emily {
+            color: #722ed1;
+            border-color: #722ed1;
+        }
+        
+        .assign-btn.emily.selected {
+            background: #722ed1;
+            color: white;
+            border-color: #4A4A1F;
+        }
+        
+        /* Star Rating */
+        .stars {
+            display: flex;
+            gap: 4px;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .star {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .star.empty {
+            color: #DDD;
+        }
+        
+        .star.filled {
+            color: #faad14;
+        }
+        
+        .star:hover {
+            transform: scale(1.2);
+        }
+        
+        /* Notes Textarea */
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #B4B85E;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            resize: vertical;
+            min-height: 60px;
+            background: white;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #FF9800;
+            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.1);
+        }
+        
+        /* Summary Box */
+        .summary-box {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF5D6 100%);
+            border: 3px solid #B4B85E;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 3px 3px 0 rgba(180, 184, 94, 0.2);
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 16px;
+            color: #4A4A1F;
+        }
+        
+        .summary-row.total {
+            border-top: 3px solid #B4B85E;
+            margin-top: 8px;
+            padding-top: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            color: #FF9800;
+        }
+        
+        /* Restaurant Info */
+        .restaurant-info {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #B4B85E;
+        }
+        
+        .restaurant-name {
+            font-size: 24px;
+            font-weight: 900;
+            color: #4A4A1F;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        
+        .order-date {
+            font-size: 14px;
+            color: #6B6B3D;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .delivery-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+            border: 2px solid #4A4A1F;
+            box-shadow: 2px 2px 0 rgba(74, 74, 31, 0.2);
+        }
+        
+        /* Edit Mode Buttons */
+        .item-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px dashed #B4B85E;
+        }
+        
+        .edit-item-btn, .save-item-btn, .cancel-item-btn, .delete-item-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 3px solid #4A4A1F;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .edit-item-btn {
+            background: linear-gradient(135deg, #6B6B3D 0%, #5A5A32 100%);
+            color: #FFC107;
+        }
+        
+        .save-item-btn {
+            background: linear-gradient(135deg, #52c41a 0%, #3fa218 100%);
+            color: white;
+        }
+        
+        .cancel-item-btn {
+            background: linear-gradient(135deg, #8c8c8c 0%, #696969 100%);
+            color: white;
+        }
+        
+        .delete-item-btn {
+            background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
+            color: white;
+        }
+        
+        .edit-item-btn:hover, .save-item-btn:hover, 
+        .cancel-item-btn:hover, .delete-item-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0 rgba(74, 74, 31, 0.3);
+        }
+        
+        /* Person Badge in View Mode */
+        .person-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 8px;
+            border: 2px solid #4A4A1F;
+            box-shadow: 2px 2px 0 rgba(74, 74, 31, 0.15);
+        }
+        
+        .person-badge.collin {
+            background: #1890ff;
+            color: white;
+        }
+        
+        .person-badge.emily {
+            background: #722ed1;
+            color: white;
+        }
+        
+        /* Rating Display in View Mode */
+        .rating-display {
+            font-size: 24px;
+            color: #faad14;
+            margin-top: 8px;
+        }
+        
+        /* Notes Display */
+        .notes-display {
+            margin-top: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border: 2px solid #B4B85E;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            .item-card {
+                padding: 14px;
+            }
+            
+            .item-name {
+                font-size: 16px;
+            }
+            
+            .stars {
+                font-size: 24px;
+            }
+            
+            .assign-btn {
+                font-size: 12px;
+                padding: 8px;
+            }
         }
         
         /* UPLOAD AREA STYLING */
@@ -1601,41 +1931,87 @@
                             <div class="restaurant-name">${order.restaurant}</div>
                             ${order.delivery_service && order.delivery_service !== 'Unknown' ? 
                                 `<div class="delivery-badge">${order.delivery_service}</div>` : ''}
-                            <div style="color: #666; margin-top: 8px;">📍 ${order.address}</div>
+                            <div style="color: #666; margin-top: 8px; font-size: 15px;">📍 ${order.address}</div>
                         </div>
                         
-                        <h3 style="margin: 20px 0 15px 0;">Order Items</h3>
+                        <h3 style="margin: 20px 0 15px 0; font-size: 20px; color: #4A4A1F; text-transform: uppercase;">Order Items</h3>
                         
-                        ${order.items.map(item => `
-                            <div class="item-card">
-                                <div class="item-header">
-                                    <div class="item-name">${item.name}</div>
-                                    <div class="item-price">$${parseFloat(item.price).toFixed(2)}</div>
-                                </div>
-                                
-                                ${item.assignedTo ? `
-                                    <div style="margin: 10px 0;">
-                                        <span style="background: ${item.assignedTo === 'Collin' ? '#1890ff' : '#722ed1'}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
-                                            👤 ${item.assignedTo}
-                                        </span>
-                                    </div>
-                                ` : ''}
-                                
-                                ${item.rating > 0 ? `
-                                    <div style="margin: 10px 0;">
-                                        <div style="color: #faad14; font-size: 20px;">
-                                            ${'★'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}
+                        <div id="itemsList">
+                            ${order.items.map(item => `
+                                <div class="item-card" id="item-${item.id}">
+                                    <div class="item-view" id="view-${item.id}">
+                                        <div class="item-header">
+                                            <div class="item-name">${item.name}</div>
+                                            <div class="item-price">$${parseFloat(item.price).toFixed(2)}</div>
+                                        </div>
+                                        
+                                        ${item.assigned_to ? `
+                                            <div style="margin: 10px 0;">
+                                                <span class="person-badge ${item.assigned_to.toLowerCase()}">
+                                                    👤 ${item.assigned_to}
+                                                </span>
+                                            </div>
+                                        ` : ''}
+                                        
+                                        ${item.rating > 0 ? `
+                                            <div class="rating-display" style="margin: 10px 0;">
+                                                ${'★'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}
+                                            </div>
+                                        ` : ''}
+                                        
+                                        ${item.notes ? `
+                                            <div class="notes-display">
+                                                💭 ${item.notes}
+                                            </div>
+                                        ` : ''}
+                                        
+                                        <div class="item-actions">
+                                            <button class="edit-item-btn" onclick="editItem(${item.id})">✏️ Edit</button>
+                                            <button class="delete-item-btn" onclick="deleteItem(${item.id})">🗑️ Delete</button>
                                         </div>
                                     </div>
-                                ` : ''}
-                                
-                                ${item.notes ? `
-                                    <div style="margin: 10px 0; padding: 12px; background: white; border-radius: 8px; font-size: 14px; color: #666;">
-                                        💭 ${item.notes}
+                                    
+                                    <div class="item-edit" id="edit-${item.id}" style="display: none;">
+                                        <div class="item-header">
+                                            <div class="item-name">
+                                                <input type="text" id="name-${item.id}" value="${item.name}" />
+                                            </div>
+                                            <div class="item-price">
+                                                <input type="number" step="0.01" id="price-${item.id}" value="${parseFloat(item.price).toFixed(2)}" />
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="label-text">Who ate this?</div>
+                                        <div class="assignment-buttons">
+                                            <button class="assign-btn collin ${item.assigned_to === 'Collin' ? 'selected' : ''}" 
+                                                    onclick="selectPerson(${item.id}, 'Collin')">
+                                                👤 Collin
+                                            </button>
+                                            <button class="assign-btn emily ${item.assigned_to === 'Emily' ? 'selected' : ''}" 
+                                                    onclick="selectPerson(${item.id}, 'Emily')">
+                                                👤 Emily
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="label-text">Rating</div>
+                                        <div class="stars" id="stars-${item.id}">
+                                            ${[1,2,3,4,5].map(star => 
+                                                `<span class="star ${star <= item.rating ? 'filled' : 'empty'}" 
+                                                       onclick="setRating(${item.id}, ${star})">★</span>`
+                                            ).join('')}
+                                        </div>
+                                        
+                                        <div class="label-text">Notes</div>
+                                        <textarea id="notes-${item.id}">${item.notes || ''}</textarea>
+                                        
+                                        <div class="item-actions">
+                                            <button class="save-item-btn" onclick="saveItemEdit(${item.id}, ${orderId})">💾 Save</button>
+                                            <button class="cancel-item-btn" onclick="cancelItemEdit(${item.id})">✖️ Cancel</button>
+                                        </div>
                                     </div>
-                                ` : ''}
-                            </div>
-                        `).join('')}
+                                </div>
+                            `).join('')}
+                        </div>
                         
                         <div class="summary-box">
                             <div class="summary-row">
@@ -1676,6 +2052,94 @@
                 
             } catch (error) {
                 alert('Error loading order: ' + error.message);
+            }
+        }
+        
+        // Edit item functions
+        function editItem(itemId) {
+            document.getElementById(`view-${itemId}`).style.display = 'none';
+            document.getElementById(`edit-${itemId}`).style.display = 'block';
+        }
+        
+        function cancelItemEdit(itemId) {
+            document.getElementById(`view-${itemId}`).style.display = 'block';
+            document.getElementById(`edit-${itemId}`).style.display = 'none';
+        }
+        
+        function selectPerson(itemId, person) {
+            const buttons = document.querySelectorAll(`#edit-${itemId} .assign-btn`);
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            const btn = person === 'Collin' ? buttons[0] : buttons[1];
+            btn.classList.add('selected');
+        }
+        
+        function setRating(itemId, rating) {
+            const stars = document.querySelectorAll(`#stars-${itemId} .star`);
+            stars.forEach((star, i) => {
+                star.className = i < rating ? 'star filled' : 'star empty';
+            });
+        }
+        
+        async function saveItemEdit(itemId, orderId) {
+            const name = document.getElementById(`name-${itemId}`).value.trim();
+            const price = parseFloat(document.getElementById(`price-${itemId}`).value);
+            const notes = document.getElementById(`notes-${itemId}`).value.trim();
+            
+            const collinBtn = document.querySelector(`#edit-${itemId} .assign-btn.collin`);
+            const emilyBtn = document.querySelector(`#edit-${itemId} .assign-btn.emily`);
+            let assignedTo = null;
+            if (collinBtn.classList.contains('selected')) assignedTo = 'Collin';
+            if (emilyBtn.classList.contains('selected')) assignedTo = 'Emily';
+            
+            const filledStars = document.querySelectorAll(`#stars-${itemId} .star.filled`).length;
+            const rating = filledStars;
+            
+            if (!name) {
+                alert('Item name cannot be empty');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/order-items/${itemId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, price, assigned_to: assignedTo, rating, notes })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to update item');
+                }
+                
+                // Refresh the order view
+                viewOrder(orderId);
+                
+            } catch (error) {
+                alert('Error saving item: ' + error.message);
+            }
+        }
+        
+        async function deleteItem(itemId) {
+            if (!confirm('Delete this item?')) return;
+            
+            try {
+                const response = await fetch(`/order-items/${itemId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to delete item');
+                }
+                
+                // Remove the item card from view
+                document.getElementById(`item-${itemId}`).remove();
+                
+            } catch (error) {
+                alert('Error deleting item: ' + error.message);
             }
         }
         
