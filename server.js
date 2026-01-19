@@ -765,6 +765,9 @@ app.get('/recommend', async (req, res) => {
       recommendation += `<div class="rec-info-item"><span>🍽️</span> Servings: ${selected.servings || 'N/A'}</div>`;
       recommendation += `</div>`;
       
+      // Wrap tabs in a single bordered container
+      recommendation += `<div class="recipe-tabs-wrapper">`;
+      
       // Build tabs for ingredients and instructions
       recommendation += `
         <div class="recipe-tabs">
@@ -812,7 +815,9 @@ app.get('/recommend', async (req, res) => {
         recommendation += `</div>`;
       }
       
-      recommendation += `</div>`;
+      recommendation += `</div>`; // Close instructions tab
+      
+      recommendation += `</div>`; // Close recipe-tabs-wrapper
       
       return res.json({
         success: true,
