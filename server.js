@@ -758,24 +758,67 @@ app.get('/recommend', async (req, res) => {
       // Pick random
       const selected = candidates[Math.floor(Math.random() * candidates.length)];
       
-      let recommendation = `<div class="rec-details">`;
-      recommendation += `<h3 style="font-size: 24px; font-weight: 900; color: #4A4A1F; margin-bottom: 12px;">${selected.name}</h3>`;
+      // Build info header
+      let recommendation = `<div class="rec-info-header">`;
+      if (selected.prep_time) {
+        recommendation += `<div class="rec-info-item"><span>⏱️</span> Prep: ${selected.prep_time}</div>`;
+      }
+      if (selected.cook_time) {
+        recommendation += `<div class="rec-info-item"><span>🔥</span> Cook: ${selected.cook_time}</div>`;
+      }
+      if (selected.servings) {
+        recommendation += `<div class="rec-info-item"><span>🍽️</span> ${selected.servings}</div>`;
+      }
+      recommendation += `</div>`;
       
-      const details = [];
-      if (selected.prep_time) details.push(`⏱️ Prep: ${selected.prep_time}`);
-      if (selected.cook_time) details.push(`🔥 Cook: ${selected.cook_time}`);
-      if (selected.servings) details.push(`🍽️ Serves: ${selected.servings}`);
+      // Build tabs for ingredients and instructions
+      recommendation += `
+        <div class="recipe-tabs">
+          <button class="recipe-tab active" onclick="switchRecipeTab('ingredients')">📝 Ingredients</button>
+          <button class="recipe-tab" onclick="switchRecipeTab('instructions')">👩🏻‍🍳 Instructions</button>
+        </div>
+      `;
       
-      if (details.length > 0) {
-        recommendation += `<p style="color: #666; margin-bottom: 12px;">${details.join(' • ')}</p>`;
+      // Ingredients tab
+      recommendation += `<div class="recipe-tab-content active" id="ingredients-tab">`;
+      if (selected.ingredients) {
+        // Format ingredients as list
+        const ingredientLines = selected.ingredients.split('\n').filter(line => line.trim());
+        recommendation += `<ul>`;
+        ingredientLines.forEach(line => {
+          if (line.trim()) {
+            recommendation += `<li>${line.trim()}</li>`;
+          }
+        });
+        recommendation += `</ul>`;
+      } else {
+        recommendation += `<p>No ingredients listed.</p>`;
+      }
+      recommendation += `</div>`;
+      
+      // Instructions tab
+      recommendation += `<div class="recipe-tab-content" id="instructions-tab">`;
+      if (selected.directions) {
+        // Format directions as paragraphs
+        const directionLines = selected.directions.split('\n\n');
+        directionLines.forEach((para, i) => {
+          if (para.trim()) {
+            recommendation += `<p><strong>Step ${i + 1}:</strong> ${para.trim()}</p>`;
+          }
+        });
+      } else {
+        recommendation += `<p>No instructions available.</p>`;
       }
       
-      if (selected.categories && selected.categories.length > 0) {
-        recommendation += `<p style="margin-bottom: 12px;"><strong>Category:</strong> ${selected.categories.join(', ')}</p>`;
+      // Add notes if available
+      if (selected.notes && selected.notes.trim()) {
+        recommendation += `<div style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, #FFF9E6 0%, #FFE082 100%); border: 3px solid #FF9800;">`;
+        recommendation += `<h4>📌 Notes:</h4>`;
+        recommendation += `<p>${selected.notes}</p>`;
+        recommendation += `</div>`;
       }
       
       recommendation += `</div>`;
-      recommendation += `<p style="font-size: 16px; line-height: 1.6;">This recipe matches your filters and looks delicious! Check your Paprika app for the full recipe.</p>`;
       
       return res.json({
         success: true,
