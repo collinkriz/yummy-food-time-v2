@@ -18,8 +18,8 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            background: #F5F1E8;
+            font-family: 'Comic Sans MS', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #FFE5E5 0%, #FFF4E5 50%, #E5F5FF 100%);
             min-height: 100vh;
             padding-bottom: 40px;
             position: relative;
@@ -28,7 +28,7 @@
         .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 10px;
+            padding: 5px;
             width: 100%;
             overflow-x: hidden;
             box-sizing: border-box;
@@ -36,17 +36,16 @@
         
         @media (max-width: 768px) {
             .container {
-                padding: 8px;
+                padding: 5px;
             }
         }
         
         .header {
-            background: #FFC107;
-            border-radius: 20px;
-            padding: 28px 24px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            border: 3px solid #4A4A1F;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FFD93D 100%);
+            border-radius: 25px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
             position: relative;
             overflow: hidden;
             box-sizing: border-box;
@@ -54,79 +53,78 @@
         
         @media (max-width: 768px) {
             .header {
-                padding: 20px 16px;
-                border-radius: 16px;
-                margin-bottom: 12px;
+                padding: 12px;
+                border-radius: 15px;
+                margin-bottom: 10px;
             }
         }
         
         .header::before {
-            content: '';
-            display: none;
+            content: '🍕🍔🌮🍜🍱';
+            position: absolute;
+            top: -10px;
+            right: -20px;
+            font-size: 80px;
+            opacity: 0.15;
+            transform: rotate(15deg);
         }
         
         h1 {
-            color: #4A4A1F;
-            font-size: 34px;
-            font-weight: 800;
-            margin-bottom: 6px;
-            text-shadow: none;
+            color: white;
+            font-size: 32px;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
             position: relative;
-            letter-spacing: -0.5px;
         }
         
         .subtitle {
-            color: #4A4A1F;
-            font-size: 15px;
-            font-weight: 600;
+            color: rgba(255,255,255,0.95);
+            font-size: 14px;
             position: relative;
         }
         
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-top: 22px;
-            background: white;
-            padding: 6px;
-            border-radius: 12px;
-            border: 3px solid #4A4A1F;
+            gap: 8px;
+            margin-top: 20px;
             position: relative;
         }
         
         @media (max-width: 768px) {
             .tabs {
-                gap: 8px;
-                margin-top: 16px;
+                gap: 5px;
+                margin-top: 12px;
             }
         }
         
         .tab {
             flex: 1;
-            padding: 12px 8px;
-            background: white;
+            padding: 14px 8px;
+            background: rgba(255,255,255,0.3);
             border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 700;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
-            color: #4A4A1F;
-            text-shadow: none;
-            backdrop-filter: none;
+            transition: all 0.3s;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
         }
         
         @media (max-width: 768px) {
             .tab {
                 padding: 10px 6px;
-                font-size: 14px;
+                font-size: 13px;
+                border-radius: 12px;
             }
         }
         
         .tab.active {
-            background: #6B6B3D;
-            color: white;
-            transform: scale(1.02);
-            box-shadow: none;
+            background: white;
+            color: #FF6B6B;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             text-shadow: none;
         }
         
@@ -146,11 +144,11 @@
         
         .card {
             background: white;
-            border-radius: 18px;
-            padding: 24px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-            border: 3px solid #4A4A1F;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 3px solid #FFD93D;
             width: 100%;
             max-width: 100%;
             overflow-x: hidden;
@@ -159,36 +157,42 @@
         
         @media (max-width: 768px) {
             .card {
-                padding: 16px;
-                border-radius: 14px;
-                margin-bottom: 12px;
+                padding: 12px;
+                border-radius: 15px;
+                border-width: 2px;
+                margin-bottom: 10px;
             }
         }
         
         .upload-area {
-            border: 4px dashed #B4B85E;
-            border-radius: 16px;
-            padding: 60px 20px;
+            border: 4px dashed #FF6B6B;
+            border-radius: 20px;
+            padding: 50px 20px;
             text-align: center;
-            background: #FEFDF8;
+            background: linear-gradient(135deg, #FFF5F5 0%, #FFFAED 100%);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
             position: relative;
         }
         
         .upload-area:hover {
-            border-color: #FFC107;
-            background: #FFF9E6;
-            transform: scale(1.01);
+            border-color: #FFD93D;
+            background: linear-gradient(135deg, #FFFAED 0%, #FFF5F5 100%);
+            transform: scale(1.02);
         }
         
         .upload-area::after {
-            content: '';
-            display: none;
+            content: '✨';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 30px;
+            animation: sparkle 2s infinite;
         }
         
         @keyframes sparkle {
-            display: none;
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
         }
         
         input[type="file"] {
@@ -196,19 +200,20 @@
         }
         
         .upload-icon {
-            font-size: 64px;
-            margin-bottom: 14px;
-            animation: none;
+            font-size: 60px;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
         }
         
         @keyframes bounce {
-            display: none;
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
         
         .upload-text {
-            color: #4A4A1F;
-            font-weight: 700;
-            font-size: 19px;
+            color: #FF6B6B;
+            font-weight: bold;
+            font-size: 18px;
         }
         
         .preview {
@@ -225,31 +230,30 @@
             width: auto !important;
             height: auto !important;
             object-fit: contain;
-            border-radius: 12px;
+            border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border: 3px solid #B4B85E;
+            border: 3px solid #FFD93D;
         }
         
         button {
             width: 100%;
-            padding: 17px;
-            background: #6B6B3D;
+            padding: 18px;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
             color: white;
-            border: 3px solid #4A4A1F;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
         
         button:hover:not(:disabled) {
-            background: #5A5A32;
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
         }
         
         button:active:not(:disabled) {
@@ -260,7 +264,6 @@
             background: #ccc;
             cursor: not-allowed;
             box-shadow: none;
-            border-color: #999;
         }
         
         .status {
@@ -290,55 +293,57 @@
         }
         
         .restaurant-info {
-            background: #FF9800;
-            padding: 24px;
-            border-radius: 16px;
+            background: linear-gradient(135deg, #FFF9C4 0%, #FFE082 100%);
+            padding: 25px;
+            border-radius: 20px;
             margin-bottom: 20px;
-            border: 3px solid #4A4A1F;
+            border: 3px solid #FFD93D;
             position: relative;
         }
         
         .restaurant-info::before {
-            content: '';
-            display: none;
+            content: '🏪';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 40px;
+            opacity: 0.3;
         }
         
         .restaurant-name {
             font-size: 26px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: #4A4A1F;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF6B6B;
             word-wrap: break-word;
             overflow-wrap: break-word;
-            letter-spacing: -0.3px;
         }
         
         .delivery-badge {
             display: inline-block;
-            background: white;
-            color: #4A4A1F;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            margin: 6px 0;
-            box-shadow: none;
-            border: 2px solid #4A4A1F;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            margin: 8px 0;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
         }
         
         .item-card {
-            background: #FEFDF8;
+            background: linear-gradient(135deg, #F5F5F5 0%, #FAFAFA 100%);
             padding: 20px;
-            border-radius: 14px;
+            border-radius: 15px;
             margin-bottom: 15px;
-            border: 3px solid #B4B85E;
-            transition: all 0.2s;
+            border: 3px solid #E0E0E0;
+            transition: all 0.3s;
         }
         
         .item-card:hover {
-            border-color: #FFC107;
-            transform: translateX(3px);
-            box-shadow: -3px 3px 12px rgba(0,0,0,0.1);
+            border-color: #FFD93D;
+            transform: translateX(5px);
+            box-shadow: -5px 5px 15px rgba(0,0,0,0.1);
         }
         
         .item-header {
@@ -346,29 +351,26 @@
             justify-content: space-between;
             align-items: start;
             margin-bottom: 15px;
-            padding-bottom: 14px;
-            border-bottom: 3px solid #FFC107;
         }
         
         .item-name {
-            font-weight: 700;
+            font-weight: bold;
             font-size: 17px;
             flex: 1;
-            color: #4A4A1F;
+            color: #333;
             word-wrap: break-word;
             overflow-wrap: break-word;
-            line-height: 1.3;
         }
         
         .item-price {
-            background: transparent;
-            color: #FF9800;
-            padding: 0;
-            border-radius: 0;
-            font-weight: 800;
-            font-size: 20px;
-            margin-left: 12px;
-            box-shadow: none;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-left: 10px;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
         }
         
         .assignment-buttons {
@@ -379,36 +381,34 @@
         
         .assign-btn {
             flex: 1;
-            padding: 13px;
-            border: 3px solid #4A4A1F;
+            padding: 12px;
+            border: 3px solid #E0E0E0;
             background: white;
-            color: #4A4A1F;
-            border-radius: 10px;
-            font-weight: 700;
+            color: #666;
+            border-radius: 12px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
             font-size: 15px;
         }
         
         .assign-btn:hover {
-            background: #FFF9E6;
-            transform: scale(1.02);
+            border-color: #FFD93D;
+            transform: scale(1.05);
         }
         
         .assign-btn.collin.selected {
-            background: #B4B85E;
+            background: linear-gradient(135deg, #4FC3F7 0%, #29B6F6 100%);
             color: white;
-            border-color: #4A4A1F;
-            box-shadow: none;
-            transform: scale(1.03);
+            border-color: #29B6F6;
+            box-shadow: 0 4px 15px rgba(41, 182, 246, 0.4);
         }
         
         .assign-btn.emily.selected {
-            background: #B4B85E;
+            background: linear-gradient(135deg, #BA68C8 0%, #AB47BC 100%);
             color: white;
-            border-color: #4A4A1F;
-            box-shadow: none;
-            transform: scale(1.03);
+            border-color: #AB47BC;
+            box-shadow: 0 4px 15px rgba(171, 71, 188, 0.4);
         }
         
         .stars {
@@ -419,62 +419,58 @@
         }
         
         .star {
-            font-size: 32px;
+            font-size: 36px;
             cursor: pointer;
-            transition: all 0.1s;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            transition: all 0.2s;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
         
         .star:hover {
-            transform: scale(1.15);
+            transform: scale(1.2) rotate(15deg);
         }
         
         .star.filled {
-            color: #FFC107;
+            color: #FFD93D;
         }
         
         .star.empty {
-            color: #E8DCC0;
+            color: #E0E0E0;
         }
         
         textarea {
             width: 100%;
             padding: 14px;
-            border: 3px solid #4A4A1F;
-            border-radius: 10px;
+            border: 3px solid #E0E0E0;
+            border-radius: 12px;
             font-family: inherit;
             font-size: 15px;
             resize: vertical;
             min-height: 70px;
-            transition: all 0.2s;
-            background: white;
-            color: #4A4A1F;
-            font-weight: 500;
+            transition: all 0.3s;
         }
         
         textarea:focus {
             outline: none;
-            border-color: #6B6B3D;
-            box-shadow: none;
-            background: #FEFDF8;
-        }
-        
-        textarea::placeholder {
-            color: #9B9B8A;
+            border-color: #FFD93D;
+            box-shadow: 0 0 0 3px rgba(255, 217, 61, 0.2);
         }
         
         .summary-box {
-            background: #FFC107;
-            padding: 22px;
-            border-radius: 16px;
+            background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%);
+            padding: 25px;
+            border-radius: 20px;
             margin-top: 20px;
-            border: 3px solid #4A4A1F;
+            border: 3px solid #4DD0E1;
             position: relative;
         }
         
         .summary-box::before {
-            content: '';
-            display: none;
+            content: '💰';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 40px;
+            opacity: 0.3;
         }
         
         .summary-row {
@@ -483,28 +479,25 @@
             padding: 10px 0;
             font-size: 15px;
             font-weight: 600;
-            color: #4A4A1F;
         }
         
         .summary-row.total {
             font-size: 22px;
-            font-weight: 800;
-            border-top: 4px solid #4A4A1F;
-            padding-top: 14px;
+            font-weight: bold;
+            border-top: 3px solid #26C6DA;
+            padding-top: 15px;
             margin-top: 10px;
-            color: #4A4A1F;
+            color: #00838F;
         }
         
         .save-btn {
-            background: #6B6B3D;
+            background: linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%);
             margin-top: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            border: 3px solid #4A4A1F;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
         }
         
         .save-btn:hover:not(:disabled) {
-            background: #5A5A32;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
         }
         
         .order-history-item {
@@ -689,7 +682,6 @@
             
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('upload')">📸 Upload</button>
-                <button class="tab" onclick="switchTab('bulk')">📂 Bulk Import</button>
                 <button class="tab" onclick="switchTab('history')">📋 History</button>
                 <button class="tab" onclick="switchTab('chat')">💬 Chat</button>
             </div>
@@ -714,66 +706,6 @@
             </div>
             
             <div id="results" style="display: none;"></div>
-        </div>
-        
-        <!-- Bulk Import Tab -->
-        <div id="bulk-tab" class="tab-content">
-            <div class="card">
-                <h2 style="margin-bottom: 16px; color: #4A4A1F; font-size: 24px; font-weight: 800;">Bulk Import Orders</h2>
-                <p style="margin-bottom: 20px; color: #4A4A1F; line-height: 1.5;">
-                    Upload a JSON file with multiple orders to import them all at once. 
-                    <a href="#" onclick="downloadTemplate(); return false;" style="color: #6B6B3D; font-weight: 700;">Download template</a>
-                </p>
-                
-                <div class="upload-area" id="csvUploadArea">
-                    <div class="upload-icon">📂</div>
-                    <div class="upload-text">Upload JSON File</div>
-                    <input type="file" id="csvFileInput" accept=".json,.txt">
-                </div>
-                
-                <div id="bulkPreview" style="display: none; margin: 20px 0;">
-                    <h3 style="margin-bottom: 12px; color: #4A4A1F; font-weight: 700;">Preview</h3>
-                    <div id="bulkPreviewContent" style="background: #FEFDF8; padding: 16px; border-radius: 12px; border: 2px solid #B4B85E; max-height: 300px; overflow-y: auto; font-size: 14px; color: #4A4A1F;"></div>
-                </div>
-                
-                <button id="bulkImportBtn" disabled style="display: none;">Import All Orders</button>
-                
-                <div id="bulkStatus" style="display: none;"></div>
-            </div>
-            
-            <div class="card" style="background: #FFF9E6; border-color: #FFspecifications107;">
-                <h3 style="margin-bottom: 12px; color: #4A4A1F; font-weight: 700;">💡 How to use bulk import:</h3>
-                <ol style="margin-left: 20px; color: #4A4A1F; line-height: 1.8;">
-                    <li><strong>Option 1 - ChatGPT:</strong> Upload 10-20 receipt images to ChatGPT and ask it to extract them into the JSON format below</li>
-                    <li><strong>Option 2 - Manual:</strong> Download the template and fill it in manually</li>
-                    <li><strong>Upload:</strong> Upload your JSON file and click "Import All Orders"</li>
-                    <li><strong>Add ratings later:</strong> Go to History tab to add ratings and notes</li>
-                </ol>
-                
-                <h4 style="margin: 20px 0 12px 0; color: #4A4A1F; font-weight: 700;">ChatGPT Prompt:</h4>
-                <div style="background: white; padding: 14px; border-radius: 10px; border: 2px solid #4A4A1F; font-family: monospace; font-size: 13px; color: #4A4A1F; line-height: 1.6;">
-                    Extract all orders from these receipt images into this exact JSON format:
-                    <br><br>
-                    {<br>
-                    &nbsp;&nbsp;"orders": [<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;{<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"restaurant": "Restaurant Name",<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"address": "123 Main St",<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"deliveryService": "DoorDash",<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"subtotal": 20.00,<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"deliveryFee": 3.00,<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"serviceFee": 2.00,<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"tax": 2.00,<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"tip": 5.00,<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"total": 32.00,<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"items": [<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ "name": "Item Name", "price": 10.00 }<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;}<br>
-                    &nbsp;&nbsp;]<br>
-                    }
-                </div>
-            </div>
         </div>
         
         <!-- History Tab -->
@@ -831,17 +763,13 @@
                 document.querySelector('.tab:nth-child(1)').classList.add('active');
                 document.getElementById('upload-tab').classList.add('active');
                 currentView = 'upload';
-            } else if (tab === 'bulk') {
-                document.querySelector('.tab:nth-child(2)').classList.add('active');
-                document.getElementById('bulk-tab').classList.add('active');
-                currentView = 'bulk';
             } else if (tab === 'history') {
-                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
                 document.getElementById('history-tab').classList.add('active');
                 currentView = 'history';
                 loadOrders();
             } else if (tab === 'chat') {
-                document.querySelector('.tab:nth-child(4)').classList.add('active');
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
                 document.getElementById('chat-tab').classList.add('active');
                 currentView = 'chat';
             }
@@ -1101,148 +1029,6 @@
                     status.style.display = 'none';
                     extractBtn.disabled = true;
                     fileInput.value = '';
-                }, 2000);
-                
-            } catch (error) {
-                console.error('Save error:', error);
-                status.className = 'status error';
-                status.textContent = '❌ Error: ' + error.message;
-            }
-        }
-        
-        // Bulk Import functionality
-        const csvUploadArea = document.getElementById('csvUploadArea');
-        const csvFileInput = document.getElementById('csvFileInput');
-        const bulkPreview = document.getElementById('bulkPreview');
-        const bulkPreviewContent = document.getElementById('bulkPreviewContent');
-        const bulkImportBtn = document.getElementById('bulkImportBtn');
-        const bulkStatus = document.getElementById('bulkStatus');
-        let bulkOrders = null;
-        
-        csvUploadArea.addEventListener('click', () => csvFileInput.click());
-        
-        csvFileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                try {
-                    const text = await file.text();
-                    const data = JSON.parse(text);
-                    
-                    if (!data.orders || !Array.isArray(data.orders)) {
-                        throw new Error('Invalid format. JSON must have an "orders" array.');
-                    }
-                    
-                    bulkOrders = data.orders;
-                    
-                    // Show preview
-                    bulkPreviewContent.innerHTML = `
-                        <strong>${bulkOrders.length} orders ready to import:</strong><br><br>
-                        ${bulkOrders.slice(0, 5).map((order, i) => `
-                            ${i + 1}. ${order.restaurant || 'Unknown'} - $${order.total || '0.00'} (${order.items?.length || 0} items)
-                        `).join('<br>')}
-                        ${bulkOrders.length > 5 ? `<br>... and ${bulkOrders.length - 5} more` : ''}
-                    `;
-                    
-                    bulkPreview.style.display = 'block';
-                    bulkImportBtn.style.display = 'block';
-                    bulkImportBtn.disabled = false;
-                    
-                } catch (error) {
-                    bulkStatus.style.display = 'block';
-                    bulkStatus.className = 'status error';
-                    bulkStatus.textContent = '❌ Error reading file: ' + error.message;
-                }
-            }
-        });
-        
-        bulkImportBtn.addEventListener('click', async () => {
-            try {
-                bulkStatus.style.display = 'block';
-                bulkStatus.className = 'status loading';
-                bulkStatus.textContent = `Importing ${bulkOrders.length} orders...`;
-                bulkImportBtn.disabled = true;
-                
-                const response = await fetch('/bulk-import', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orders: bulkOrders })
-                });
-                
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Import failed');
-                }
-                
-                bulkStatus.className = 'status success';
-                bulkStatus.textContent = `✅ Successfully imported ${result.imported} orders!${result.failed > 0 ? ` (${result.failed} failed)` : ''}`;
-                
-                // Reset after success
-                setTimeout(() => {
-                    bulkOrders = null;
-                    bulkPreview.style.display = 'none';
-                    bulkImportBtn.style.display = 'none';
-                    bulkStatus.style.display = 'none';
-                    csvFileInput.value = '';
-                }, 3000);
-                
-            } catch (error) {
-                bulkStatus.className = 'status error';
-                bulkStatus.textContent = '❌ Import error: ' + error.message;
-                bulkImportBtn.disabled = false;
-            }
-        });
-        
-        function downloadTemplate() {
-            const template = {
-                orders: [
-                    {
-                        restaurant: "Taco Bell",
-                        address: "123 Main St, Hazel Park, MI",
-                        deliveryService: "DoorDash",
-                        subtotal: 15.00,
-                        deliveryFee: 2.99,
-                        serviceFee: 3.00,
-                        tax: 1.50,
-                        discount: 0,
-                        tip: 5.00,
-                        total: 27.49,
-                        items: [
-                            { name: "Crunchwrap Supreme", price: 7.50 },
-                            { name: "Nacho Fries", price: 3.50 },
-                            { name: "Baja Blast", price: 4.00 }
-                        ]
-                    },
-                    {
-                        restaurant: "Pizza Hut",
-                        address: "456 Oak Ave, Hazel Park, MI",
-                        deliveryService: "Uber Eats",
-                        subtotal: 25.00,
-                        deliveryFee: 3.99,
-                        serviceFee: 4.00,
-                        tax: 2.50,
-                        discount: 0,
-                        tip: 6.00,
-                        total: 41.49,
-                        items: [
-                            { name: "Large Pepperoni Pizza", price: 18.00 },
-                            { name: "Breadsticks", price: 7.00 }
-                        ]
-                    }
-                ]
-            };
-            
-            const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'bulk-import-template.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-                    status.style.display = 'none';
-                    extractBtn.disabled = true;
-                    fileInput.value = '';
                     
                     // Switch to history
                     switchTab('history');
@@ -1323,7 +1109,6 @@
                 
                 detailDiv.innerHTML = `
                     <button class="back-btn" onclick="backToList()">← Back to Orders</button>
-                    <button class="back-btn" onclick="editOrder(${orderId})" style="background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%); margin-left: 10px;">✏️ Edit Order</button>
                     
                     <div class="card">
                         <div class="restaurant-info">
@@ -1338,10 +1123,10 @@
                             <div class="restaurant-name">${order.restaurant}</div>
                             ${order.delivery_service && order.delivery_service !== 'Unknown' ? 
                                 `<div class="delivery-badge">${order.delivery_service}</div>` : ''}
-                            <div style="color: #4A4A1F; margin-top: 8px; font-weight: 600;">📍 ${order.address}</div>
+                            <div style="color: #666; margin-top: 8px;">📍 ${order.address}</div>
                         </div>
                         
-                        <h3 style="margin: 20px 0 15px 0; color: #4A4A1F; font-weight: 700;">Order Items</h3>
+                        <h3 style="margin: 20px 0 15px 0;">Order Items</h3>
                         
                         ${order.items.map(item => `
                             <div class="item-card">
@@ -1352,7 +1137,7 @@
                                 
                                 ${item.assignedTo ? `
                                     <div style="margin: 10px 0;">
-                                        <span style="background: #B4B85E; color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                                        <span style="background: ${item.assignedTo === 'Collin' ? '#1890ff' : '#722ed1'}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
                                             👤 ${item.assignedTo}
                                         </span>
                                     </div>
@@ -1360,14 +1145,14 @@
                                 
                                 ${item.rating > 0 ? `
                                     <div style="margin: 10px 0;">
-                                        <div style="color: #FFC107; font-size: 24px;">
+                                        <div style="color: #faad14; font-size: 20px;">
                                             ${'★'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}
                                         </div>
                                     </div>
                                 ` : ''}
                                 
                                 ${item.notes ? `
-                                    <div style="margin: 10px 0; padding: 12px; background: white; border-radius: 8px; border: 2px solid #B4B85E; font-size: 14px; color: #4A4A1F;">
+                                    <div style="margin: 10px 0; padding: 12px; background: white; border-radius: 8px; font-size: 14px; color: #666;">
                                         💭 ${item.notes}
                                     </div>
                                 ` : ''}
@@ -1420,253 +1205,6 @@
             document.getElementById('ordersList').style.display = 'block';
             document.getElementById('orderDetail').style.display = 'none';
             loadOrders();
-        }
-        
-        let editingOrder = null;
-        
-        async function editOrder(orderId) {
-            try {
-                const response = await fetch(`/orders/${orderId}`);
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to load order');
-                }
-                
-                editingOrder = result.order;
-                
-                const detailDiv = document.getElementById('orderDetail');
-                detailDiv.innerHTML = `
-                    <button class="back-btn" onclick="viewOrder(${orderId})">← Cancel</button>
-                    
-                    <div class="card">
-                        <h2 style="margin-bottom: 20px; color: #4A4A1F; font-weight: 800;">Edit Order</h2>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 14px;">RESTAURANT NAME</label>
-                            <input type="text" id="edit-restaurant" value="${editingOrder.restaurant}" 
-                                style="width: 100%; padding: 12px; border: 3px solid #4A4A1F; border-radius: 10px; font-size: 16px; font-weight: 600;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 14px;">ADDRESS</label>
-                            <input type="text" id="edit-address" value="${editingOrder.address}" 
-                                style="width: 100%; padding: 12px; border: 3px solid #4A4A1F; border-radius: 10px; font-size: 15px;">
-                        </div>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 14px;">DELIVERY SERVICE</label>
-                            <select id="edit-delivery" style="width: 100%; padding: 12px; border: 3px solid #4A4A1F; border-radius: 10px; font-size: 15px; font-weight: 600;">
-                                <option value="DoorDash" ${editingOrder.delivery_service === 'DoorDash' ? 'selected' : ''}>DoorDash</option>
-                                <option value="Uber Eats" ${editingOrder.delivery_service === 'Uber Eats' ? 'selected' : ''}>Uber Eats</option>
-                                <option value="Grubhub" ${editingOrder.delivery_service === 'Grubhub' ? 'selected' : ''}>Grubhub</option>
-                                <option value="Postmates" ${editingOrder.delivery_service === 'Postmates' ? 'selected' : ''}>Postmates</option>
-                                <option value="Other" ${editingOrder.delivery_service === 'Other' ? 'selected' : ''}>Other</option>
-                            </select>
-                        </div>
-                        
-                        <h3 style="margin: 30px 0 15px 0; color: #4A4A1F; font-weight: 700;">Items</h3>
-                        
-                        <div id="edit-items-container">
-                            ${editingOrder.items.map((item, i) => `
-                                <div class="item-card" id="edit-item-${i}" style="border-color: #B4B85E;">
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">ITEM NAME</label>
-                                        <input type="text" id="edit-item-name-${i}" value="${item.name}" 
-                                            style="width: 100%; padding: 10px; border: 2px solid #4A4A1F; border-radius: 8px; font-size: 15px;">
-                                    </div>
-                                    
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">PRICE</label>
-                                        <input type="number" step="0.01" id="edit-item-price-${i}" value="${item.price}" 
-                                            style="width: 100%; padding: 10px; border: 2px solid #4A4A1F; border-radius: 8px; font-size: 15px;">
-                                    </div>
-                                    
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">ASSIGN TO</label>
-                                        <div style="display: flex; gap: 10px;">
-                                            <button class="assign-btn collin ${item.assignedTo === 'Collin' ? 'selected' : ''}" 
-                                                onclick="toggleEditAssignment(${i}, 'Collin')">Collin</button>
-                                            <button class="assign-btn emily ${item.assignedTo === 'Emily' ? 'selected' : ''}" 
-                                                onclick="toggleEditAssignment(${i}, 'Emily')">Emily</button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">RATING</label>
-                                        <div class="stars" id="edit-stars-${i}">
-                                            ${[1,2,3,4,5].map(star => 
-                                                `<span class="star ${star <= (item.rating || 0) ? 'filled' : 'empty'}" 
-                                                    onclick="setEditRating(${i}, ${star})">★</span>`
-                                            ).join('')}
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">NOTES</label>
-                                        <textarea id="edit-item-notes-${i}" 
-                                            style="width: 100%; padding: 12px; border: 3px solid #4A4A1F; border-radius: 10px; font-size: 14px; min-height: 70px;">${item.notes || ''}</textarea>
-                                    </div>
-                                    
-                                    <button onclick="removeEditItem(${i})" 
-                                        style="background: linear-gradient(135deg, #EF5350 0%, #E53935 100%); margin-top: 10px; padding: 10px; font-size: 14px;">
-                                        🗑️ Remove Item
-                                    </button>
-                                </div>
-                            `).join('')}
-                        </div>
-                        
-                        <button onclick="addEditItem()" 
-                            style="background: linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%); margin-top: 15px;">
-                            ➕ Add Item
-                        </button>
-                        
-                        <h3 style="margin: 30px 0 15px 0; color: #4A4A1F; font-weight: 700;">Order Totals</h3>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">SUBTOTAL</label>
-                                <input type="number" step="0.01" id="edit-subtotal" value="${editingOrder.subtotal}" 
-                                    style="width: 100%; padding: 10px; border: 2px solid #4A4A1F; border-radius: 8px; font-size: 15px;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">DELIVERY FEE</label>
-                                <input type="number" step="0.01" id="edit-deliveryFee" value="${editingOrder.delivery_fee}" 
-                                    style="width: 100%; padding: 10px; border: 2px solid #4A4A1F; border-radius: 8px; font-size: 15px;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">SERVICE FEE</label>
-                                <input type="number" step="0.01" id="edit-serviceFee" value="${editingOrder.service_fee}" 
-                                    style="width: 100%; padding: 10px; border: 2px solid #4A4A1F; border-radius: 8px; font-size: 15px;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">TAX</label>
-                                <input type="number" step="0.01" id="edit-tax" value="${editingOrder.tax}" 
-                                    style="width: 100%; padding: 10px; border: 2px solid #4A4A1F; border-radius: 8px; font-size: 15px;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">TIP</label>
-                                <input type="number" step="0.01" id="edit-tip" value="${editingOrder.tip}" 
-                                    style="width: 100%; padding: 10px; border: 2px solid #4A4A1F; border-radius: 8px; font-size: 15px;">
-                            </div>
-                            <div>
-                                <label style="display: block; margin-bottom: 8px; color: #4A4A1F; font-weight: 700; font-size: 13px;">TOTAL</label>
-                                <input type="number" step="0.01" id="edit-total" value="${editingOrder.total}" 
-                                    style="width: 100%; padding: 10px; border: 2px solid #4A4A1F; border-radius: 8px; font-size: 15px;">
-                            </div>
-                        </div>
-                        
-                        <button onclick="saveOrderEdits(${orderId})" 
-                            style="background: linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%);">
-                            💾 Save Changes
-                        </button>
-                        
-                        <div id="edit-status" style="display: none; margin-top: 15px;"></div>
-                    </div>
-                `;
-                
-            } catch (error) {
-                alert('Error loading order for editing: ' + error.message);
-            }
-        }
-        
-        function toggleEditAssignment(itemIndex, person) {
-            const item = editingOrder.items[itemIndex];
-            item.assignedTo = item.assignedTo === person ? null : person;
-            
-            // Update UI
-            const collinBtn = document.querySelector(`#edit-item-${itemIndex} .assign-btn.collin`);
-            const emilyBtn = document.querySelector(`#edit-item-${itemIndex} .assign-btn.emily`);
-            
-            collinBtn.classList.toggle('selected', item.assignedTo === 'Collin');
-            emilyBtn.classList.toggle('selected', item.assignedTo === 'Emily');
-        }
-        
-        function setEditRating(itemIndex, rating) {
-            editingOrder.items[itemIndex].rating = rating;
-            
-            // Update UI
-            const stars = document.querySelectorAll(`#edit-stars-${itemIndex} .star`);
-            stars.forEach((star, i) => {
-                if (i < rating) {
-                    star.classList.add('filled');
-                    star.classList.remove('empty');
-                } else {
-                    star.classList.remove('filled');
-                    star.classList.add('empty');
-                }
-            });
-        }
-        
-        function removeEditItem(itemIndex) {
-            if (!confirm('Remove this item?')) return;
-            editingOrder.items.splice(itemIndex, 1);
-            editOrder(editingOrder.id);
-        }
-        
-        function addEditItem() {
-            editingOrder.items.push({
-                name: 'New Item',
-                price: 0,
-                assignedTo: null,
-                rating: 0,
-                notes: ''
-            });
-            editOrder(editingOrder.id);
-        }
-        
-        async function saveOrderEdits(orderId) {
-            try {
-                const editStatus = document.getElementById('edit-status');
-                editStatus.style.display = 'block';
-                editStatus.className = 'status loading';
-                editStatus.textContent = 'Saving changes...';
-                
-                // Gather all the edited data
-                const updatedOrder = {
-                    restaurant: document.getElementById('edit-restaurant').value,
-                    address: document.getElementById('edit-address').value,
-                    deliveryService: document.getElementById('edit-delivery').value,
-                    subtotal: parseFloat(document.getElementById('edit-subtotal').value) || 0,
-                    deliveryFee: parseFloat(document.getElementById('edit-deliveryFee').value) || 0,
-                    serviceFee: parseFloat(document.getElementById('edit-serviceFee').value) || 0,
-                    tax: parseFloat(document.getElementById('edit-tax').value) || 0,
-                    discount: 0,
-                    tip: parseFloat(document.getElementById('edit-tip').value) || 0,
-                    total: parseFloat(document.getElementById('edit-total').value) || 0,
-                    items: editingOrder.items.map((item, i) => ({
-                        name: document.getElementById(`edit-item-name-${i}`).value,
-                        price: parseFloat(document.getElementById(`edit-item-price-${i}`).value) || 0,
-                        assignedTo: item.assignedTo,
-                        rating: item.rating || 0,
-                        notes: document.getElementById(`edit-item-notes-${i}`).value || null
-                    }))
-                };
-                
-                const response = await fetch(`/orders/${orderId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedOrder)
-                });
-                
-                const result = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(result.error || 'Failed to update order');
-                }
-                
-                editStatus.className = 'status success';
-                editStatus.textContent = '✅ Changes saved successfully!';
-                
-                setTimeout(() => {
-                    viewOrder(orderId);
-                }, 1500);
-                
-            } catch (error) {
-                const editStatus = document.getElementById('edit-status');
-                editStatus.className = 'status error';
-                editStatus.textContent = '❌ Error: ' + error.message;
-            }
         }
         
         async function deleteOrder(orderId) {
