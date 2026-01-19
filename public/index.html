@@ -421,6 +421,104 @@
             text-align: center;
         }
         
+        .rec-info-header {
+            background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%);
+            border: 3px solid #B4B85E;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .rec-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #4A4A1F;
+        }
+        
+        .rec-info-item span {
+            font-size: 20px;
+        }
+        
+        /* Recipe Tabs */
+        .recipe-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 4px solid #4A4A1F;
+        }
+        
+        .recipe-tab {
+            flex: 1;
+            padding: 16px;
+            background: #F5F1E8;
+            border: none;
+            border-bottom: 4px solid transparent;
+            margin-bottom: -4px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #4A4A1F;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-top: 4px solid #4A4A1F;
+            border-left: 4px solid #4A4A1F;
+        }
+        
+        .recipe-tab:last-child {
+            border-right: 4px solid #4A4A1F;
+        }
+        
+        .recipe-tab:hover {
+            background: #FFE082;
+        }
+        
+        .recipe-tab.active {
+            background: white;
+            color: #FF9800;
+            border-bottom: 4px solid white;
+        }
+        
+        .recipe-tab-content {
+            display: none;
+            padding: 20px 0;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+        }
+        
+        .recipe-tab-content.active {
+            display: block;
+        }
+        
+        .recipe-tab-content h4 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #4A4A1F;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        
+        .recipe-tab-content ul {
+            margin-left: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .recipe-tab-content li {
+            margin-bottom: 8px;
+        }
+        
+        .recipe-tab-content p {
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+        }
+        
         .rec-content {
             font-size: 18px;
             line-height: 1.8;
@@ -673,7 +771,7 @@
                     <div class="choice-title">Take Out</div>
                 </div>
                 <div class="choice-card" onclick="selectChoice('cooking')">
-                    <div class="choice-icon">👨‍🍳</div>
+                    <div class="choice-icon">👩🏻‍🍳</div>
                     <div class="choice-title">Cook at Home</div>
                 </div>
             </div>
@@ -868,6 +966,18 @@
         
         function backToFilters() {
             showView('filterView');
+        }
+        
+        function switchRecipeTab(tabName) {
+            // Remove active from all tabs and content
+            document.querySelectorAll('.recipe-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.recipe-tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active to clicked tab
+            event.target.classList.add('active');
+            
+            // Show corresponding content
+            document.getElementById(tabName + '-tab').classList.add('active');
         }
         
         function showUpload() {
