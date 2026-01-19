@@ -765,19 +765,19 @@ app.get('/recommend', async (req, res) => {
       recommendation += `<div class="rec-info-item"><span>🍽️</span> Servings: ${selected.servings || 'N/A'}</div>`;
       recommendation += `</div>`;
       
-      // Wrap tabs in a single bordered container
-      recommendation += `<div class="recipe-tabs-wrapper">`;
-      
-      // Build tabs for ingredients and instructions
+      // Toggle buttons (separate from content box)
       recommendation += `
-        <div class="recipe-tabs">
-          <button class="recipe-tab active" onclick="switchRecipeTab('ingredients')">📝 Ingredients</button>
-          <button class="recipe-tab" onclick="switchRecipeTab('instructions')">👩🏻‍🍳 Instructions</button>
+        <div class="recipe-toggles">
+          <button class="recipe-toggle active" onclick="switchRecipeTab('ingredients')">📝 Ingredients</button>
+          <button class="recipe-toggle" onclick="switchRecipeTab('instructions')">👩🏻‍🍳 Instructions</button>
         </div>
       `;
       
-      // Ingredients tab
-      recommendation += `<div class="recipe-tab-content active" id="ingredients-tab">`;
+      // Content box with sections
+      recommendation += `<div class="recipe-content-box">`;
+      
+      // Ingredients section
+      recommendation += `<div class="recipe-section active" id="ingredients-section">`;
       if (selected.ingredients) {
         // Format ingredients as list
         const ingredientLines = selected.ingredients.split('\n').filter(line => line.trim());
@@ -793,8 +793,8 @@ app.get('/recommend', async (req, res) => {
       }
       recommendation += `</div>`;
       
-      // Instructions tab
-      recommendation += `<div class="recipe-tab-content" id="instructions-tab">`;
+      // Instructions section
+      recommendation += `<div class="recipe-section" id="instructions-section">`;
       if (selected.directions) {
         // Format directions as paragraphs
         const directionLines = selected.directions.split('\n\n');
@@ -815,9 +815,9 @@ app.get('/recommend', async (req, res) => {
         recommendation += `</div>`;
       }
       
-      recommendation += `</div>`; // Close instructions tab
+      recommendation += `</div>`; // Close instructions section
       
-      recommendation += `</div>`; // Close recipe-tabs-wrapper
+      recommendation += `</div>`; // Close recipe-content-box
       
       return res.json({
         success: true,
