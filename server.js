@@ -1074,7 +1074,7 @@ app.get('/admin/migrate-add-tags-column', async (req, res) => {
 });
 
 // ONE-TIME: Batch tag all recipes (run once after deployment)
-app.post('/admin/tag-all-recipes', async (req, res) => {
+app.get('/admin/tag-all-recipes', async (req, res) => {
   try {
     const fs = require('fs');
     const path = require('path');
