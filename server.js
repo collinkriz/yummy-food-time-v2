@@ -543,23 +543,36 @@ app.delete('/order-items/:id', async (req, res) => {
 // Get all recipes
 app.get('/recipes', async (req, res) => {
   try {
-    const recipesPath = path.join(__dirname, 'recipes.json');
-    if (!fs.existsSync(recipesPath)) {
-      return res.json({ success: true, recipes: [] });
-    }
-    const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
     const { search, tags } = req.query;
-    let filtered = recipes;
+    
+    let query = `
+      SELECT *
+      FROM meals
+      WHERE meal_type = 'recipe'
+    `;
+    
+    const params = [];
+    let paramCount = 1;
     
     if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(r => r.name.toLowerCase().includes(searchLower) || (r.ingredients && r.ingredients.toLowerCase().includes(searchLower)));
+      query += ` AND (name ILIKE $${paramCount} OR ingredients ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+      paramCount++;
     }
+    
     if (tags && tags.length > 0) {
       const tagArray = Array.isArray(tags) ? tags : [tags];
-      filtered = filtered.filter(r => r.tags && tagArray.some(tag => r.tags.includes(tag)));
+      query += ` AND tags && $${paramCount}::text[]`;
+      params.push(tagArray);
+      paramCount++;
     }
-    res.json({ success: true, recipes: filtered });
+    
+    query += ` ORDER BY name ASC`;
+    
+    const result = await pool.query(query, params);
+    
+    res.json({ success: true, recipes: result.rows });
+    
   } catch (error) {
     console.error('Error fetching recipes:', error);
     res.status(500).json({ error: error.message });
@@ -570,16 +583,18 @@ app.get('/recipes', async (req, res) => {
 app.get('/recipes/:name', async (req, res) => {
   try {
     const { name } = req.params;
-    const recipesPath = path.join(__dirname, 'recipes.json');
-    if (!fs.existsSync(recipesPath)) {
-      return res.status(404).json({ error: 'No recipes found' });
-    }
-    const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
-    const recipe = recipes.find(r => r.name === decodeURIComponent(name));
-    if (!recipe) {
+    
+    const result = await pool.query(
+      `SELECT * FROM meals WHERE name = $1 AND meal_type = 'recipe'`,
+      [decodeURIComponent(name)]
+    );
+    
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Recipe not found' });
     }
-    res.json({ success: true, recipe });
+    
+    res.json({ success: true, recipe: result.rows[0] });
+    
   } catch (error) {
     console.error('Error fetching recipe:', error);
     res.status(500).json({ error: error.message });
