@@ -1677,7 +1677,47 @@
                     <div class="choice-title">Take Out Ideas</div>
                 </div>
                 <div class="choice-card" onclick="selectChoice('cooking')">
-                    <div class="choice-icon">👩🏻‍🍳</div>
+                    <div class="choice-icon" style="width: 80px; height: 80px; margin: 0 auto;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="80" height="80">
+                          <!-- Chef Hat -->
+                          <ellipse cx="100" cy="60" rx="55" ry="20" fill="#FFFFFF" stroke="#4A4A1F" stroke-width="4"/>
+                          <rect x="45" y="55" width="110" height="50" fill="#FFFFFF" stroke="#4A4A1F" stroke-width="4"/>
+                          <ellipse cx="100" cy="105" rx="55" ry="10" fill="#FFFFFF" stroke="#4A4A1F" stroke-width="4"/>
+                          
+                          <!-- Face -->
+                          <circle cx="100" cy="130" r="45" fill="#F4C6A8" stroke="#4A4A1F" stroke-width="3"/>
+                          
+                          <!-- Brown Hair (sides) -->
+                          <path d="M 60 110 Q 50 130 55 150" fill="#6B4423" stroke="#4A4A1F" stroke-width="2"/>
+                          <path d="M 140 110 Q 150 130 145 150" fill="#6B4423" stroke="#4A4A1F" stroke-width="2"/>
+                          
+                          <!-- Eyes -->
+                          <circle cx="85" cy="125" r="6" fill="#4A4A1F"/>
+                          <circle cx="115" cy="125" r="6" fill="#4A4A1F"/>
+                          
+                          <!-- Happy smile -->
+                          <path d="M 75 140 Q 100 155 125 140" fill="none" stroke="#4A4A1F" stroke-width="3" stroke-linecap="round"/>
+                          
+                          <!-- Nose piercing -->
+                          <circle cx="105" cy="135" r="2" fill="none" stroke="#4A4A1F" stroke-width="1.5"/>
+                          
+                          <!-- Chef Coat -->
+                          <path d="M 55 170 L 55 200 L 145 200 L 145 170" fill="#FFFFFF" stroke="#4A4A1F" stroke-width="3"/>
+                          <rect x="55" y="165" width="90" height="10" fill="#FFFFFF" stroke="#4A4A1F" stroke-width="3"/>
+                          
+                          <!-- Buttons on chef coat -->
+                          <circle cx="100" cy="180" r="4" fill="#FFC107" stroke="#4A4A1F" stroke-width="2"/>
+                          <circle cx="100" cy="195" r="4" fill="#FFC107" stroke="#4A4A1F" stroke-width="2"/>
+                          
+                          <!-- Tattoo on arm (simplified floral) -->
+                          <g transform="translate(30, 185)">
+                            <circle cx="0" cy="0" r="3" fill="#4A4A1F"/>
+                            <circle cx="4" cy="-3" r="2" fill="#4A4A1F"/>
+                            <circle cx="-4" cy="-3" r="2" fill="#4A4A1F"/>
+                            <path d="M 0 0 L 0 8" stroke="#4A4A1F" stroke-width="1.5"/>
+                          </g>
+                        </svg>
+                    </div>
                     <div class="choice-title">Recipe Ideas</div>
                 </div>
             </div>
@@ -2306,6 +2346,39 @@
                 console.error('Recommendation error:', error);
                 recTitle.textContent = 'Oops!';
                 recContent.textContent = error.message || 'Unable to get a recommendation. Please try again.';
+            }
+        }
+        
+        async function getAIRecommendation() {
+            const recTitle = document.getElementById('recTitle');
+            const recContent = document.getElementById('recContent');
+            
+            recTitle.textContent = 'Getting AI suggestion...';
+            recContent.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                const params = new URLSearchParams({
+                    filters: Array.from(selectedFilters).join(',')
+                });
+                
+                const response = await fetch(`/ai-takeout-suggestion?${params}`);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to get AI suggestion');
+                }
+                
+                recTitle.textContent = result.title;
+                recContent.innerHTML = result.recommendation;
+                
+            } catch (error) {
+                console.error('AI recommendation error:', error);
+                recTitle.textContent = 'Oops!';
+                recContent.innerHTML = `
+                    <p style="text-align: center; color: #c00; padding: 20px;">
+                        ${error.message || 'Unable to get AI suggestion. Please try again.'}
+                    </p>
+                `;
             }
         }
         
