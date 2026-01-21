@@ -195,42 +195,61 @@
         
         /* TOP BUTTONS */
         .top-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
             position: relative;
             z-index: 2;
         }
         
         .top-btn {
-            flex: 1;
-            padding: 12px 16px;
+            padding: 10px 14px;
             background: #F5F1E8;
             border: 3px solid #4A4A1F;
-            border-radius: 24px;
-            font-size: 14px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: 800;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             color: #4A4A1F;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            box-shadow: 4px 4px 0 rgba(74, 74, 31, 0.25);
+            box-shadow: 3px 3px 0 rgba(74, 74, 31, 0.25);
             -webkit-tap-highlight-color: rgba(255, 152, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .top-btn .icon {
+            font-size: 18px;
+            line-height: 1;
         }
         
         .top-btn:active {
             background: #FF9800;
             color: white;
-            transform: translateY(-2px) scale(0.98);
-            box-shadow: 5px 5px 0 rgba(74, 74, 31, 0.3);
+            transform: translateY(-1px) scale(0.98);
+            box-shadow: 4px 4px 0 rgba(74, 74, 31, 0.3);
             transition-duration: 0.15s;
         }
         
         @media (max-width: 768px) {
+            .top-buttons {
+                gap: 8px;
+                margin-top: 14px;
+            }
+            
             .top-btn {
-                padding: 10px 12px;
-                font-size: 12px;
+                padding: 8px 10px;
+                font-size: 11px;
+                gap: 6px;
+            }
+            
+            .top-btn .icon {
+                font-size: 16px;
             }
         }
         
@@ -1404,10 +1423,10 @@
             </div>
             
             <div class="top-buttons">
-                <button class="top-btn" onclick="showLogMeal()">📝 Log Meal</button>
-                <button class="top-btn" onclick="showRecipeList()">📖 Recipes</button>
-                <button class="top-btn" onclick="selectChoice('takeout')">🍔 Take Out</button>
-                <button class="top-btn" onclick="showMealHistory()">📋 History</button>
+                <button class="top-btn" onclick="showLogMeal()"><span class="icon">📝</span> Log Meal</button>
+                <button class="top-btn" onclick="showMealHistory()"><span class="icon">📋</span> History</button>
+                <button class="top-btn" onclick="showRecipeList()"><span class="icon">📖</span> Recipes</button>
+                <button class="top-btn" onclick="selectChoice('takeout')"><span class="icon">🍔</span> Take Out</button>
             </div>
         </div>
         
@@ -1738,15 +1757,19 @@
         
         function toggleFilter(filterId) {
             const tile = document.querySelector(`[data-filter="${filterId}"]`);
+            if (!tile) return;
+            
             const isAny = tile.dataset.isAny === 'true';
             
             // Get current page filters
             let currentPageFilters;
             if (currentChoice === 'cooking') {
                 currentPageFilters = cookingFilterPages[currentFilterPage - 1].filters;
+            } else if (currentChoice === 'takeout') {
+                currentPageFilters = takeoutFilters;
             }
             
-            if (isAny) {
+            if (isAny && currentPageFilters) {
                 // Selecting "Any X" - clear all other selections from this page
                 currentPageFilters.forEach(f => {
                     if (f.id !== filterId) {
@@ -1766,11 +1789,13 @@
                 }
             } else {
                 // Selecting specific filter - remove "Any X" if it was selected
-                const anyFilter = currentPageFilters.find(f => f.isAny);
-                if (anyFilter && selectedFilters.has(anyFilter.id)) {
-                    selectedFilters.delete(anyFilter.id);
-                    const anyTile = document.querySelector(`[data-filter="${anyFilter.id}"]`);
-                    if (anyTile) anyTile.classList.remove('active');
+                if (currentPageFilters) {
+                    const anyFilter = currentPageFilters.find(f => f.isAny);
+                    if (anyFilter && selectedFilters.has(anyFilter.id)) {
+                        selectedFilters.delete(anyFilter.id);
+                        const anyTile = document.querySelector(`[data-filter="${anyFilter.id}"]`);
+                        if (anyTile) anyTile.classList.remove('active');
+                    }
                 }
                 
                 // Toggle this filter
