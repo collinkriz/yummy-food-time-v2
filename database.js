@@ -23,8 +23,35 @@ async function initializeDatabase() {
         tip DECIMAL(10, 2),
         total DECIMAL(10, 2),
         order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        logged_as_meal BOOLEAN DEFAULT false,
+        meal_date TIMESTAMP,
+        recipe_name VARCHAR(255)
       )
+    `);
+    
+    // Add columns to existing tables if they don't exist
+    await pool.query(`
+      DO $$ 
+      BEGIN
+        BEGIN
+          ALTER TABLE orders ADD COLUMN logged_as_meal BOOLEAN DEFAULT false;
+        EXCEPTION
+          WHEN duplicate_column THEN NULL;
+        END;
+        
+        BEGIN
+          ALTER TABLE orders ADD COLUMN meal_date TIMESTAMP;
+        EXCEPTION
+          WHEN duplicate_column THEN NULL;
+        END;
+        
+        BEGIN
+          ALTER TABLE orders ADD COLUMN recipe_name VARCHAR(255);
+        EXCEPTION
+          WHEN duplicate_column THEN NULL;
+        END;
+      END $$;
     `);
 
     // Create order_items table

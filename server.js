@@ -1365,6 +1365,110 @@ Example: ["Main Dish", "Mexican", "Medium (30-60 min)", "Medium", "Spicy", "Comf
   }
 });
 
+// Log a home cooked meal
+app.post('/log-meal', async (req, res) => {
+  try {
+    const { recipeName } = req.body;
+    
+    if (!recipeName) {
+      return res.status(400).json({ error: 'Recipe name is required' });
+    }
+    
+    // Create an order entry for the logged meal
+    const result = await pool.query(
+      `INSERT INTO orders (
+        restaurant, logged_as_meal, meal_date, recipe_name
+      ) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [recipeName, true, new Date(), recipeName]
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'Meal logged successfully!',
+      orderId: result.rows[0].id 
+    });
+    
+  } catch (error) {
+    console.error('Error logging meal:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Mark an existing order as a logged meal
+app.post('/mark-as-meal/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    await pool.query(
+      `UPDATE orders SET logged_as_meal = true, meal_date = $1 WHERE id = $2`,
+      [new Date(), orderId]
+    );
+    
+    res.json({ success: true, message: 'Order marked as logged meal!' });
+    
+  } catch (error) {
+    console.error('Error marking as meal:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get meal history
+app.get('/meal-history', async (req, res) => {
+  try {
+    const { search } = req.query;
+    
+    let query = `
+      SELECT o.id, o.restaurant, o.recipe_name, o.meal_date, o.delivery_service,
+             o.address, o.total,
+             json_agg(
+               json_build_object(
+                 'id', oi.id,
+                 'name', oi.item_name,
+                 'price', oi.price,
+                 'rating', oi.rating,
+                 'assignedTo', oi.assigned_to,
+                 'notes', oi.notes
+               ) ORDER BY oi.id
+             ) FILTER (WHERE oi.id IS NOT NULL) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      WHERE o.logged_as_meal = true
+    `;
+    
+    const params = [];
+    
+    if (search) {
+      query += ` AND (o.restaurant ILIKE $1 OR o.recipe_name ILIKE $1)`;
+      params.push(`%${search}%`);
+    }
+    
+    query += ` GROUP BY o.id ORDER BY o.meal_date DESC`;
+    
+    const result = await pool.query(query, params);
+    
+    res.json({ meals: result.rows });
+    
+  } catch (error) {
+    console.error('Error fetching meal history:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a logged meal
+app.delete('/meal-history/:mealId', async (req, res) => {
+  try {
+    const { mealId } = req.params;
+    
+    await pool.query('DELETE FROM orders WHERE id = $1 AND logged_as_meal = true', [mealId]);
+    
+    res.json({ success: true, message: 'Meal deleted from history' });
+    
+  } catch (error) {
+    console.error('Error deleting meal:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
