@@ -541,7 +541,7 @@ app.delete('/order-items/:id', async (req, res) => {
 });
 
 // Get all recipes
-app.get('/recipes', async (req, res) => {
+app.get('/api/recipes', async (req, res) => {
   try {
     const { search, tags } = req.query;
     
@@ -580,7 +580,7 @@ app.get('/recipes', async (req, res) => {
 });
 
 // Get single recipe
-app.get('/recipes/:name', async (req, res) => {
+app.get('/api/recipes/:name', async (req, res) => {
   try {
     const { name } = req.params;
     
