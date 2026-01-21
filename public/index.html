@@ -344,41 +344,85 @@
         
         /* FILTER TILES */
         .filter-section {
-            margin-top: 30px;
+            margin-top: 20px;
+        }
+        
+        /* Progress Dots */
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .progress-dots .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #DDD;
+            border: 2px solid #4A4A1F;
+            transition: all 0.2s ease;
+        }
+        
+        .progress-dots .dot.active {
+            background: #FF9800;
+            transform: scale(1.3);
         }
         
         .filter-section h2 {
             color: #4A4A1F;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 900;
             text-transform: uppercase;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-section {
+                margin-top: 10px;
+            }
+            
+            .filter-section h2 {
+                font-size: 20px;
+                margin-bottom: 12px;
+            }
+            
+            .progress-dots {
+                margin-bottom: 16px;
+            }
         }
         
         .filter-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
         
         @media (max-width: 768px) {
             .filter-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
+                margin-bottom: 16px;
             }
         }
         
         .filter-tile {
             background: white;
             border: 4px solid #B4B85E;
-            padding: 30px 20px;
+            padding: 24px 16px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 4px 4px 0 rgba(180, 184, 94, 0.2);
             -webkit-tap-highlight-color: rgba(255, 152, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .filter-tile {
+                padding: 18px 12px;
+            }
         }
         
         .filter-tile:active {
@@ -422,10 +466,23 @@
             margin-bottom: 12px;
         }
         
+        @media (max-width: 768px) {
+            .filter-icon {
+                font-size: 40px;
+                margin-bottom: 8px;
+            }
+        }
+        
         .filter-name {
             font-size: 16px;
             font-weight: 800;
             text-transform: uppercase;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-name {
+                font-size: 14px;
+            }
         }
         
         .filter-actions {
@@ -1361,13 +1418,21 @@
         
         <!-- FILTER VIEW -->
         <div id="filterView" class="view">
-            <button class="back-btn" onclick="goHome()">← Back</button>
+            <button class="back-btn" onclick="goBackFromFilters()">← Back</button>
             
             <div class="filter-section">
+                <!-- Progress Dots -->
+                <div id="progressDots" class="progress-dots" style="display: none;">
+                    <span class="dot active"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+                
                 <h2 id="filterTitle">What are you looking for?</h2>
                 <div class="filter-grid" id="filterGrid"></div>
+                
                 <div class="filter-actions">
-                    <button class="filter-btn" onclick="getRecommendation()">Get Recommendation →</button>
+                    <button class="filter-btn" id="filterNextBtn" onclick="handleFilterNext()">Next →</button>
                 </div>
             </div>
         </div>
@@ -1492,6 +1557,7 @@
         let currentChoice = null;
         let selectedFilters = new Set();
         let chatHistory = [];
+        let currentFilterPage = 1; // Track which page of filters we're on
         
         const takeoutFilters = [
             { id: 'cheap', icon: '💰', name: 'Cheap' },
@@ -1501,20 +1567,38 @@
             { id: 'comfort', icon: '🍕', name: 'Comfort' }
         ];
         
-        const cookingFilters = [
+        // Multi-page cooking filters
+        const cookingFiltersPage1 = [
+            { id: 'breakfast', icon: '🍳', name: 'Breakfast' },
+            { id: 'lunch', icon: '🥗', name: 'Lunch' },
+            { id: 'dinner', icon: '🍽️', name: 'Dinner' },
+            { id: 'side', icon: '🥔', name: 'Side' },
+            { id: 'dessert', icon: '🍰', name: 'Dessert' },
+            { id: 'any-meal', icon: '🎲', name: 'Any Meal', isAny: true }
+        ];
+        
+        const cookingFiltersPage2 = [
             { id: 'healthy', icon: '🥗', name: 'Healthy' },
             { id: 'quick', icon: '⚡', name: 'Quick' },
             { id: 'filling', icon: '🍗', name: 'Filling' },
-            { id: 'complex', icon: '🎓', name: 'Complex' },
             { id: 'comfort', icon: '🧀', name: 'Comfort' },
-            { id: 'main', icon: '🍽️', name: 'Main Dish' },
-            { id: 'salad', icon: '🥗', name: 'Salad' },
-            { id: 'soup', icon: '🍜', name: 'Soup' },
-            { id: 'breakfast', icon: '🍳', name: 'Breakfast' },
-            { id: 'dessert', icon: '🍰', name: 'Dessert' },
-            { id: 'side', icon: '🥔', name: 'Side Dish' },
-            { id: 'sauce', icon: '🥫', name: 'Sauce' },
-            { id: 'appetizer', icon: '🍤', name: 'Appetizer' }
+            { id: 'complex', icon: '🎓', name: 'Complex' },
+            { id: 'any-vibe', icon: '😊', name: 'Any Vibe', isAny: true }
+        ];
+        
+        const cookingFiltersPage3 = [
+            { id: 'italian', icon: '🇮🇹', name: 'Italian' },
+            { id: 'mexican', icon: '🇲🇽', name: 'Mexican' },
+            { id: 'asian', icon: '🇨🇳', name: 'Asian' },
+            { id: 'indian', icon: '🇮🇳', name: 'Indian' },
+            { id: 'american', icon: '🥖', name: 'American' },
+            { id: 'any-cuisine', icon: '🌎', name: 'Any Cuisine', isAny: true }
+        ];
+        
+        const cookingFilterPages = [
+            { filters: cookingFiltersPage1, title: 'What meal(s)?' },
+            { filters: cookingFiltersPage2, title: 'What vibe(s)?' },
+            { filters: cookingFiltersPage3, title: 'Cuisine(s)?' }
         ];
         
         // View navigation functions
@@ -1529,38 +1613,148 @@
         function goHome() {
             currentChoice = null;
             selectedFilters.clear();
+            currentFilterPage = 1;
             showView('homeView');
+        }
+        
+        function goBackFromFilters() {
+            if (currentChoice === 'cooking' && currentFilterPage > 1) {
+                // Go back to previous filter page
+                currentFilterPage--;
+                renderFilterPage();
+            } else {
+                // Go back to home
+                goHome();
+            }
         }
         
         function selectChoice(choice) {
             currentChoice = choice;
             selectedFilters.clear();
+            currentFilterPage = 1;
             
-            const filters = choice === 'takeout' ? takeoutFilters : cookingFilters;
+            renderFilterPage();
+            showView('filterView');
+        }
+        
+        function renderFilterPage() {
             const filterGrid = document.getElementById('filterGrid');
             const filterTitle = document.getElementById('filterTitle');
+            const progressDots = document.getElementById('progressDots');
+            const nextBtn = document.getElementById('filterNextBtn');
             
-            filterTitle.textContent = choice === 'takeout' ? 'What kind of takeout?' : 'What style of cooking?';
-            
-            filterGrid.innerHTML = filters.map(f => `
-                <div class="filter-tile" data-filter="${f.id}" onclick="toggleFilter('${f.id}')">
-                    <div class="filter-icon">${f.icon}</div>
-                    <div class="filter-name">${f.name}</div>
-                </div>
-            `).join('');
-            
-            showView('filterView');
+            if (currentChoice === 'takeout') {
+                // Takeout: Single page, no progress dots
+                progressDots.style.display = 'none';
+                filterTitle.textContent = 'What kind of takeout?';
+                nextBtn.textContent = 'Get Recommendation';
+                
+                filterGrid.innerHTML = takeoutFilters.map(f => `
+                    <div class="filter-tile" data-filter="${f.id}" onclick="toggleFilter('${f.id}')">
+                        <div class="filter-icon">${f.icon}</div>
+                        <div class="filter-name">${f.name}</div>
+                    </div>
+                `).join('');
+                
+            } else {
+                // Cooking: Multi-page
+                progressDots.style.display = 'flex';
+                const pageData = cookingFilterPages[currentFilterPage - 1];
+                filterTitle.textContent = pageData.title;
+                
+                // Update progress dots
+                document.querySelectorAll('.progress-dots .dot').forEach((dot, index) => {
+                    if (index < currentFilterPage) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+                
+                // Update button text
+                if (currentFilterPage === 3) {
+                    const selectedCount = selectedFilters.size;
+                    nextBtn.textContent = selectedCount > 0 ? `Get Recommendation (${selectedCount})` : 'Get Recommendation';
+                } else {
+                    nextBtn.textContent = 'Next →';
+                }
+                
+                // Render current page filters
+                filterGrid.innerHTML = pageData.filters.map(f => `
+                    <div class="filter-tile ${selectedFilters.has(f.id) ? 'active' : ''}" 
+                         data-filter="${f.id}" 
+                         data-is-any="${f.isAny || false}"
+                         onclick="toggleFilter('${f.id}')">
+                        <div class="filter-icon">${f.icon}</div>
+                        <div class="filter-name">${f.name}</div>
+                    </div>
+                `).join('');
+            }
         }
         
         function toggleFilter(filterId) {
             const tile = document.querySelector(`[data-filter="${filterId}"]`);
+            const isAny = tile.dataset.isAny === 'true';
             
-            if (selectedFilters.has(filterId)) {
-                selectedFilters.delete(filterId);
-                tile.classList.remove('active');
+            // Get current page filters
+            let currentPageFilters;
+            if (currentChoice === 'cooking') {
+                currentPageFilters = cookingFilterPages[currentFilterPage - 1].filters;
+            }
+            
+            if (isAny) {
+                // Selecting "Any X" - clear all other selections from this page
+                currentPageFilters.forEach(f => {
+                    if (f.id !== filterId) {
+                        selectedFilters.delete(f.id);
+                        const otherTile = document.querySelector(`[data-filter="${f.id}"]`);
+                        if (otherTile) otherTile.classList.remove('active');
+                    }
+                });
+                
+                // Toggle the "Any" option
+                if (selectedFilters.has(filterId)) {
+                    selectedFilters.delete(filterId);
+                    tile.classList.remove('active');
+                } else {
+                    selectedFilters.add(filterId);
+                    tile.classList.add('active');
+                }
             } else {
-                selectedFilters.add(filterId);
-                tile.classList.add('active');
+                // Selecting specific filter - remove "Any X" if it was selected
+                const anyFilter = currentPageFilters.find(f => f.isAny);
+                if (anyFilter && selectedFilters.has(anyFilter.id)) {
+                    selectedFilters.delete(anyFilter.id);
+                    const anyTile = document.querySelector(`[data-filter="${anyFilter.id}"]`);
+                    if (anyTile) anyTile.classList.remove('active');
+                }
+                
+                // Toggle this filter
+                if (selectedFilters.has(filterId)) {
+                    selectedFilters.delete(filterId);
+                    tile.classList.remove('active');
+                } else {
+                    selectedFilters.add(filterId);
+                    tile.classList.add('active');
+                }
+            }
+            
+            // Update button text if on last page
+            if (currentChoice === 'cooking' && currentFilterPage === 3) {
+                const nextBtn = document.getElementById('filterNextBtn');
+                const selectedCount = selectedFilters.size;
+                nextBtn.textContent = selectedCount > 0 ? `Get Recommendation (${selectedCount})` : 'Get Recommendation';
+            }
+        }
+        
+        function handleFilterNext() {
+            if (currentChoice === 'takeout' || currentFilterPage === 3) {
+                // Get recommendation
+                getRecommendation();
+            } else {
+                // Go to next page
+                currentFilterPage++;
+                renderFilterPage();
             }
         }
         
@@ -1597,6 +1791,11 @@
         }
         
         function backToFilters() {
+            // Go back to the last page of filters
+            if (currentChoice === 'cooking') {
+                currentFilterPage = 3;
+                renderFilterPage();
+            }
             showView('filterView');
         }
         
