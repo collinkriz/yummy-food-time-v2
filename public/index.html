@@ -1404,9 +1404,10 @@
             </div>
             
             <div class="top-buttons">
-                <button class="top-btn" onclick="showUpload()">📸 Upload</button>
+                <button class="top-btn" onclick="showLogMeal()">📝 Log Meal</button>
                 <button class="top-btn" onclick="showRecipeList()">📖 Recipes</button>
-                <button class="top-btn" onclick="showHistory()">📋 History</button>
+                <button class="top-btn" onclick="selectChoice('takeout')">🍔 Take Out</button>
+                <button class="top-btn" onclick="showMealHistory()">📋 History</button>
             </div>
         </div>
         
@@ -1457,6 +1458,26 @@
             </div>
         </div>
         
+        <!-- LOG MEAL VIEW -->
+        <div id="logMealView" class="view">
+            <button class="back-btn" onclick="goHome()">← Back</button>
+            
+            <h2 style="text-align: center; color: #4A4A1F; font-size: 28px; font-weight: 900; text-transform: uppercase; margin-bottom: 30px;">
+                Log a Meal
+            </h2>
+            
+            <div class="choice-cards">
+                <div class="choice-card" onclick="showUpload()">
+                    <div class="choice-icon">🍔</div>
+                    <div class="choice-title">Take Out</div>
+                </div>
+                <div class="choice-card" onclick="showRecipeListForLogging()">
+                    <div class="choice-icon">🏠</div>
+                    <div class="choice-title">Home Cooked</div>
+                </div>
+            </div>
+        </div>
+        
         <!-- UPLOAD VIEW -->
         <div id="uploadView" class="view">
             <button class="back-btn" onclick="goHome()">← Back</button>
@@ -1482,12 +1503,12 @@
             <div id="results" style="display: none;"></div>
         </div>
         
-        <!-- HISTORY VIEW -->
-        <div id="historyView" class="view">
+        <!-- ORDERS VIEW (for order database / recommendations) -->
+        <div id="ordersView" class="view">
             <button class="back-btn" onclick="goHome()">← Back</button>
             
             <div class="card">
-                <h2 style="margin-bottom: 20px; text-align: center; color: #FF9800;">📋 Order History</h2>
+                <h2 style="margin-bottom: 20px; text-align: center; color: #FF9800;">📋 Order Database</h2>
                 
                 <!-- Search Bar -->
                 <div style="margin-bottom: 24px;">
@@ -1506,6 +1527,32 @@
             
             <div id="ordersList"></div>
             <div id="orderDetail" style="display: none;"></div>
+        </div>
+        
+        <!-- MEAL HISTORY VIEW -->
+        <div id="mealHistoryView" class="view">
+            <button class="back-btn" onclick="goHome()">← Back</button>
+            
+            <div class="card">
+                <h2 style="margin-bottom: 20px; text-align: center; color: #FF9800;">📋 Meal History</h2>
+                
+                <!-- Search Bar -->
+                <div style="margin-bottom: 24px;">
+                    <input 
+                        type="text" 
+                        id="mealHistorySearch" 
+                        placeholder="🔍 Search meals..." 
+                        style="width: 100%; padding: 16px; font-size: 16px; border: 4px solid #4A4A1F; border-radius: 12px; font-weight: 600; background: white;"
+                        oninput="filterMealHistory()"
+                    />
+                </div>
+                
+                <!-- Meal Count -->
+                <div id="mealCount" style="margin-bottom: 16px; font-weight: 600; color: #6B6B3D; text-align: center;"></div>
+            </div>
+            
+            <div id="mealsList"></div>
+            <div id="mealDetail" style="display: none;"></div>
         </div>
         
         <!-- RECIPE LIST VIEW -->
@@ -2072,7 +2119,16 @@
                 }
                 
                 status.className = 'status success';
-                status.textContent = '✅ Order saved successfully!';
+                status.innerHTML = `
+                    ✅ Order saved successfully!<br><br>
+                    <button onclick="markOrderAsMeal(${result.orderId})" 
+                            style="padding: 12px 24px; background: linear-gradient(135deg, #52c41a 0%, #3fa218 100%); color: white; font-size: 14px; font-weight: 800; border: 3px solid #4A4A1F; border-radius: 8px; cursor: pointer; text-transform: uppercase; margin-top: 8px;">
+                        📝 Log This Meal
+                    </button>
+                `;
+                
+                // Store the order ID for potential logging
+                window.lastSavedOrderId = result.orderId;
                 
                 setTimeout(() => {
                     // Reset form
@@ -2588,9 +2644,24 @@
             showView('uploadView');
         }
         
+        function showLogMeal() {
+            showView('logMealView');
+        }
+        
         function showHistory() {
-            showView('historyView');
+            showView('ordersView');
             loadOrders();
+        }
+        
+        async function showMealHistory() {
+            showView('mealHistoryView');
+            loadMealHistory();
+        }
+        
+        function showRecipeListForLogging() {
+            // Special flag to know we're logging a meal
+            window.isLoggingMeal = true;
+            showRecipeList();
         }
         
         // RECIPE LIST FUNCTIONS
@@ -2740,9 +2811,19 @@
             
             html += '</div>'; // Close recipe-content-box
             
-            // Source button
-            if (recipe.source_url) {
-                html += `<div style="margin-top: 24px; text-align: center;"><a href="${recipe.source_url}" target="_blank" style="display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; font-weight: 800; border-radius: 8px; border: 4px solid #4A4A1F; transition: all 0.2s ease;">🌐 View Original Recipe</a></div>`;
+            // If logging a meal, add confirmation button
+            if (window.isLoggingMeal) {
+                html += `<div style="margin-top: 24px; text-align: center;">
+                    <button onclick="confirmLogMeal('${recipe.name.replace(/'/g, "\\'")}')" 
+                            style="padding: 16px 40px; background: linear-gradient(135deg, #52c41a 0%, #3fa218 100%); color: white; font-size: 18px; font-weight: 800; border: 4px solid #4A4A1F; border-radius: 8px; cursor: pointer; text-transform: uppercase; box-shadow: 5px 5px 0 rgba(74, 74, 31, 0.3);">
+                        ✅ Log This Meal
+                    </button>
+                </div>`;
+            } else {
+                // Source button (only show when not logging)
+                if (recipe.source_url) {
+                    html += `<div style="margin-top: 24px; text-align: center;"><a href="${recipe.source_url}" target="_blank" style="display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; font-weight: 800; border-radius: 8px; border: 4px solid #4A4A1F; transition: all 0.2s ease;">🌐 View Original Recipe</a></div>`;
+                }
             }
             
             html += '</div>';
@@ -2835,6 +2916,155 @@
                 sendChatMessage();
             }
         });
+        
+        // MEAL LOGGING FUNCTIONS
+        async function confirmLogMeal(recipeName) {
+            if (!confirm(`Log "${recipeName}" to your meal history?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/log-meal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipeName })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to log meal');
+                }
+                
+                alert('✅ Meal logged successfully!');
+                window.isLoggingMeal = false;
+                goHome();
+                
+            } catch (error) {
+                console.error('Error logging meal:', error);
+                alert('❌ Failed to log meal: ' + error.message);
+            }
+        }
+        
+        async function markOrderAsMeal(orderId) {
+            try {
+                const response = await fetch(`/mark-as-meal/${orderId}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to log meal');
+                }
+                
+                alert('✅ Meal logged to history!');
+                goHome();
+                
+            } catch (error) {
+                console.error('Error marking as meal:', error);
+                alert('❌ Failed to log meal: ' + error.message);
+            }
+        }
+        
+        // MEAL HISTORY FUNCTIONS
+        let allMeals = [];
+        
+        async function loadMealHistory() {
+            try {
+                const response = await fetch('/meal-history');
+                if (!response.ok) {
+                    throw new Error('Failed to load meal history');
+                }
+                
+                const data = await response.json();
+                allMeals = data.meals;
+                displayMealHistory(allMeals);
+                
+            } catch (error) {
+                console.error('Error loading meal history:', error);
+                document.getElementById('mealsList').innerHTML = '<div class="card"><p style="text-align: center; color: #999;">Unable to load meal history.</p></div>';
+            }
+        }
+        
+        function filterMealHistory() {
+            const searchTerm = document.getElementById('mealHistorySearch').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                displayMealHistory(allMeals);
+                return;
+            }
+            
+            const filtered = allMeals.filter(meal => {
+                const name = meal.recipe_name || meal.restaurant || '';
+                return name.toLowerCase().includes(searchTerm);
+            });
+            
+            displayMealHistory(filtered);
+        }
+        
+        function displayMealHistory(meals) {
+            const container = document.getElementById('mealsList');
+            const countDiv = document.getElementById('mealCount');
+            
+            countDiv.textContent = `${meals.length} meal${meals.length !== 1 ? 's' : ''} logged`;
+            
+            if (meals.length === 0) {
+                container.innerHTML = '<div class="card"><p style="text-align: center; color: #999; padding: 40px 0;">No meals logged yet. Start by logging a meal!</p></div>';
+                return;
+            }
+            
+            container.innerHTML = meals.map(meal => {
+                const isHomeCooked = !!meal.recipe_name;
+                const name = meal.recipe_name || meal.restaurant;
+                const date = new Date(meal.meal_date);
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="card clickable-card" onclick="viewMeal(${meal.id})">
+                        <div style="display: flex; justify-content: space-between; align-items: start; gap: 16px;">
+                            <div style="flex: 1;">
+                                <div style="font-size: 13px; color: #999; font-weight: 600; margin-bottom: 8px;">
+                                    ${formattedDate}
+                                </div>
+                                
+                                <h3 style="font-size: 20px; font-weight: 900; color: #FF9800; margin-bottom: 8px;">
+                                    ${name}
+                                </h3>
+                                
+                                <div style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; border: 2px solid #4A4A1F; background: ${isHomeCooked ? '#52c41a' : '#FF9800'}; color: white;">
+                                    ${isHomeCooked ? '🏠 Home Cooked' : '🍔 Take Out'}
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 32px; color: #FF9800; font-weight: 900;">→</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        async function viewMeal(mealId) {
+            const meal = allMeals.find(m => m.id === mealId);
+            if (!meal) return;
+            
+            const isHomeCooked = !!meal.recipe_name;
+            
+            if (isHomeCooked) {
+                // Show recipe detail
+                showRecipeDetail(meal.recipe_name);
+            } else {
+                // Show order detail (reuse existing function)
+                viewOrder(mealId);
+            }
+        }
     </script>
 </body>
 </html>
