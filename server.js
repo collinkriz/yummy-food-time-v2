@@ -269,6 +269,96 @@ app.get('/run-migration', async (req, res) => {
 });
 // ==================== END MIGRATION ENDPOINT ====================
 
+// ==================== IMPORT RECIPES ENDPOINT ====================
+// One-time import of recipes from recipes.json into database
+// Visit: /import-recipes
+app.get('/import-recipes', async (req, res) => {
+  const client = await pool.connect();
+  const results = [];
+  
+  try {
+    results.push('📚 Starting recipe import...<br><br>');
+    
+    const recipesPath = path.join(__dirname, 'recipes.json');
+    if (!fs.existsSync(recipesPath)) {
+      return res.send(`
+        <html><body style="font-family: sans-serif; padding: 40px;">
+          <h1 style="color: #dc2626;">❌ recipes.json Not Found</h1>
+          <p>Make sure recipes.json is in the root directory of your project.</p>
+          <p><a href="/">Go back</a></p>
+        </body></html>
+      `);
+    }
+    
+    const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
+    results.push(`📋 Found ${recipes.length} recipes in JSON file<br><br>`);
+    
+    let imported = 0;
+    let skipped = 0;
+    
+    for (const recipe of recipes) {
+      try {
+        await client.query(`
+          INSERT INTO meals (
+            meal_type, name, prep_time, cook_time, total_time, servings,
+            ingredients, directions, notes, source_url, photo_url, tags, created_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        `, [
+          'recipe',
+          recipe.name,
+          recipe.prep_time,
+          recipe.cook_time,
+          recipe.total_time,
+          recipe.servings,
+          recipe.ingredients,
+          recipe.directions,
+          recipe.notes,
+          recipe.source_url,
+          recipe.photo_url,
+          recipe.tags || recipe.ai_category || [],
+          new Date()
+        ]);
+        imported++;
+      } catch (err) {
+        if (err.code === '23505') {
+          skipped++;
+        } else {
+          console.error(`Error importing ${recipe.name}:`, err.message);
+        }
+      }
+    }
+    
+    results.push(`<h2 style="color: #22c55e;">✅ Import Complete!</h2>`);
+    results.push(`<p>Imported: ${imported} recipes</p>`);
+    results.push(`<p>Skipped (duplicates): ${skipped} recipes</p>`);
+    
+    res.send(`
+      <html><body style="font-family: sans-serif; padding: 40px; max-width: 800px;">
+        <div style="background: #f0f9ff; padding: 30px; border-radius: 12px; border: 2px solid #22c55e;">
+          ${results.join('')}
+        </div>
+        <p><a href="/" style="background: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin-top: 20px;">Go to App</a></p>
+      </body></html>
+    `);
+    
+  } catch (error) {
+    results.push(`<br><h2 style="color: #dc2626;">❌ Import Failed</h2>`);
+    results.push(`<p><strong>Error:</strong> ${error.message}</p>`);
+    
+    res.send(`
+      <html><body style="font-family: sans-serif; padding: 40px; max-width: 800px;">
+        <div style="background: #fee; padding: 30px; border-radius: 12px; border: 2px solid #dc2626;">
+          ${results.join('')}
+        </div>
+        <p><a href="/" style="color: #3b82f6;">Go back</a></p>
+      </body></html>
+    `);
+  } finally {
+    client.release();
+  }
+});
+// ==================== END IMPORT RECIPES ENDPOINT ====================
+
 // Extract order info endpoint
 app.post('/extract-order', upload.single('image'), async (req, res) => {
   try {
@@ -571,7 +661,8 @@ app.get('/api/recipes', async (req, res) => {
     
     const result = await pool.query(query, params);
     
-    res.json({ success: true, recipes: result.rows });
+    // Return just the array of recipes
+    res.json(result.rows);
     
   } catch (error) {
     console.error('Error fetching recipes:', error);
