@@ -359,6 +359,214 @@ app.get('/import-recipes', async (req, res) => {
 });
 // ==================== END IMPORT RECIPES ENDPOINT ====================
 
+// ==================== TAG ALL RECIPES ENDPOINT ====================
+// AI-powered tagging of all recipes in database
+// Visit: /run-tagging
+let taggingInProgress = false;
+
+app.get('/run-tagging', async (req, res) => {
+  if (taggingInProgress) {
+    return res.send(`
+      <html><body style="font-family: sans-serif; padding: 40px;">
+        <h1 style="color: #f59e0b;">⏳ Tagging In Progress!</h1>
+        <p>The tagging process is already running. Please wait...</p>
+        <p><a href="/" style="color: #3b82f6;">Go to app</a></p>
+      </body></html>
+    `);
+  }
+
+  if (req.query.confirm !== 'yes') {
+    return res.send(`
+      <html><body style="font-family: sans-serif; padding: 40px; max-width: 700px;">
+        <h1>🏷️ AI Recipe Tagging</h1>
+        <p>This will tag all 162 recipes with comprehensive AI-generated tags.</p>
+        <p><strong>Details:</strong></p>
+        <ul>
+          <li>Uses Claude API to analyze each recipe</li>
+          <li>Generates 4-8 tags per recipe (Course, Time, Difficulty, Cuisine, etc.)</li>
+          <li>Takes ~10-15 minutes</li>
+          <li>Costs ~$1-2 in API credits</li>
+          <li>Updates database directly</li>
+        </ul>
+        <p><a href="/run-tagging?confirm=yes" style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 20px 0;">✨ Yes, Tag All Recipes</a></p>
+        <p><a href="/" style="color: #666;">Cancel</a></p>
+      </body></html>
+    `);
+  }
+
+  // Set flag to prevent concurrent runs
+  taggingInProgress = true;
+
+  // Set headers for streaming response
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Transfer-Encoding', 'chunked');
+  
+  res.write(`
+    <html>
+    <head>
+      <style>
+        body { font-family: monospace; padding: 40px; background: #1e1e1e; color: #d4d4d4; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .batch { color: #fbbf24; font-weight: bold; margin-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <h1 style="color: #667eea;">🏷️ AI Recipe Tagging</h1>
+      <pre>
+  `);
+
+  const startTime = Date.now();
+  let successCount = 0;
+  let errorCount = 0;
+  const BATCH_SIZE = 10;
+
+  try {
+    res.write(`<span class="info">📋 Fetching recipes from database...</span>\n`);
+    
+    const result = await pool.query(`
+      SELECT id, name, ingredients, directions, prep_time, cook_time, servings, tags
+      FROM meals
+      WHERE meal_type = 'recipe'
+      ORDER BY name ASC
+    `);
+    
+    const recipes = result.rows;
+    res.write(`<span class="success">✅ Found ${recipes.length} recipes</span>\n\n`);
+    res.write(`<span class="info">⚡ Processing 10 recipes at a time...</span>\n\n`);
+
+    for (let i = 0; i < recipes.length; i += BATCH_SIZE) {
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(recipes.length / BATCH_SIZE);
+      const batch = recipes.slice(i, i + BATCH_SIZE);
+      
+      res.write(`<span class="batch">📦 Batch ${batchNum}/${totalBatches} - Recipes ${i + 1}-${Math.min(i + BATCH_SIZE, recipes.length)}</span>\n`);
+      
+      const results = await Promise.all(
+        batch.map(async (recipe, idx) => {
+          const recipeNum = i + idx + 1;
+          const recipeName = recipe.name.substring(0, 40).padEnd(40);
+          
+          try {
+            const prompt = `Analyze this recipe and assign appropriate tags. Choose tags that accurately describe this recipe based on reading the full content.
+
+**Recipe Name:** ${recipe.name}
+**Ingredients:** ${recipe.ingredients || 'N/A'}
+**Directions:** ${recipe.directions ? recipe.directions.substring(0, 1000) : 'N/A'}
+**Prep Time:** ${recipe.prep_time || 'N/A'}
+**Cook Time:** ${recipe.cook_time || 'N/A'}
+**Servings:** ${recipe.servings || 'N/A'}
+
+**Available Tags by Category:**
+Meal Type: Breakfast, Lunch, Dinner, Brunch, Snack
+Course: Appetizer, Main Dish, Side Dish, Salad, Soup, Dessert, Beverage, Sauce/Condiment
+Dietary: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Nut-Free, Low-Carb, Keto, Paleo
+Cuisine: American, Italian, Mexican, Asian, Indian, Mediterranean, French, Thai, Korean, Japanese, Chinese, Greek, Middle Eastern
+Cooking Method: Baked, Grilled, Fried, Slow Cooker, Instant Pot, One-Pot, No-Cook, Roasted, Sautéed, Steamed
+Time: Quick (< 30 min), Medium (30-60 min), Long (> 60 min)
+Difficulty: Easy, Medium, Hard
+Characteristics: Healthy, Comfort Food, Kid-Friendly, Party Food, Make-Ahead, Meal Prep, Spicy, Sweet, Savory, Fresh, Hearty, Light
+
+Return ONLY a JSON array of 4-8 selected tags. Include at least one from: Course, Time, Difficulty.
+
+Example: ["Dessert", "Quick (< 30 min)", "Easy", "Sweet"]`;
+
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01'
+              },
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 200,
+                messages: [{ role: 'user', content: prompt }]
+              })
+            });
+
+            const data = await response.json();
+            const text = data.content[0].text.trim();
+            const tagsMatch = text.match(/\[.*\]/s);
+            
+            if (tagsMatch) {
+              const tags = JSON.parse(tagsMatch[0]);
+              await pool.query(
+                'UPDATE meals SET tags = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+                [tags, recipe.id]
+              );
+              successCount++;
+              return { success: true, name: recipeName, count: tags.length, num: recipeNum };
+            } else {
+              errorCount++;
+              return { success: false, name: recipeName, num: recipeNum };
+            }
+          } catch (error) {
+            errorCount++;
+            return { success: false, name: recipeName, num: recipeNum, error: error.message };
+          }
+        })
+      );
+
+      // Write results for this batch
+      results.forEach(r => {
+        if (r.success) {
+          res.write(`  <span class="success">[${r.num}/${recipes.length}] ${r.name} ✅ ${r.count} tags</span>\n`);
+        } else {
+          res.write(`  <span class="error">[${r.num}/${recipes.length}] ${r.name} ⚠️  fallback</span>\n`);
+        }
+      });
+      
+      res.write('\n');
+      
+      // Small delay between batches
+      if (i + BATCH_SIZE < recipes.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    const duration = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
+    
+    res.write(`\n<span class="success">✅ Tagging complete in ${duration} minutes!</span>\n`);
+    res.write(`<span class="info">   Success: ${successCount} recipes</span>\n`);
+    res.write(`<span class="info">   Errors: ${errorCount} recipes</span>\n\n`);
+    
+    // Show tag statistics
+    res.write(`<span class="info">📊 Tag Distribution:</span>\n`);
+    const stats = await pool.query(`
+      SELECT unnest(tags) as tag, COUNT(*) as count
+      FROM meals
+      WHERE meal_type = 'recipe' AND tags IS NOT NULL
+      GROUP BY tag
+      ORDER BY count DESC
+      LIMIT 20
+    `);
+    
+    stats.rows.forEach(row => {
+      res.write(`   ${row.tag}: ${row.count}\n`);
+    });
+
+    res.write(`
+      </pre>
+      <p style="margin-top: 30px;"><a href="/" style="background: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Go to App</a></p>
+    </body></html>
+    `);
+    
+  } catch (error) {
+    res.write(`\n<span class="error">❌ Error: ${error.message}</span>\n`);
+    res.write(`
+      </pre>
+      <p><a href="/">Go back</a></p>
+    </body></html>
+    `);
+  } finally {
+    taggingInProgress = false;
+    res.end();
+  }
+});
+// ==================== END TAG ALL RECIPES ENDPOINT ====================
+
 // Extract order info endpoint
 app.post('/extract-order', upload.single('image'), async (req, res) => {
   try {
