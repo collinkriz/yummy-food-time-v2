@@ -938,7 +938,8 @@ app.get('/api/recipes/:name', async (req, res) => {
       return res.status(404).json({ error: 'Recipe not found' });
     }
     
-    res.json({ success: true, recipe: result.rows[0] });
+    // Return just the recipe object (not wrapped in {success, recipe})
+    res.json(result.rows[0]);
     
   } catch (error) {
     console.error('Error fetching recipe:', error);
