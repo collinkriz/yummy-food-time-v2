@@ -3223,6 +3223,8 @@
                                 </div>
                             ` : ''}
                             
+                            ${recipe.tags && recipe.tags.length > 0 ? renderTags(recipe.tags) : ''}
+                            
                             <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 14px; color: #6B6B3D; font-weight: 600;">
                                 ${recipe.prep_time && recipe.prep_time !== 'N/A' ? `<span>⏱️ Prep: ${recipe.prep_time}</span>` : ''}
                                 ${recipe.cook_time && recipe.cook_time !== 'N/A' ? `<span>🔥 Cook: ${recipe.cook_time}</span>` : ''}
@@ -3256,6 +3258,13 @@
             html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🔥</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Cook: ${recipe.cook_time || 'N/A'}</div></div>`;
             html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🍽️</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Servings: ${recipe.servings || 'N/A'}</div></div>`;
             html += '</div>';
+            
+            // Tags display
+            if (recipe.tags && recipe.tags.length > 0) {
+                html += '<div style="display: flex; justify-content: center; margin-bottom: 20px;">';
+                html += renderTags(recipe.tags);
+                html += '</div>';
+            }
             
             // Toggle buttons (separate from content box)
             html += '<div class="recipe-toggles">';
