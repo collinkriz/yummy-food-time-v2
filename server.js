@@ -1045,6 +1045,101 @@ app.get('/api/recipes', (req, res) => {
   }
 });
 
+// ONE-TIME: Batch tag all recipes (run once after deployment)
+app.post('/admin/tag-all-recipes', async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const recipesPath = path.join(__dirname, 'recipes.json');
+    
+    const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
+    const taggedRecipes = [];
+    let successCount = 0;
+    let errorCount = 0;
+    
+    // Send initial response so connection doesn't timeout
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.write(`Starting to tag ${recipes.length} recipes...\n\n`);
+    
+    for (let i = 0; i < recipes.length; i++) {
+      const recipe = recipes[i];
+      
+      res.write(`[${i + 1}/${recipes.length}] Tagging: ${recipe.name}... `);
+      
+      try {
+        const prompt = `Analyze this recipe and assign appropriate tags. Choose tags that accurately describe this recipe based on reading the full content.
+
+**Recipe Name:** ${recipe.name}
+**Ingredients:** ${(recipe.ingredients || '').substring(0, 800)}
+**Directions:** ${(recipe.directions || '').substring(0, 800)}
+**Prep Time:** ${recipe.prep_time || 'N/A'}
+**Cook Time:** ${recipe.cook_time || 'N/A'}
+
+**Available Tags by Category:**
+Meal Type: Breakfast, Lunch, Dinner, Brunch, Snack
+Course: Appetizer, Main Dish, Side Dish, Salad, Soup, Dessert, Beverage, Sauce/Condiment
+Dietary: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Nut-Free, Low-Carb, Keto, Paleo
+Cuisine: American, Italian, Mexican, Asian, Indian, Mediterranean, French, Thai, Korean, Japanese, Chinese, Greek, Middle Eastern
+Cooking Method: Baked, Grilled, Fried, Slow Cooker, Instant Pot, One-Pot, No-Cook, Roasted, Sautéed, Steamed
+Time: Quick (< 30 min), Medium (30-60 min), Long (> 60 min)
+Difficulty: Easy, Medium, Hard
+Characteristics: Healthy, Comfort Food, Kid-Friendly, Party Food, Make-Ahead, Meal Prep, Spicy, Sweet, Savory, Fresh, Hearty, Light
+
+Return ONLY a JSON array of 4-8 selected tags. Example: ["Main Dish", "Italian", "Medium (30-60 min)", "Medium", "Comfort Food"]`;
+
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 200,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+
+        const data = await response.json();
+        const text = data.content[0].text.trim();
+        const tagsMatch = text.match(/\[.*\]/s);
+        
+        if (tagsMatch) {
+          recipe.tags = JSON.parse(tagsMatch[0]);
+          successCount++;
+          res.write(`✅ ${recipe.tags.length} tags\n`);
+        } else {
+          recipe.tags = recipe.ai_category || [];
+          errorCount++;
+          res.write(`⚠️ fallback\n`);
+        }
+        
+      } catch (error) {
+        recipe.tags = recipe.ai_category || [];
+        errorCount++;
+        res.write(`❌ error\n`);
+      }
+      
+      taggedRecipes.push(recipe);
+      
+      // Small delay to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
+    
+    // Save tagged recipes
+    fs.writeFileSync(recipesPath, JSON.stringify(taggedRecipes, null, 2));
+    
+    res.write(`\n✅ Complete! ${successCount} success, ${errorCount} errors\n`);
+    res.write(`Updated recipes.json with tags.\n`);
+    res.end();
+    
+  } catch (error) {
+    console.error('Tagging error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // AI-powered tag suggestion endpoint
 app.post('/suggest-tags', async (req, res) => {
   try {
