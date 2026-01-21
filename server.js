@@ -1152,11 +1152,161 @@ app.get('/recommend', async (req, res) => {
       });
       
     } else {
-      // Takeout recommendations
-      res.json({
-        title: 'Order This!',
-        recommendation: '<p style="text-align: center; padding: 40px;">Takeout recommendations coming soon!</p>'
-      });
+      // Takeout recommendations - Hybrid approach
+      // 1. Get a past order that matches filters (if any)
+      // 2. Use AI to suggest a new restaurant near Hazel Park, MI
+      
+      // Map filter IDs to characteristics
+      const filterCharacteristics = {
+        'cheap': 'affordable, budget-friendly',
+        'healthy': 'healthy, fresh, nutritious',
+        'filling': 'hearty portions, filling, satisfying',
+        'fast': 'quick service, fast delivery',
+        'comfort': 'comfort food, indulgent, classic'
+      };
+      
+      const selectedCharacteristics = filterArray
+        .filter(f => filterCharacteristics[f])
+        .map(f => filterCharacteristics[f]);
+      
+      const vibeDescription = selectedCharacteristics.length > 0 
+        ? selectedCharacteristics.join(', ')
+        : 'any cuisine';
+      
+      try {
+        // Get past orders from database
+        let pastOrderQuery = `
+          SELECT DISTINCT ON (restaurant) 
+            restaurant, 
+            address, 
+            delivery_service,
+            AVG(oi.rating) as avg_rating,
+            COUNT(oi.id) as item_count
+          FROM meals m
+          LEFT JOIN meal_items oi ON m.id = oi.meal_id
+          WHERE m.meal_type = 'takeout' 
+            AND oi.rating >= 4
+          GROUP BY restaurant, address, delivery_service
+          ORDER BY restaurant, avg_rating DESC
+          LIMIT 5
+        `;
+        
+        const pastOrders = await pool.query(pastOrderQuery);
+        const pastOrder = pastOrders.rows.length > 0 
+          ? pastOrders.rows[Math.floor(Math.random() * pastOrders.rows.length)]
+          : null;
+        
+        // Generate AI recommendation
+        const aiPrompt = `You are a local food expert for the Hazel Park, Michigan area (within 15 miles). 
+
+The user is looking for takeout with these vibes: ${vibeDescription}
+
+Suggest ONE specific restaurant that:
+1. Is within 15 miles of Hazel Park, MI
+2. Matches the vibe: ${vibeDescription}
+3. Is a real, existing restaurant
+4. Has good reviews
+
+Format your response as HTML with:
+- Restaurant name as a heading
+- Brief description (2-3 sentences)
+- Type of cuisine
+- Why it matches their vibe
+- Approximate location (city/neighborhood)
+
+Keep it friendly, casual, and enthusiastic. Use simple HTML tags only (h3, p, strong). No markdown.`;
+
+        const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 500,
+            messages: [{
+              role: 'user',
+              content: aiPrompt
+            }]
+          })
+        });
+        
+        const aiData = await aiResponse.json();
+        const aiSuggestion = aiData.content[0].text;
+        
+        // Build recommendation HTML
+        let html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
+        
+        // Past order section (if exists)
+        if (pastOrder) {
+          html += `
+            <div style="background: linear-gradient(135deg, #52c41a 0%, #3fa218 100%); 
+                        padding: 20px; 
+                        border-radius: 12px; 
+                        border: 4px solid #4A4A1F;
+                        color: white;">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span style="font-size: 28px;">⭐</span>
+                <h3 style="margin: 0; font-size: 18px; font-weight: 900; text-transform: uppercase;">
+                  Order Again
+                </h3>
+              </div>
+              <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 900;">
+                ${pastOrder.restaurant}
+              </h2>
+              <p style="margin: 0 0 8px 0; font-size: 14px; opacity: 0.9;">
+                ${pastOrder.address || 'Your past favorite!'}
+              </p>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;">
+                <span>⭐ ${pastOrder.avg_rating ? Number(pastOrder.avg_rating).toFixed(1) : '5.0'} average rating</span>
+                <span>•</span>
+                <span>${pastOrder.item_count} items ordered</span>
+              </div>
+            </div>
+          `;
+        }
+        
+        // AI suggestion section
+        html += `
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                      padding: 20px; 
+                      border-radius: 12px; 
+                      border: 4px solid #4A4A1F;
+                      color: white;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <span style="font-size: 28px;">✨</span>
+              <h3 style="margin: 0; font-size: 18px; font-weight: 900; text-transform: uppercase;">
+                Try Something New
+              </h3>
+            </div>
+            <div style="line-height: 1.6;">
+              ${aiSuggestion}
+            </div>
+          </div>
+        `;
+        
+        html += '</div>';
+        
+        res.json({
+          title: vibeDescription ? `${vibeDescription.split(',')[0].charAt(0).toUpperCase() + vibeDescription.split(',')[0].slice(1)} Takeout` : 'Order This!',
+          recommendation: html
+        });
+        
+      } catch (aiError) {
+        console.error('AI recommendation error:', aiError);
+        
+        // Fallback to just past orders if AI fails
+        let fallbackHtml = '<div style="text-align: center; padding: 40px;">';
+        fallbackHtml += '<p style="font-size: 18px; color: #4A4A1F; margin-bottom: 20px;">Here are some of your favorites!</p>';
+        fallbackHtml += '</div>';
+        
+        res.json({
+          title: 'Order Again!',
+          recommendation: fallbackHtml
+        });
+      }
     }
     
   } catch (error) {
