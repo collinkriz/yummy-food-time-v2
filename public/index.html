@@ -1426,7 +1426,7 @@
                 <button class="top-btn" onclick="showLogMeal()"><span class="icon">📝</span> Log Meal</button>
                 <button class="top-btn" onclick="showMealHistory()"><span class="icon">📋</span> History</button>
                 <button class="top-btn" onclick="showRecipeList()"><span class="icon">📖</span> Recipes</button>
-                <button class="top-btn" onclick="selectChoice('takeout')"><span class="icon">🍔</span> Take Out</button>
+                <button class="top-btn" onclick="showOrders()"><span class="icon">🍔</span> Orders</button>
             </div>
         </div>
         
@@ -1434,12 +1434,12 @@
         <div id="homeView" class="view active">
             <div class="choice-cards">
                 <div class="choice-card" onclick="selectChoice('takeout')">
-                    <div class="choice-icon">🍔</div>
-                    <div class="choice-title">Take Out</div>
+                    <div class="choice-icon">🎲</div>
+                    <div class="choice-title">Take Out Ideas</div>
                 </div>
                 <div class="choice-card" onclick="selectChoice('cooking')">
                     <div class="choice-icon">👩🏻‍🍳</div>
-                    <div class="choice-title">Cook at Home</div>
+                    <div class="choice-title">Recipe Ideas</div>
                 </div>
             </div>
         </div>
@@ -2673,6 +2673,11 @@
             showView('logMealView');
         }
         
+        function showOrders() {
+            showView('ordersView');
+            loadOrders();
+        }
+        
         function showHistory() {
             showView('ordersView');
             loadOrders();
@@ -2680,7 +2685,7 @@
         
         async function showMealHistory() {
             showView('mealHistoryView');
-            loadMealHistory();
+            await loadMealHistory();
         }
         
         function showRecipeListForLogging() {
