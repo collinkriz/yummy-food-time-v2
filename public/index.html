@@ -1673,7 +1673,7 @@
         <div id="homeView" class="view active">
             <div class="choice-cards">
                 <div class="choice-card" onclick="selectChoice('takeout')">
-                    <div class="choice-icon">🎲</div>
+                    <div class="choice-icon">🍕</div>
                     <div class="choice-title">Take Out Ideas</div>
                 </div>
                 <div class="choice-card" onclick="selectChoice('cooking')">
@@ -2310,7 +2310,14 @@
         }
         
         function backToFilters() {
-            // Go back to the last page of filters
+            // If viewing recipe detail from recipe list, go back to recipe list
+            if (isViewingRecipeDetail && currentChoice === 'cooking') {
+                isViewingRecipeDetail = false;
+                showView('recipeListView');
+                return;
+            }
+            
+            // Otherwise go back to the filter page
             if (currentChoice === 'cooking') {
                 currentFilterPage = 2;
                 renderFilterPage();
@@ -3146,6 +3153,7 @@
         
         // RECIPE LIST FUNCTIONS
         let allRecipes = [];
+        let isViewingRecipeDetail = false; // Track if we're in recipe detail view
         
         async function showRecipeList() {
             showView('recipeListView');
@@ -3241,6 +3249,13 @@
         async function showRecipeDetail(recipeName) {
             const recipe = allRecipes.find(r => r.name === recipeName);
             if (!recipe) return;
+            
+            // Track that we're viewing a recipe detail (for back button navigation)
+            // Check if we came from recipe list view
+            const recipeListView = document.getElementById('recipeListView');
+            if (recipeListView && recipeListView.classList.contains('active')) {
+                isViewingRecipeDetail = true;
+            }
             
             // Simulate getting recommendation by directly setting the content
             currentChoice = 'cooking';
