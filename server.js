@@ -122,7 +122,7 @@ Look at EVERY section of the receipt carefully. The address is often near the to
   }
 });
 
-// Save order to database
+// Save takeout order to database (using unified meals schema)
 app.post('/orders', async (req, res) => {
   const client = await pool.connect();
   try {
@@ -137,12 +137,17 @@ app.post('/orders', async (req, res) => {
 
     await client.query('BEGIN');
 
-    // Insert order (use 0 as default for missing numeric values)
-    const orderResult = await client.query(
-      `INSERT INTO orders (restaurant, address, delivery_service, subtotal, delivery_fee, service_fee, tax, discount, tip, total)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id`,
+    // Insert meal as type 'takeout'
+    const mealResult = await client.query(
+      `INSERT INTO meals (
+        meal_type, name, restaurant, address, delivery_service, 
+        subtotal, delivery_fee, service_fee, tax, discount, tip, total, meal_date
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING id`,
       [
+        'takeout',
+        restaurant, // Use restaurant name as meal name for takeout
         restaurant, 
         address || 'Not provided', 
         deliveryService || 'Unknown', 
@@ -152,26 +157,27 @@ app.post('/orders', async (req, res) => {
         tax || 0, 
         discount || 0, 
         tip || 0, 
-        total || 0
+        total || 0,
+        new Date()
       ]
     );
 
-    const orderId = orderResult.rows[0].id;
+    const mealId = mealResult.rows[0].id;
 
     // Insert items
     for (const item of items) {
       await client.query(
-        `INSERT INTO order_items (order_id, item_name, price, assigned_to, rating, notes)
+        `INSERT INTO meal_items (meal_id, item_name, price, assigned_to, rating, notes)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [orderId, item.name, item.price || 0, item.assignedTo || null, item.rating || 0, item.notes || null]
+        [mealId, item.name, item.price || 0, item.assignedTo || null, item.rating || 0, item.notes || null]
       );
     }
 
     await client.query('COMMIT');
     
-    console.log('Order saved successfully with ID:', orderId);
+    console.log('Takeout order saved successfully with ID:', mealId);
 
-    res.json({ success: true, orderId });
+    res.json({ success: true, orderId: mealId });
 
   } catch (error) {
     await client.query('ROLLBACK');
@@ -182,25 +188,27 @@ app.post('/orders', async (req, res) => {
   }
 });
 
-// Get all orders
+// Get all takeout orders
 app.get('/orders', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT o.*, 
+      SELECT m.*, 
              json_agg(
                json_build_object(
-                 'id', oi.id,
-                 'name', oi.item_name,
-                 'price', oi.price,
-                 'assignedTo', oi.assigned_to,
-                 'rating', oi.rating,
-                 'notes', oi.notes
-               ) ORDER BY oi.id
-             ) as items
-      FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      GROUP BY o.id
-      ORDER BY o.created_at DESC
+                 'id', mi.id,
+                 'name', mi.item_name,
+                 'price', mi.price,
+                 'assignedTo', mi.assigned_to,
+                 'rating', mi.rating,
+                 'notes', mi.notes,
+                 'tags', mi.tags
+               ) ORDER BY mi.id
+             ) FILTER (WHERE mi.id IS NOT NULL) as items
+      FROM meals m
+      LEFT JOIN meal_items mi ON m.id = mi.meal_id
+      WHERE m.meal_type = 'takeout'
+      GROUP BY m.id
+      ORDER BY m.created_at DESC
     `);
 
     res.json({ success: true, orders: result.rows });
@@ -217,21 +225,22 @@ app.get('/orders/:id', async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(`
-      SELECT o.*, 
+      SELECT m.*, 
              json_agg(
                json_build_object(
-                 'id', oi.id,
-                 'name', oi.item_name,
-                 'price', oi.price,
-                 'assignedTo', oi.assigned_to,
-                 'rating', oi.rating,
-                 'notes', oi.notes
-               ) ORDER BY oi.id
-             ) as items
-      FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      WHERE o.id = $1
-      GROUP BY o.id
+                 'id', mi.id,
+                 'name', mi.item_name,
+                 'price', mi.price,
+                 'assignedTo', mi.assigned_to,
+                 'rating', mi.rating,
+                 'notes', mi.notes,
+                 'tags', mi.tags
+               ) ORDER BY mi.id
+             ) FILTER (WHERE mi.id IS NOT NULL) as items
+      FROM meals m
+      LEFT JOIN meal_items mi ON m.id = mi.meal_id
+      WHERE m.id = $1 AND m.meal_type = 'takeout'
+      GROUP BY m.id
     `, [id]);
 
     if (result.rows.length === 0) {
@@ -246,24 +255,41 @@ app.get('/orders/:id', async (req, res) => {
   }
 });
 
-// Update order item (rating, assignment, notes)
+// Update order item (rating, assignment, notes, tags)
 app.patch('/order-items/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, assigned_to, rating, notes, tags } = req.body;
+    const { rating, assignedTo, notes, tags } = req.body;
 
-    const result = await pool.query(
-      `UPDATE order_items 
-       SET item_name = COALESCE($1, item_name),
-           price = COALESCE($2, price),
-           assigned_to = COALESCE($3, assigned_to),
-           rating = COALESCE($4, rating),
-           notes = COALESCE($5, notes),
-           tags = COALESCE($6, tags)
-       WHERE id = $7
-       RETURNING *`,
-      [name, price, assigned_to, rating, notes, tags, id]
-    );
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (rating !== undefined) {
+      updates.push(`rating = $${paramCount++}`);
+      values.push(rating);
+    }
+    if (assignedTo !== undefined) {
+      updates.push(`assigned_to = $${paramCount++}`);
+      values.push(assignedTo);
+    }
+    if (notes !== undefined) {
+      updates.push(`notes = $${paramCount++}`);
+      values.push(notes);
+    }
+    if (tags !== undefined) {
+      updates.push(`tags = $${paramCount++}`);
+      values.push(tags);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    values.push(id);
+    const query = `UPDATE meal_items SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+
+    const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Item not found' });
@@ -272,95 +298,83 @@ app.patch('/order-items/:id', async (req, res) => {
     res.json({ success: true, item: result.rows[0] });
 
   } catch (error) {
-    console.error('Error updating item:', error);
+    console.error('Error updating order item:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Delete individual order item
-app.delete('/order-items/:id', async (req, res) => {
+// Update entire order (restaurant, address, delivery service, fees, etc.)
+app.patch('/orders/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const { restaurant, address, deliveryService, subtotal, deliveryFee, serviceFee, tax, discount, tip, total } = req.body;
 
-    const result = await pool.query(
-      'DELETE FROM order_items WHERE id = $1 RETURNING *',
-      [id]
-    );
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (restaurant !== undefined) {
+      updates.push(`name = $${paramCount}`, `restaurant = $${paramCount}`);
+      values.push(restaurant);
+      paramCount++;
+    }
+    if (address !== undefined) {
+      updates.push(`address = $${paramCount++}`);
+      values.push(address);
+    }
+    if (deliveryService !== undefined) {
+      updates.push(`delivery_service = $${paramCount++}`);
+      values.push(deliveryService);
+    }
+    if (subtotal !== undefined) {
+      updates.push(`subtotal = $${paramCount++}`);
+      values.push(subtotal);
+    }
+    if (deliveryFee !== undefined) {
+      updates.push(`delivery_fee = $${paramCount++}`);
+      values.push(deliveryFee);
+    }
+    if (serviceFee !== undefined) {
+      updates.push(`service_fee = $${paramCount++}`);
+      values.push(serviceFee);
+    }
+    if (tax !== undefined) {
+      updates.push(`tax = $${paramCount++}`);
+      values.push(tax);
+    }
+    if (discount !== undefined) {
+      updates.push(`discount = $${paramCount++}`);
+      values.push(discount);
+    }
+    if (tip !== undefined) {
+      updates.push(`tip = $${paramCount++}`);
+      values.push(tip);
+    }
+    if (total !== undefined) {
+      updates.push(`total = $${paramCount++}`);
+      values.push(total);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(id);
+    
+    const query = `UPDATE meals SET ${updates.join(', ')} WHERE id = $${paramCount} AND meal_type = 'takeout' RETURNING *`;
+
+    const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Item not found' });
+      return res.status(404).json({ error: 'Order not found' });
     }
 
-    res.json({ success: true, message: 'Item deleted successfully' });
+    res.json({ success: true, order: result.rows[0] });
 
   } catch (error) {
-    console.error('Error deleting item:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update entire order
-app.put('/orders/:id', async (req, res) => {
-  const client = await pool.connect();
-  try {
-    const { id } = req.params;
-    const { restaurant, address, deliveryService, subtotal, deliveryFee, serviceFee, tax, discount, tip, total, items } = req.body;
-
-    console.log('Updating order:', id, JSON.stringify(req.body, null, 2));
-
-    // Validate required fields
-    if (!restaurant || !items || items.length === 0) {
-      throw new Error('Restaurant and items are required');
-    }
-
-    await client.query('BEGIN');
-
-    // Update order
-    await client.query(
-      `UPDATE orders 
-       SET restaurant = $1, address = $2, delivery_service = $3, 
-           subtotal = $4, delivery_fee = $5, service_fee = $6, 
-           tax = $7, discount = $8, tip = $9, total = $10
-       WHERE id = $11`,
-      [
-        restaurant,
-        address || 'Not provided',
-        deliveryService || 'Unknown',
-        subtotal || 0,
-        deliveryFee || 0,
-        serviceFee || 0,
-        tax || 0,
-        discount || 0,
-        tip || 0,
-        total || 0,
-        id
-      ]
-    );
-
-    // Delete existing items
-    await client.query('DELETE FROM order_items WHERE order_id = $1', [id]);
-
-    // Insert updated items
-    for (const item of items) {
-      await client.query(
-        `INSERT INTO order_items (order_id, item_name, price, assigned_to, rating, notes)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [id, item.name, item.price || 0, item.assignedTo || null, item.rating || 0, item.notes || null]
-      );
-    }
-
-    await client.query('COMMIT');
-
-    console.log('Order updated successfully:', id);
-
-    res.json({ success: true, orderId: id });
-
-  } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Error updating order:', error);
-    res.status(500).json({ error: error.message, details: error.stack });
-  } finally {
-    client.release();
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -368,8 +382,11 @@ app.put('/orders/:id', async (req, res) => {
 app.delete('/orders/:id', async (req, res) => {
   try {
     const { id } = req.params;
-
-    const result = await pool.query('DELETE FROM orders WHERE id = $1 RETURNING id', [id]);
+    
+    const result = await pool.query(
+      'DELETE FROM meals WHERE id = $1 AND meal_type = \'takeout\' RETURNING id', 
+      [id]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
@@ -383,922 +400,175 @@ app.delete('/orders/:id', async (req, res) => {
   }
 });
 
-// Chat endpoint for food recommendations
-app.post('/chat', async (req, res) => {
+// Add item to existing order
+app.post('/orders/:id/items', async (req, res) => {
   try {
-    const { message, history } = req.body;
+    const { id } = req.params;
+    const { name, price } = req.body;
 
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+    if (!name) {
+      return res.status(400).json({ error: 'Item name is required' });
     }
 
-    // Get user's order history for context
-    const ordersResult = await pool.query(`
-      SELECT o.restaurant, o.delivery_service, o.total, o.created_at,
-             json_agg(
-               json_build_object(
-                 'name', oi.item_name,
-                 'price', oi.price,
-                 'assignedTo', oi.assigned_to,
-                 'rating', oi.rating,
-                 'notes', oi.notes
-               ) ORDER BY oi.rating DESC NULLS LAST
-             ) as items
-      FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      GROUP BY o.id
-      ORDER BY o.created_at DESC
-      LIMIT 20
-    `);
+    const result = await pool.query(
+      `INSERT INTO meal_items (meal_id, item_name, price) 
+       VALUES ($1, $2, $3) 
+       RETURNING *`,
+      [id, name, price || 0]
+    );
 
-    // Load recipe library from Paprika export
-    const fs = require('fs');
-    const path = require('path');
-    const recipesPath = path.join(__dirname, 'recipes.json');
-    let recipeContext = '';
-    
-    if (fs.existsSync(recipesPath)) {
-      const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
-      recipeContext = `\n\nUser's Home Recipe Library (${recipes.length} recipes from Paprika):\n`;
-      recipeContext += 'You have access to full recipe details including ingredients and directions. When user asks about cooking at home, recommend from these recipes.\n\n';
-      
-      // For efficiency, just list recipe names in the main prompt
-      // Full details will be provided when specifically asked
-      const recipeList = recipes.map((r, i) => {
-        let info = `${i + 1}. ${r.name}`;
-        if (r.prep_time || r.cook_time) {
-          const times = [];
-          if (r.prep_time) times.push(`${r.prep_time}`);
-          if (r.cook_time) times.push(`${r.cook_time}`);
-          info += ` (${times.join(' + ')})`;
-        }
-        return info;
-      }).join('\n');
-      
-      recipeContext += recipeList;
-      recipeContext += '\n\nIMPORTANT: ';
-      recipeContext += '- When user asks about cooking, recommend specific recipes from this list by name\n';
-      recipeContext += '- If user asks for ingredients or directions for a recipe, provide the full details\n';
-      recipeContext += '- You have access to complete ingredients lists and step-by-step directions for all recipes\n';
-      recipeContext += '- Never say you don\'t have access to recipes or their details\n';
-      
-      // Store full recipes in a global for easy access
-      global.recipeLibrary = recipes;
-    }
-
-    // Build context from order history
-    let orderContext = '';
-    if (ordersResult.rows.length > 0) {
-      orderContext = '\n\nUser\'s Recent Takeout Order History:\n';
-      ordersResult.rows.forEach((order, i) => {
-        orderContext += `\n${i + 1}. ${order.restaurant}`;
-        if (order.delivery_service && order.delivery_service !== 'Unknown') {
-          orderContext += ` (via ${order.delivery_service})`;
-        }
-        orderContext += `\n   Items ordered:\n`;
-        order.items.forEach(item => {
-          orderContext += `   - ${item.name} ($${parseFloat(item.price).toFixed(2)})`;
-          if (item.rating > 0) {
-            orderContext += ` - Rated: ${item.rating}/5 stars`;
-          }
-          if (item.notes) {
-            orderContext += ` - Notes: "${item.notes}"`;
-          }
-          orderContext += '\n';
-        });
-      });
-    } else {
-      orderContext = '\n\nThe user has no takeout order history yet.';
-    }
-
-    // Check if user is asking for specific recipe details
-    let recipeDetails = '';
-    const lowerMessage = message.toLowerCase();
-    
-    // Keywords that indicate they want recipe details
-    if ((lowerMessage.includes('ingredient') || lowerMessage.includes('direction') || 
-         lowerMessage.includes('how to make') || lowerMessage.includes('how do i make') ||
-         lowerMessage.includes('recipe for') || lowerMessage.includes('steps')) && 
-        global.recipeLibrary) {
-      
-      // Try to find matching recipe
-      const matchedRecipe = global.recipeLibrary.find(r => 
-        lowerMessage.includes(r.name.toLowerCase())
-      );
-      
-      if (matchedRecipe) {
-        recipeDetails = `\n\nFULL RECIPE DETAILS FOR: ${matchedRecipe.name}\n`;
-        recipeDetails += `\nINGREDIENTS:\n${matchedRecipe.ingredients}\n`;
-        recipeDetails += `\nDIRECTIONS:\n${matchedRecipe.directions}\n`;
-        if (matchedRecipe.notes) {
-          recipeDetails += `\nNOTES:\n${matchedRecipe.notes}\n`;
-        }
-      }
-    }
-
-    // Build conversation messages
-    const messages = [
-      {
-        role: 'user',
-        content: `You're a helpful food recommendation assistant. Be conversational but professional - like a useful app, not a casual friend. Keep responses brief (1-2 short paragraphs maximum, ideally 2-4 sentences).
-
-${recipeContext}
-
-${orderContext}
-
-${recipeDetails}
-
-Guidelines:
-- Professional but friendly tone
-- Brief and direct responses
-- For COOKING AT HOME questions: recommend specific recipes from the recipe library above by name
-- For TAKEOUT questions: reference their order history  
-- When user asks for ingredients or directions, provide the full details from the recipe data above
-- Ask follow-up questions when helpful
-- Use complete sentences, proper grammar
-
-Examples of good responses:
-"For a healthy main dish, I'd recommend the Avocado Lime Salmon or Baked Sesame-Ginger Salmon in Parchment from your recipe library. Both are quick to prepare and packed with flavor."
-
-"Based on your 5-star rating for the Hot Honey Chicken, I'd recommend trying the Nashville Hot sandwich at the new spot on John R."
-
-"Looking at your recipes, the Chili Garlic Noodles with Crispy Tofu would be perfect - it's bold, flavorful, and comes together quickly."
-
-Keep responses focused and concise.`
-      }
-    ];
-
-    // Add conversation history
-    if (history && history.length > 0) {
-      messages.push(...history);
-    }
-
-    // Add current message
-    messages.push({ role: 'user', content: message });
-
-    // Call Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        messages: messages
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Claude API error:', data);
-      return res.status(response.status).json({ 
-        error: data.error?.message || 'Claude API error',
-        details: data
-      });
-    }
-
-    // Extract text from response
-    const text = data.content
-      .filter(item => item.type === 'text')
-      .map(item => item.text)
-      .join('\n')
-      .trim();
-
-    res.json({ success: true, response: text });
+    res.json({ success: true, item: result.rows[0] });
 
   } catch (error) {
-    console.error('Error in chat:', error);
+    console.error('Error adding item:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Recommendation endpoint
-app.get('/recommend', async (req, res) => {
+// Delete order item
+app.delete('/order-items/:id', async (req, res) => {
   try {
-    const { type, filters, random } = req.query;
-    const filterList = filters ? filters.split(',').filter(f => f) : [];
-    const isRandom = random === 'true';
+    const { id } = req.params;
     
-    if (type === 'takeout') {
-      // Get orders from database with filter matching
-      const ordersResult = await pool.query(`
-        SELECT o.restaurant, o.address, o.delivery_service,
-               json_agg(
-                 json_build_object(
-                   'name', oi.item_name,
-                   'price', oi.price,
-                   'rating', oi.rating,
-                   'assignedTo', oi.assigned_to
-                 ) ORDER BY oi.rating DESC NULLS LAST
-               ) as items
-        FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.order_id
-        GROUP BY o.restaurant, o.address, o.delivery_service
-        ORDER BY RANDOM()
-        LIMIT 50
-      `);
-      
-      if (ordersResult.rows.length === 0) {
-        return res.status(404).json({ error: 'No order history found. Upload some orders first!' });
-      }
-      
-      // Simple filter logic for takeout
-      let candidates = ordersResult.rows;
-      
-      if (filterList.includes('cheap')) {
-        // Filter for restaurants with average order < $30
-        candidates = candidates.filter(o => {
-          const avgPrice = o.items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0) / o.items.length;
-          return avgPrice < 15;
-        });
-      }
-      
-      if (filterList.includes('healthy')) {
-        // Look for salad, bowl, veggie keywords
-        candidates = candidates.filter(o => 
-          o.restaurant.toLowerCase().includes('salad') ||
-          o.restaurant.toLowerCase().includes('bowl') ||
-          o.items.some(item => 
-            item.name.toLowerCase().includes('salad') ||
-            item.name.toLowerCase().includes('veggie') ||
-            item.name.toLowerCase().includes('healthy')
-          )
-        );
-      }
-      
-      // If no matches after filtering, use all
-      if (candidates.length === 0) {
-        candidates = ordersResult.rows;
-      }
-      
-      // Pick random from candidates
-      const selected = candidates[Math.floor(Math.random() * candidates.length)];
-      const topItems = selected.items.filter(item => (item.rating || 0) >= 4).slice(0, 3);
-      
-      let recommendation = `<div class="rec-details">`;
-      recommendation += `<h3 style="font-size: 24px; font-weight: 900; color: #4A4A1F; margin-bottom: 12px;">${selected.restaurant}</h3>`;
-      if (selected.address) {
-        recommendation += `<p style="color: #666; margin-bottom: 16px;">📍 ${selected.address}</p>`;
-      }
-      
-      if (topItems.length > 0) {
-        recommendation += `<p style="font-weight: 700; margin-bottom: 10px;">Try these:</p><ul style="margin-left: 20px;">`;
-        topItems.forEach(item => {
-          recommendation += `<li style="margin-bottom: 8px;"><strong>${item.name}</strong>`;
-          if (item.rating === 5) recommendation += ` ⭐⭐⭐⭐⭐`;
-          else if (item.rating === 4) recommendation += ` ⭐⭐⭐⭐`;
-          recommendation += `</li>`;
-        });
-        recommendation += `</ul>`;
-      }
-      recommendation += `</div>`;
-      
-      return res.json({
-        success: true,
-        title: selected.restaurant,
-        recommendation: recommendation
-      });
-      
-    } else if (type === 'cooking') {
-      // Load recipes from JSON file
-      const fs = require('fs');
-      const path = require('path');
-      const recipesPath = path.join(__dirname, 'recipes.json');
-      
-      if (!fs.existsSync(recipesPath)) {
-        return res.status(404).json({ error: 'No recipes found. Please upload your recipe collection.' });
-      }
-      
-      const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
-      
-      // Filter logic for cooking
-      // Exclude sauce-only recipes from recommendations
-      let candidates = recipes.filter(r => {
-        // Exclude if it's just a sauce (not a meal)
-        const isSauceOnly = 
-          (r.ai_category && r.ai_category.includes('Sauce') && r.ai_category.length === 1) ||
-          (r.name.toLowerCase().includes('sauce') && 
-           !r.name.toLowerCase().includes('with') && 
-           r.name.toLowerCase().split(' ').length <= 3);
-        return !isSauceOnly;
-      });
-      
-      // Style filters
-      if (filterList.includes('quick')) {
-        candidates = candidates.filter(r => 
-          (r.prep_time && r.prep_time.includes('min') && parseInt(r.prep_time) <= 30) ||
-          (r.cook_time && r.cook_time.includes('min') && parseInt(r.cook_time) <= 30) ||
-          r.name.toLowerCase().includes('quick') ||
-          r.name.toLowerCase().includes('easy')
-        );
-      }
-      
-      if (filterList.includes('healthy')) {
-        candidates = candidates.filter(r =>
-          r.name.toLowerCase().includes('salad') ||
-          r.name.toLowerCase().includes('veggie') ||
-          r.name.toLowerCase().includes('healthy') ||
-          r.name.toLowerCase().includes('salmon') ||
-          r.name.toLowerCase().includes('tofu')
-        );
-      }
-      
-      if (filterList.includes('complex')) {
-        candidates = candidates.filter(r =>
-          r.difficulty.toLowerCase().includes('hard') ||
-          r.difficulty.toLowerCase().includes('complex') ||
-          (r.cook_time && parseInt(r.cook_time) > 60)
-        );
-      }
-      
-      if (filterList.includes('comfort')) {
-        candidates = candidates.filter(r =>
-          r.name.toLowerCase().includes('mac') ||
-          r.name.toLowerCase().includes('cheese') ||
-          r.name.toLowerCase().includes('pasta') ||
-          r.name.toLowerCase().includes('bread') ||
-          r.name.toLowerCase().includes('pizza')
-        );
-      }
-      
-      if (filterList.includes('filling')) {
-        candidates = candidates.filter(r =>
-          r.name.toLowerCase().includes('pasta') ||
-          r.name.toLowerCase().includes('rice') ||
-          r.name.toLowerCase().includes('burrito') ||
-          r.name.toLowerCase().includes('bowl') ||
-          r.name.toLowerCase().includes('stew')
-        );
-      }
-      
-      // AI Category filters
-      if (filterList.includes('main')) {
-        candidates = candidates.filter(r => 
-          r.ai_category && r.ai_category.includes('Main Dish')
-        );
-      }
-      
-      if (filterList.includes('salad')) {
-        candidates = candidates.filter(r => 
-          r.ai_category && r.ai_category.includes('Salad')
-        );
-      }
-      
-      if (filterList.includes('soup')) {
-        candidates = candidates.filter(r => 
-          r.ai_category && r.ai_category.includes('Soup')
-        );
-      }
-      
-      // Meal type filters
-      if (filterList.includes('breakfast')) {
-        candidates = candidates.filter(r => 
-          (r.ai_category && r.ai_category.includes('Breakfast')) ||
-          r.name.toLowerCase().includes('breakfast') ||
-          r.name.toLowerCase().includes('pancake') ||
-          r.name.toLowerCase().includes('waffle') ||
-          r.name.toLowerCase().includes('egg') ||
-          r.name.toLowerCase().includes('oatmeal') ||
-          r.name.toLowerCase().includes('muffin')
-        );
-      }
-      
-      if (filterList.includes('lunch')) {
-        candidates = candidates.filter(r =>
-          (r.ai_category && (r.ai_category.includes('Lunch') || r.ai_category.includes('Salad'))) ||
-          r.name.toLowerCase().includes('sandwich') ||
-          r.name.toLowerCase().includes('salad') ||
-          r.name.toLowerCase().includes('wrap') ||
-          r.name.toLowerCase().includes('soup') ||
-          r.name.toLowerCase().includes('bowl')
-        );
-      }
-      
-      if (filterList.includes('dinner')) {
-        candidates = candidates.filter(r =>
-          (r.ai_category && (r.ai_category.includes('Main Dish') || r.ai_category.includes('Dinner'))) ||
-          r.name.toLowerCase().includes('chicken') ||
-          r.name.toLowerCase().includes('beef') ||
-          r.name.toLowerCase().includes('pork') ||
-          r.name.toLowerCase().includes('pasta') ||
-          r.name.toLowerCase().includes('steak') ||
-          r.name.toLowerCase().includes('roast')
-        );
-      }
-      
-      if (filterList.includes('dessert')) {
-        candidates = candidates.filter(r => 
-          r.ai_category && r.ai_category.includes('Dessert')
-        );
-      }
-      
-      if (filterList.includes('side')) {
-        candidates = candidates.filter(r => 
-          r.ai_category && r.ai_category.includes('Side Dish')
-        );
-      }
-      
-      if (filterList.includes('sauce')) {
-        candidates = candidates.filter(r => 
-          r.ai_category && r.ai_category.includes('Sauce')
-        );
-      }
-      
-      if (filterList.includes('appetizer')) {
-        candidates = candidates.filter(r => 
-          r.ai_category && r.ai_category.includes('Appetizer')
-        );
-      }
-      
-      // Cuisine filters
-      if (filterList.includes('italian')) {
-        candidates = candidates.filter(r =>
-          r.name.toLowerCase().includes('italian') ||
-          r.name.toLowerCase().includes('pasta') ||
-          r.name.toLowerCase().includes('pizza') ||
-          r.name.toLowerCase().includes('risotto') ||
-          r.name.toLowerCase().includes('parmigiana') ||
-          r.name.toLowerCase().includes('marinara') ||
-          r.name.toLowerCase().includes('gnocchi') ||
-          r.name.toLowerCase().includes('lasagna') ||
-          r.name.toLowerCase().includes('ravioli') ||
-          (r.ingredients && (
-            r.ingredients.toLowerCase().includes('parmesan') ||
-            r.ingredients.toLowerCase().includes('mozzarella') ||
-            r.ingredients.toLowerCase().includes('basil')
-          ))
-        );
-      }
-      
-      if (filterList.includes('mexican')) {
-        candidates = candidates.filter(r =>
-          r.name.toLowerCase().includes('mexican') ||
-          r.name.toLowerCase().includes('taco') ||
-          r.name.toLowerCase().includes('burrito') ||
-          r.name.toLowerCase().includes('enchilada') ||
-          r.name.toLowerCase().includes('quesadilla') ||
-          r.name.toLowerCase().includes('fajita') ||
-          r.name.toLowerCase().includes('salsa') ||
-          r.name.toLowerCase().includes('guacamole') ||
-          (r.ingredients && (
-            r.ingredients.toLowerCase().includes('cilantro') ||
-            r.ingredients.toLowerCase().includes('cumin') ||
-            r.ingredients.toLowerCase().includes('tortilla')
-          ))
-        );
-      }
-      
-      if (filterList.includes('asian')) {
-        candidates = candidates.filter(r =>
-          r.name.toLowerCase().includes('asian') ||
-          r.name.toLowerCase().includes('chinese') ||
-          r.name.toLowerCase().includes('japanese') ||
-          r.name.toLowerCase().includes('thai') ||
-          r.name.toLowerCase().includes('korean') ||
-          r.name.toLowerCase().includes('vietnamese') ||
-          r.name.toLowerCase().includes('stir fry') ||
-          r.name.toLowerCase().includes('fried rice') ||
-          r.name.toLowerCase().includes('noodle') ||
-          r.name.toLowerCase().includes('sushi') ||
-          r.name.toLowerCase().includes('ramen') ||
-          r.name.toLowerCase().includes('teriyaki') ||
-          r.name.toLowerCase().includes('pad thai') ||
-          (r.ingredients && (
-            r.ingredients.toLowerCase().includes('soy sauce') ||
-            r.ingredients.toLowerCase().includes('ginger') ||
-            r.ingredients.toLowerCase().includes('sesame') ||
-            r.ingredients.toLowerCase().includes('rice vinegar')
-          ))
-        );
-      }
-      
-      if (filterList.includes('indian')) {
-        candidates = candidates.filter(r =>
-          r.name.toLowerCase().includes('indian') ||
-          r.name.toLowerCase().includes('curry') ||
-          r.name.toLowerCase().includes('tikka') ||
-          r.name.toLowerCase().includes('masala') ||
-          r.name.toLowerCase().includes('tandoori') ||
-          r.name.toLowerCase().includes('biryani') ||
-          r.name.toLowerCase().includes('naan') ||
-          (r.ingredients && (
-            r.ingredients.toLowerCase().includes('curry') ||
-            r.ingredients.toLowerCase().includes('turmeric') ||
-            r.ingredients.toLowerCase().includes('garam masala') ||
-            r.ingredients.toLowerCase().includes('cardamom')
-          ))
-        );
-      }
-      
-      if (filterList.includes('american')) {
-        candidates = candidates.filter(r =>
-          r.name.toLowerCase().includes('american') ||
-          r.name.toLowerCase().includes('burger') ||
-          r.name.toLowerCase().includes('bbq') ||
-          r.name.toLowerCase().includes('barbecue') ||
-          r.name.toLowerCase().includes('fried chicken') ||
-          r.name.toLowerCase().includes('mac and cheese') ||
-          r.name.toLowerCase().includes('meatloaf') ||
-          r.name.toLowerCase().includes('pot roast') ||
-          r.name.toLowerCase().includes('cornbread') ||
-          r.name.toLowerCase().includes('apple pie')
-        );
-      }
-      
-      // If no matches, use all
-      if (candidates.length === 0) {
-        candidates = recipes;
-      }
-      
-      // Pick random
-      const selected = candidates[Math.floor(Math.random() * candidates.length)];
-      
-      // Build info header - always show all three fields
-      let recommendation = `<div class="rec-info-header">`;
-      recommendation += `<div class="rec-info-item"><span>⏱️</span> Prep: ${selected.prep_time || 'N/A'}</div>`;
-      recommendation += `<div class="rec-info-item"><span>🔥</span> Cook: ${selected.cook_time || 'N/A'}</div>`;
-      recommendation += `<div class="rec-info-item"><span>🍽️</span> Servings: ${selected.servings || 'N/A'}</div>`;
-      recommendation += `</div>`;
-      
-      // Toggle buttons (separate from content box)
-      recommendation += `
-        <div class="recipe-toggles">
-          <button class="recipe-toggle active" onclick="switchRecipeTab('ingredients')">📝 Ingredients</button>
-          <button class="recipe-toggle" onclick="switchRecipeTab('instructions')">👩🏻‍🍳 Instructions</button>
-        </div>
-      `;
-      
-      // Content box with sections
-      recommendation += `<div class="recipe-content-box">`;
-      
-      // Ingredients section
-      recommendation += `<div class="recipe-section active" id="ingredients-section">`;
-      if (selected.ingredients) {
-        // Format ingredients as list
-        const ingredientLines = selected.ingredients.split('\n').filter(line => line.trim());
-        recommendation += `<ul>`;
-        ingredientLines.forEach(line => {
-          if (line.trim()) {
-            recommendation += `<li>${line.trim()}</li>`;
-          }
-        });
-        recommendation += `</ul>`;
-      } else {
-        recommendation += `<p>No ingredients listed.</p>`;
-      }
-      recommendation += `</div>`;
-      
-      // Instructions section
-      recommendation += `<div class="recipe-section" id="instructions-section">`;
-      if (selected.directions) {
-        // Format directions as paragraphs
-        const directionLines = selected.directions.split('\n\n');
-        directionLines.forEach((para, i) => {
-          if (para.trim()) {
-            recommendation += `<p><strong>Step ${i + 1}:</strong> ${para.trim()}</p>`;
-          }
-        });
-      } else {
-        recommendation += `<p>No instructions available.</p>`;
-      }
-      
-      // Add notes if available
-      if (selected.notes && selected.notes.trim()) {
-        recommendation += `<div style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, #FFF9E6 0%, #FFE082 100%); border: 3px solid #FF9800;">`;
-        recommendation += `<h4>📌 Notes:</h4>`;
-        recommendation += `<p>${selected.notes}</p>`;
-        recommendation += `</div>`;
-      }
-      
-      recommendation += `</div>`; // Close instructions section
-      
-      recommendation += `</div>`; // Close recipe-content-box
-      
-      return res.json({
-        success: true,
-        title: selected.name,
-        recommendation: recommendation
-      });
+    const result = await pool.query(
+      'DELETE FROM meal_items WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Item not found' });
     }
-    
-    return res.status(400).json({ error: 'Invalid type. Must be "takeout" or "cooking"' });
-    
+
+    res.json({ success: true, message: 'Item deleted' });
+
   } catch (error) {
-    console.error('Recommendation error:', error);
+    console.error('Error deleting item:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Dice roll - random restaurant recommendation
-app.get('/dice-roll', async (req, res) => {
+// ==================== RECIPE ENDPOINTS ====================
+
+// Get all recipes
+app.get('/recipes', async (req, res) => {
   try {
-    // Get all restaurants with their top-rated items
-    const ordersResult = await pool.query(`
-      SELECT DISTINCT ON (o.restaurant) 
-             o.restaurant, 
-             o.address,
-             o.delivery_service,
-             json_agg(
-               json_build_object(
-                 'name', oi.item_name,
-                 'rating', oi.rating,
-                 'assignedTo', oi.assigned_to
-               ) ORDER BY oi.rating DESC NULLS LAST
-             ) FILTER (WHERE oi.rating >= 4) as top_items
-      FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      GROUP BY o.restaurant, o.address, o.delivery_service
-      ORDER BY o.restaurant, RANDOM()
-    `);
+    const { search, tags } = req.query;
     
-    if (ordersResult.rows.length === 0) {
-      return res.status(404).json({ 
-        error: 'No order history found. Upload some orders first!' 
-      });
+    let query = `
+      SELECT m.*
+      FROM meals m
+      WHERE m.meal_type = 'recipe'
+    `;
+    
+    const params = [];
+    let paramCount = 1;
+    
+    if (search) {
+      query += ` AND (m.name ILIKE $${paramCount} OR m.ingredients ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+      paramCount++;
     }
     
-    // Pick a random restaurant
-    const randomRestaurant = ordersResult.rows[Math.floor(Math.random() * ordersResult.rows.length)];
-    
-    // Build recommendation text
-    let recommendation = '';
-    
-    if (randomRestaurant.top_items && randomRestaurant.top_items.length > 0) {
-      const topItems = randomRestaurant.top_items.filter(item => item.rating >= 4);
-      
-      if (topItems.length > 0) {
-        const collinItems = topItems.filter(item => item.assignedTo === 'Collin');
-        const emilyItems = topItems.filter(item => item.assignedTo === 'Emily');
-        
-        recommendation = '<div style="margin-bottom: 12px;">';
-        
-        if (collinItems.length > 0) {
-          recommendation += `<strong>For Collin:</strong> ${collinItems[0].name}`;
-          if (collinItems[0].rating === 5) recommendation += ' ⭐⭐⭐⭐⭐';
-          recommendation += '<br>';
-        }
-        
-        if (emilyItems.length > 0) {
-          recommendation += `<strong>For Emily:</strong> ${emilyItems[0].name}`;
-          if (emilyItems[0].rating === 5) recommendation += ' ⭐⭐⭐⭐⭐';
-        }
-        
-        if (collinItems.length === 0 && emilyItems.length === 0) {
-          // If no specific assignments, just show top items
-          recommendation += `Try: ${topItems[0].name}`;
-          if (topItems[0].rating === 5) recommendation += ' ⭐⭐⭐⭐⭐';
-          if (topItems.length > 1) {
-            recommendation += ` or ${topItems[1].name}`;
-            if (topItems[1].rating === 5) recommendation += ' ⭐⭐⭐⭐⭐';
-          }
-        }
-        
-        recommendation += '</div>';
-      } else {
-        recommendation = '<div>You\'ve ordered from here before. Try something new!</div>';
-      }
-    } else {
-      recommendation = '<div>Give this place another try!</div>';
+    if (tags && tags.length > 0) {
+      const tagArray = Array.isArray(tags) ? tags : [tags];
+      query += ` AND m.tags && $${paramCount}::text[]`;
+      params.push(tagArray);
+      paramCount++;
     }
     
-    res.json({
-      success: true,
-      restaurant: randomRestaurant.restaurant,
-      address: randomRestaurant.address,
-      deliveryService: randomRestaurant.delivery_service,
-      recommendation: recommendation
-    });
+    query += ` ORDER BY m.name ASC`;
+    
+    const result = await pool.query(query, params);
+    
+    res.json({ success: true, recipes: result.rows });
     
   } catch (error) {
-    console.error('Error in dice roll:', error);
+    console.error('Error fetching recipes:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Chat greeting endpoint
-app.get('/chat-greeting', async (req, res) => {
+// Get single recipe
+app.get('/recipes/:id', async (req, res) => {
   try {
-    const hour = new Date().getHours();
-    
-    // Get recent orders for context
-    const ordersResult = await pool.query(`
-      SELECT o.restaurant, o.created_at,
-             json_agg(
-               json_build_object(
-                 'name', oi.item_name,
-                 'rating', oi.rating
-               ) ORDER BY oi.rating DESC NULLS LAST
-             ) FILTER (WHERE oi.rating >= 4) as top_items
-      FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      GROUP BY o.id
-      ORDER BY o.created_at DESC
-      LIMIT 5
-    `);
-    
-    let greeting = '';
-    
-    // Time-based greetings
-    if (hour >= 5 && hour < 11) {
-      greeting = "Good morning! What can I help you find for breakfast?";
-    } else if (hour >= 11 && hour < 14) {
-      greeting = "It's lunch time. What are you in the mood for?";
-    } else if (hour >= 14 && hour < 17) {
-      greeting = "Looking for a snack or early dinner?";
-    } else if (hour >= 17 && hour < 21) {
-      greeting = "What sounds good for dinner?";
-    } else {
-      greeting = "What can I help you order tonight?";
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `SELECT * FROM meals WHERE id = $1 AND meal_type = 'recipe'`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Recipe not found' });
     }
-    
-    // Add context if they have recent orders
-    if (ordersResult.rows.length > 0) {
-      const recentRestaurant = ordersResult.rows[0].restaurant;
-      const daysSinceOrder = Math.floor((Date.now() - new Date(ordersResult.rows[0].created_at)) / (1000 * 60 * 60 * 24));
-      
-      if (daysSinceOrder === 0) {
-        const greetings = [
-          `You've already ordered today. Looking for something else?`,
-          `Ready to order again? What sounds good?`,
-          `What can I help you find?`
-        ];
-        greeting = greetings[Math.floor(Math.random() * greetings.length)];
-      } else if (daysSinceOrder < 3) {
-        // Don't suggest same restaurant
-        greeting = greeting.replace('What sounds good?', `Any preferences?`);
-      }
-    }
-    
-    res.json({ success: true, greeting });
-    
+
+    res.json({ success: true, recipe: result.rows[0] });
+
   } catch (error) {
-    console.error('Error generating greeting:', error);
-    res.json({ success: true, greeting: "Hey! What sounds good?" });
-  }
-});
-
-// Health check
-app.get('/health', async (req, res) => {
-  try {
-    await pool.query('SELECT 1');
-    res.json({ 
-      status: 'ok', 
-      hasApiKey: !!process.env.ANTHROPIC_API_KEY,
-      database: 'connected'
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      status: 'error', 
-      hasApiKey: !!process.env.ANTHROPIC_API_KEY,
-      database: 'disconnected',
-      error: error.message
-    });
-  }
-});
-
-// Get all recipes endpoint
-app.get('/api/recipes', (req, res) => {
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const recipesPath = path.join(__dirname, 'recipes.json');
-    
-    if (!fs.existsSync(recipesPath)) {
-      return res.status(404).json({ error: 'Recipes file not found' });
-    }
-    
-    const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
-    res.json(recipes);
-  } catch (error) {
-    console.error('Error loading recipes:', error);
-    res.status(500).json({ error: 'Failed to load recipes' });
-  }
-});
-
-// ONE-TIME: Add tags column to existing database
-app.get('/admin/migrate-add-tags-column', async (req, res) => {
-  try {
-    // Check if column already exists
-    const checkColumn = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name='order_items' AND column_name='tags'
-    `);
-    
-    if (checkColumn.rows.length > 0) {
-      return res.send('✅ Tags column already exists! No migration needed.');
-    }
-    
-    // Add the tags column
-    await pool.query(`
-      ALTER TABLE order_items 
-      ADD COLUMN tags TEXT[]
-    `);
-    
-    res.send('✅ Successfully added tags column to order_items table!');
-    
-  } catch (error) {
-    console.error('Migration error:', error);
-    res.status(500).send(`❌ Error: ${error.message}`);
-  }
-});
-
-// ONE-TIME: Batch tag all recipes (run once after deployment)
-app.get('/admin/tag-all-recipes', async (req, res) => {
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const recipesPath = path.join(__dirname, 'recipes.json');
-    
-    const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
-    const taggedRecipes = [];
-    let successCount = 0;
-    let errorCount = 0;
-    
-    // Send initial response so connection doesn't timeout
-    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.write(`Starting to tag ${recipes.length} recipes...\n\n`);
-    
-    for (let i = 0; i < recipes.length; i++) {
-      const recipe = recipes[i];
-      
-      res.write(`[${i + 1}/${recipes.length}] Tagging: ${recipe.name}... `);
-      
-      try {
-        const prompt = `Analyze this recipe and assign appropriate tags. Choose tags that accurately describe this recipe based on reading the full content.
-
-**Recipe Name:** ${recipe.name}
-**Ingredients:** ${(recipe.ingredients || '').substring(0, 800)}
-**Directions:** ${(recipe.directions || '').substring(0, 800)}
-**Prep Time:** ${recipe.prep_time || 'N/A'}
-**Cook Time:** ${recipe.cook_time || 'N/A'}
-
-**Available Tags by Category:**
-Meal Type: Breakfast, Lunch, Dinner, Brunch, Snack
-Course: Appetizer, Main Dish, Side Dish, Salad, Soup, Dessert, Beverage, Sauce/Condiment
-Dietary: Vegetarian, Vegan, Gluten-Free, Dairy-Free, Nut-Free, Low-Carb, Keto, Paleo
-Cuisine: American, Italian, Mexican, Asian, Indian, Mediterranean, French, Thai, Korean, Japanese, Chinese, Greek, Middle Eastern
-Cooking Method: Baked, Grilled, Fried, Slow Cooker, Instant Pot, One-Pot, No-Cook, Roasted, Sautéed, Steamed
-Time: Quick (< 30 min), Medium (30-60 min), Long (> 60 min)
-Difficulty: Easy, Medium, Hard
-Characteristics: Healthy, Comfort Food, Kid-Friendly, Party Food, Make-Ahead, Meal Prep, Spicy, Sweet, Savory, Fresh, Hearty, Light
-
-Return ONLY a JSON array of 4-8 selected tags. Example: ["Main Dish", "Italian", "Medium (30-60 min)", "Medium", "Comfort Food"]`;
-
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': process.env.ANTHROPIC_API_KEY,
-            'anthropic-version': '2023-06-01'
-          },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 200,
-            messages: [{ role: 'user', content: prompt }]
-          })
-        });
-
-        const data = await response.json();
-        const text = data.content[0].text.trim();
-        const tagsMatch = text.match(/\[.*\]/s);
-        
-        if (tagsMatch) {
-          recipe.tags = JSON.parse(tagsMatch[0]);
-          successCount++;
-          res.write(`✅ ${recipe.tags.length} tags\n`);
-        } else {
-          recipe.tags = recipe.ai_category || [];
-          errorCount++;
-          res.write(`⚠️ fallback\n`);
-        }
-        
-      } catch (error) {
-        recipe.tags = recipe.ai_category || [];
-        errorCount++;
-        res.write(`❌ error\n`);
-      }
-      
-      taggedRecipes.push(recipe);
-      
-      // Small delay to avoid rate limits
-      await new Promise(resolve => setTimeout(resolve, 600));
-    }
-    
-    // Save tagged recipes
-    fs.writeFileSync(recipesPath, JSON.stringify(taggedRecipes, null, 2));
-    
-    res.write(`\n✅ Complete! ${successCount} success, ${errorCount} errors\n`);
-    res.write(`Updated recipes.json with tags.\n`);
-    res.end();
-    
-  } catch (error) {
-    console.error('Tagging error:', error);
+    console.error('Error fetching recipe:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Update recipe tags
+app.patch('/recipes/:id/tags', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tags } = req.body;
+
+    const result = await pool.query(
+      `UPDATE meals SET tags = $1, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $2 AND meal_type = 'recipe' 
+       RETURNING *`,
+      [tags || [], id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Recipe not found' });
+    }
+
+    res.json({ success: true, recipe: result.rows[0] });
+
+  } catch (error) {
+    console.error('Error updating recipe tags:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Bulk tag recipes (for migration/batch tagging)
+app.post('/recipes/bulk-tag', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { recipes } = req.body; // Array of { id, tags }
+    
+    if (!Array.isArray(recipes)) {
+      return res.status(400).json({ error: 'recipes must be an array' });
+    }
+
+    await client.query('BEGIN');
+    
+    let updated = 0;
+    for (const recipe of recipes) {
+      if (recipe.id && recipe.tags) {
+        await client.query(
+          `UPDATE meals SET tags = $1, updated_at = CURRENT_TIMESTAMP 
+           WHERE id = $2 AND meal_type = 'recipe'`,
+          [recipe.tags, recipe.id]
+        );
+        updated++;
+      }
+    }
+    
+    await client.query('COMMIT');
+    
+    res.json({ success: true, updated });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error bulk tagging recipes:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -1377,25 +647,46 @@ Example: ["Main Dish", "Mexican", "Medium (30-60 min)", "Medium", "Spicy", "Comf
 // Log a home cooked meal
 app.post('/log-meal', async (req, res) => {
   try {
-    const { recipeName } = req.body;
+    const { recipeId, recipeName, rating, notes } = req.body;
     
-    if (!recipeName) {
-      return res.status(400).json({ error: 'Recipe name is required' });
+    if (!recipeId && !recipeName) {
+      return res.status(400).json({ error: 'Recipe ID or name is required' });
     }
     
-    // Create an order entry for the logged meal
-    const result = await pool.query(
-      `INSERT INTO orders (
-        restaurant, logged_as_meal, meal_date, recipe_name
-      ) VALUES ($1, $2, $3, $4) RETURNING id`,
-      [recipeName, true, new Date(), recipeName]
-    );
-    
-    res.json({ 
-      success: true, 
-      message: 'Meal logged successfully!',
-      orderId: result.rows[0].id 
-    });
+    // If recipeId provided, just update the meal_date and rating
+    if (recipeId) {
+      const result = await pool.query(
+        `UPDATE meals 
+         SET meal_date = $1, overall_rating = $2, notes = $3, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $4 AND meal_type = 'recipe'
+         RETURNING id`,
+        [new Date(), rating || null, notes || null, recipeId]
+      );
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Recipe not found' });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Meal logged successfully!',
+        mealId: result.rows[0].id 
+      });
+    } else {
+      // Create a simple meal entry (for custom meals not from recipes)
+      const result = await pool.query(
+        `INSERT INTO meals (meal_type, name, meal_date, overall_rating, notes)
+         VALUES ('recipe', $1, $2, $3, $4) 
+         RETURNING id`,
+        [recipeName, new Date(), rating || null, notes || null]
+      );
+      
+      res.json({ 
+        success: true, 
+        message: 'Meal logged successfully!',
+        mealId: result.rows[0].id 
+      });
+    }
     
   } catch (error) {
     console.error('Error logging meal:', error);
@@ -1403,55 +694,46 @@ app.post('/log-meal', async (req, res) => {
   }
 });
 
-// Mark an existing order as a logged meal
-app.post('/mark-as-meal/:orderId', async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    
-    await pool.query(
-      `UPDATE orders SET logged_as_meal = true, meal_date = $1 WHERE id = $2`,
-      [new Date(), orderId]
-    );
-    
-    res.json({ success: true, message: 'Order marked as logged meal!' });
-    
-  } catch (error) {
-    console.error('Error marking as meal:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get meal history
+// Get meal history (both takeout and home cooked)
 app.get('/meal-history', async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, mealType } = req.query;
     
     let query = `
-      SELECT o.id, o.restaurant, o.recipe_name, o.meal_date, o.delivery_service,
-             o.address, o.total,
+      SELECT m.id, m.meal_type, m.name, m.restaurant, m.meal_date, m.delivery_service,
+             m.address, m.total, m.overall_rating, m.tags,
              json_agg(
                json_build_object(
-                 'id', oi.id,
-                 'name', oi.item_name,
-                 'price', oi.price,
-                 'rating', oi.rating,
-                 'assignedTo', oi.assigned_to,
-                 'notes', oi.notes
-               ) ORDER BY oi.id
-             ) FILTER (WHERE oi.id IS NOT NULL) as items
-      FROM orders o
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      WHERE o.logged_as_meal = true
+                 'id', mi.id,
+                 'name', mi.item_name,
+                 'price', mi.price,
+                 'rating', mi.rating,
+                 'assignedTo', mi.assigned_to,
+                 'notes', mi.notes,
+                 'tags', mi.tags
+               ) ORDER BY mi.id
+             ) FILTER (WHERE mi.id IS NOT NULL) as items
+      FROM meals m
+      LEFT JOIN meal_items mi ON m.id = mi.meal_id
+      WHERE m.meal_date IS NOT NULL
     `;
     
     const params = [];
+    let paramCount = 1;
     
-    if (search) {
-      query += ` AND (o.restaurant ILIKE $1 OR o.recipe_name ILIKE $1)`;
-      params.push(`%${search}%`);
+    if (mealType) {
+      query += ` AND m.meal_type = $${paramCount}`;
+      params.push(mealType);
+      paramCount++;
     }
     
-    query += ` GROUP BY o.id ORDER BY o.meal_date DESC`;
+    if (search) {
+      query += ` AND (m.name ILIKE $${paramCount} OR m.restaurant ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+      paramCount++;
+    }
+    
+    query += ` GROUP BY m.id ORDER BY m.meal_date DESC`;
     
     const result = await pool.query(query, params);
     
@@ -1468,12 +750,16 @@ app.delete('/meal-history/:mealId', async (req, res) => {
   try {
     const { mealId } = req.params;
     
-    await pool.query('DELETE FROM orders WHERE id = $1 AND logged_as_meal = true', [mealId]);
+    // Just clear the meal_date to "unlog" it, don't delete the meal
+    await pool.query(
+      'UPDATE meals SET meal_date = NULL, overall_rating = NULL WHERE id = $1',
+      [mealId]
+    );
     
-    res.json({ success: true, message: 'Meal deleted from history' });
+    res.json({ success: true, message: 'Meal removed from history' });
     
   } catch (error) {
-    console.error('Error deleting meal:', error);
+    console.error('Error removing meal from history:', error);
     res.status(500).json({ error: error.message });
   }
 });
