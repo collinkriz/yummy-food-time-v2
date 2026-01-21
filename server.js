@@ -1167,10 +1167,10 @@ app.get('/recommend', async (req, res) => {
             MAX(m.meal_date) as last_ordered
           FROM meals m
           LEFT JOIN meal_items oi ON m.id = oi.meal_id
-          WHERE m.meal_type = 'takeout' 
-            AND oi.rating >= 4
+          WHERE m.meal_type = 'takeout'
           GROUP BY restaurant, address, delivery_service
-          ORDER BY restaurant, avg_rating DESC
+          HAVING COUNT(oi.id) > 0
+          ORDER BY restaurant, AVG(oi.rating) DESC NULLS LAST, COUNT(oi.id) DESC
           LIMIT 10
         `;
         
