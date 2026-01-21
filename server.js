@@ -384,7 +384,8 @@ app.get('/run-tagging', async (req, res) => {
         <ul>
           <li>Uses Claude API to analyze each recipe</li>
           <li>Generates 4-8 tags per recipe (Course, Time, Difficulty, Cuisine, etc.)</li>
-          <li>Takes ~10-15 minutes</li>
+          <li>Processes ONE recipe at a time (slower but more reliable)</li>
+          <li>Takes ~20-25 minutes</li>
           <li>Costs ~$1-2 in API credits</li>
           <li>Updates database directly</li>
         </ul>
@@ -413,14 +414,13 @@ app.get('/run-tagging', async (req, res) => {
       </style>
     </head>
     <body>
-      <h1 style="color: #667eea;">🏷️ AI Recipe Tagging</h1>
+      <h1 style="color: #667eea;">🏷️ AI Recipe Tagging (Slow & Steady Mode)</h1>
       <pre>
   `);
 
   const startTime = Date.now();
   let successCount = 0;
   let errorCount = 0;
-  const BATCH_SIZE = 10;
 
   try {
     res.write(`<span class="info">📋 Fetching recipes from database...</span>\n`);
@@ -434,22 +434,21 @@ app.get('/run-tagging', async (req, res) => {
     
     const recipes = result.rows;
     res.write(`<span class="success">✅ Found ${recipes.length} recipes</span>\n\n`);
-    res.write(`<span class="info">⚡ Processing 10 recipes at a time...</span>\n\n`);
+    res.write(`<span class="info">🐢 Processing ONE recipe at a time with 1 second delay between each...</span>\n\n`);
 
-    for (let i = 0; i < recipes.length; i += BATCH_SIZE) {
-      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-      const totalBatches = Math.ceil(recipes.length / BATCH_SIZE);
-      const batch = recipes.slice(i, i + BATCH_SIZE);
+    // Process ONE recipe at a time
+    for (let i = 0; i < recipes.length; i++) {
+      const recipe = recipes[i];
+      const recipeNum = i + 1;
+      const recipeName = recipe.name.substring(0, 45).padEnd(45);
       
-      res.write(`<span class="batch">📦 Batch ${batchNum}/${totalBatches} - Recipes ${i + 1}-${Math.min(i + BATCH_SIZE, recipes.length)}</span>\n`);
+      // Show progress every 10 recipes
+      if (i % 10 === 0) {
+        res.write(`<span class="batch">📦 Progress: ${i + 1}/${recipes.length}</span>\n`);
+      }
       
-      const results = await Promise.all(
-        batch.map(async (recipe, idx) => {
-          const recipeNum = i + idx + 1;
-          const recipeName = recipe.name.substring(0, 40).padEnd(40);
-          
-          try {
-            const prompt = `Analyze this recipe and assign appropriate tags. Choose tags that accurately describe this recipe based on reading the full content.
+      try {
+        const prompt = `Analyze this recipe and assign appropriate tags. Choose tags that accurately describe this recipe based on reading the full content.
 
 **Recipe Name:** ${recipe.name}
 **Ingredients:** ${recipe.ingredients || 'N/A'}
@@ -472,58 +471,48 @@ Return ONLY a JSON array of 4-8 selected tags. Include at least one from: Course
 
 Example: ["Dessert", "Quick (< 30 min)", "Easy", "Sweet"]`;
 
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': process.env.ANTHROPIC_API_KEY,
-                'anthropic-version': '2023-06-01'
-              },
-              body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
-                max_tokens: 200,
-                messages: [{ role: 'user', content: prompt }]
-              })
-            });
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 200,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
 
-            const data = await response.json();
-            const text = data.content[0].text.trim();
-            const tagsMatch = text.match(/\[.*\]/s);
-            
-            if (tagsMatch) {
-              const tags = JSON.parse(tagsMatch[0]);
-              await pool.query(
-                'UPDATE meals SET tags = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-                [tags, recipe.id]
-              );
-              successCount++;
-              return { success: true, name: recipeName, count: tags.length, num: recipeNum };
-            } else {
-              errorCount++;
-              return { success: false, name: recipeName, num: recipeNum };
-            }
-          } catch (error) {
-            errorCount++;
-            return { success: false, name: recipeName, num: recipeNum, error: error.message };
-          }
-        })
-      );
-
-      // Write results for this batch
-      results.forEach(r => {
-        if (r.success) {
-          res.write(`  <span class="success">[${r.num}/${recipes.length}] ${r.name} ✅ ${r.count} tags</span>\n`);
-        } else {
-          res.write(`  <span class="error">[${r.num}/${recipes.length}] ${r.name} ⚠️  fallback</span>\n`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error?.message || `API error: ${response.status}`);
         }
-      });
-      
-      res.write('\n');
-      
-      // Small delay between batches
-      if (i + BATCH_SIZE < recipes.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const text = data.content[0].text.trim();
+        const tagsMatch = text.match(/\[.*\]/s);
+        
+        if (tagsMatch) {
+          const tags = JSON.parse(tagsMatch[0]);
+          await pool.query(
+            'UPDATE meals SET tags = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [tags, recipe.id]
+          );
+          successCount++;
+          res.write(`  <span class="success">[${recipeNum}/${recipes.length}] ${recipeName} ✅ ${tags.length} tags</span>\n`);
+        } else {
+          errorCount++;
+          res.write(`  <span class="error">[${recipeNum}/${recipes.length}] ${recipeName} ⚠️  parse failed</span>\n`);
+        }
+      } catch (error) {
+        errorCount++;
+        res.write(`  <span class="error">[${recipeNum}/${recipes.length}] ${recipeName} ❌ ${error.message.substring(0, 30)}</span>\n`);
       }
+      
+      // 1 second delay between each recipe
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     const duration = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
@@ -533,7 +522,7 @@ Example: ["Dessert", "Quick (< 30 min)", "Easy", "Sweet"]`;
     res.write(`<span class="info">   Errors: ${errorCount} recipes</span>\n\n`);
     
     // Show tag statistics
-    res.write(`<span class="info">📊 Tag Distribution:</span>\n`);
+    res.write(`<span class="info">📊 Top 20 Tags:</span>\n`);
     const stats = await pool.query(`
       SELECT unnest(tags) as tag, COUNT(*) as count
       FROM meals
@@ -554,7 +543,7 @@ Example: ["Dessert", "Quick (< 30 min)", "Easy", "Sweet"]`;
     `);
     
   } catch (error) {
-    res.write(`\n<span class="error">❌ Error: ${error.message}</span>\n`);
+    res.write(`\n<span class="error">❌ Fatal Error: ${error.message}</span>\n`);
     res.write(`
       </pre>
       <p><a href="/">Go back</a></p>
@@ -566,6 +555,63 @@ Example: ["Dessert", "Quick (< 30 min)", "Easy", "Sweet"]`;
   }
 });
 // ==================== END TAG ALL RECIPES ENDPOINT ====================
+
+// ==================== TEST TAGGING ENDPOINT ====================
+// Test tagging a single recipe to debug issues
+app.get('/test-tagging', async (req, res) => {
+  try {
+    // Get one recipe
+    const result = await pool.query(`
+      SELECT id, name, ingredients, directions, prep_time, cook_time, servings
+      FROM meals
+      WHERE meal_type = 'recipe'
+      LIMIT 1
+    `);
+    
+    if (result.rows.length === 0) {
+      return res.json({ error: 'No recipes found' });
+    }
+    
+    const recipe = result.rows[0];
+    
+    const prompt = `Analyze this recipe and assign appropriate tags. Return ONLY a JSON array of 4-8 tags.
+
+Recipe: ${recipe.name}
+Ingredients: ${recipe.ingredients?.substring(0, 200) || 'N/A'}
+
+Available tags: Dessert, Main Dish, Quick (< 30 min), Easy, Vegetarian, Italian, Baked
+
+Example: ["Dessert", "Quick (< 30 min)", "Easy"]`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    
+    res.json({
+      success: response.ok,
+      status: response.status,
+      recipe: recipe.name,
+      apiKey: process.env.ANTHROPIC_API_KEY ? 'Present (first 10 chars): ' + process.env.ANTHROPIC_API_KEY.substring(0, 10) : 'Missing!',
+      response: data
+    });
+    
+  } catch (error) {
+    res.json({ error: error.message, stack: error.stack });
+  }
+});
+// ==================== END TEST TAGGING ENDPOINT ====================
 
 // Extract order info endpoint
 app.post('/extract-order', upload.single('image'), async (req, res) => {
