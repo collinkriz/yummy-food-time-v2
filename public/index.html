@@ -3186,8 +3186,8 @@
             
             const filtered = allRecipes.filter(recipe => {
                 return recipe.name.toLowerCase().includes(searchTerm) ||
-                       (recipe.category && recipe.category.some(cat => cat.toLowerCase().includes(searchTerm))) ||
-                       (recipe.ingredients && recipe.ingredients.toLowerCase().includes(searchTerm));
+                       (recipe.ingredients && recipe.ingredients.toLowerCase().includes(searchTerm)) ||
+                       (recipe.tags && recipe.tags.some(tag => tag.toLowerCase().includes(searchTerm)));
             });
             
             displayRecipes(filtered);
@@ -3212,24 +3212,6 @@
                             <h3 style="font-size: 20px; font-weight: 900; color: #4A4A1F; margin-bottom: 8px; text-transform: uppercase;">
                                 ${recipe.name}
                             </h3>
-                            
-                            ${recipe.category ? `
-                                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
-                                    ${recipe.category.map(c => `
-                                        <span style="background: linear-gradient(135deg, #FFE082 0%, #FFD54F 100%); 
-                                                     padding: 4px 10px; 
-                                                     border-radius: 6px; 
-                                                     font-size: 12px; 
-                                                     font-weight: 700; 
-                                                     color: #4A4A1F; 
-                                                     text-transform: uppercase; 
-                                                     letter-spacing: 0.5px;
-                                                     border: 2px solid #4A4A1F;">
-                                            ${c}
-                                        </span>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
                             
                             ${recipe.tags && recipe.tags.length > 0 ? renderTags(recipe.tags) : ''}
                             
