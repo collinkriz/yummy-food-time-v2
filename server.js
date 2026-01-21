@@ -1084,14 +1084,35 @@ app.get('/recommend', async (req, res) => {
     const filterArray = filters ? filters.split(',').filter(f => f) : [];
     
     if (type === 'cooking') {
+      // Map filter IDs to actual tag names
+      const filterToTagMap = {
+        'breakfast': 'Breakfast',
+        'lunch': 'Lunch',
+        'dinner': 'Dinner',
+        'side': 'Side Dish',
+        'dessert': 'Dessert',
+        'healthy': 'Healthy',
+        'quick': 'Quick (< 30 min)',
+        'filling': 'Hearty',
+        'comfort': 'Comfort Food',
+        'complex': 'Hard'
+      };
+      
+      // Convert filter IDs to tag names, excluding "any" filters
+      const tagFilters = filterArray
+        .filter(f => !f.startsWith('any-'))
+        .map(f => filterToTagMap[f] || f)
+        .filter(Boolean);
+      
       // Get recipes from database
       let query = `SELECT * FROM meals WHERE meal_type = 'recipe'`;
       const params = [];
       
       // Apply tag filters if any
-      if (filterArray.length > 0 && !filterArray.includes('any-meal') && !filterArray.includes('any-vibe')) {
+      if (tagFilters.length > 0) {
+        // Use && operator to check if recipe tags contain ANY of the selected filters
         query += ` AND tags && $1::text[]`;
-        params.push(filterArray);
+        params.push(tagFilters);
       }
       
       query += ` ORDER BY RANDOM() LIMIT 1`;
@@ -1099,77 +1120,35 @@ app.get('/recommend', async (req, res) => {
       const result = await pool.query(query, params);
       
       if (result.rows.length === 0) {
+        // If no exact match, try getting any recipe
+        const anyRecipe = await pool.query(`SELECT * FROM meals WHERE meal_type = 'recipe' ORDER BY RANDOM() LIMIT 1`);
+        
+        if (anyRecipe.rows.length === 0) {
+          return res.json({
+            title: 'No Recipes Found',
+            recommendation: '<p style="text-align: center; padding: 40px;">No recipes available in the database.</p>'
+          });
+        }
+        
+        // Return a random recipe with a note
+        const recipe = anyRecipe.rows[0];
+        let html = '<div style="text-align: center; padding: 20px; background: #FFF3CD; border: 2px solid #FFC107; border-radius: 8px; margin-bottom: 20px;">';
+        html += '<p style="color: #856404; font-weight: 600;">No exact matches found for your filters, but here\'s a great recipe anyway!</p>';
+        html += '</div>';
+        
+        html += buildRecipeHTML(recipe);
+        
         return res.json({
-          title: 'No Recipes Found',
-          recommendation: '<p style="text-align: center; padding: 40px;">No recipes match your filters. Try different options!</p>'
+          title: recipe.name,
+          recommendation: html
         });
       }
       
       const recipe = result.rows[0];
       
-      // Build recipe HTML
-      let html = '<div class="rec-details">';
-      
-      // Info row
-      html += '<div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">';
-      html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">⏱️</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Prep: ${recipe.prep_time || 'N/A'}</div></div>`;
-      html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🔥</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Cook: ${recipe.cook_time || 'N/A'}</div></div>`;
-      html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🍽️</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Servings: ${recipe.servings || 'N/A'}</div></div>`;
-      html += '</div>';
-      
-      // Tags
-      if (recipe.tags && recipe.tags.length > 0) {
-        html += '<div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">';
-        recipe.tags.forEach(tag => {
-          html += `<span class="tag">${tag}</span>`;
-        });
-        html += '</div>';
-      }
-      
-      // Toggle buttons
-      html += '<div class="recipe-toggles">';
-      html += '<button class="recipe-toggle active" onclick="switchRecipeTab(\'ingredients\')">📝 Ingredients</button>';
-      html += '<button class="recipe-toggle" onclick="switchRecipeTab(\'instructions\')">👩🏻‍🍳 Instructions</button>';
-      html += '</div>';
-      
-      // Content box
-      html += '<div class="recipe-content-box">';
-      
-      // Ingredients
-      html += '<div id="ingredients-section" class="recipe-section active">';
-      if (recipe.ingredients) {
-        const ingredients = recipe.ingredients.split('\n').filter(i => i.trim());
-        html += '<ul>';
-        ingredients.forEach(ing => {
-          html += `<li>${ing.trim()}</li>`;
-        });
-        html += '</ul>';
-      } else {
-        html += '<p>No ingredients listed.</p>';
-      }
-      html += '</div>';
-      
-      // Instructions
-      html += '<div id="instructions-section" class="recipe-section">';
-      if (recipe.directions) {
-        html += `<p>${recipe.directions.replace(/\n/g, '<br><br>')}</p>`;
-      } else {
-        html += '<p>No instructions available.</p>';
-      }
-      html += '</div>';
-      
-      html += '</div>'; // Close recipe-content-box
-      
-      // Source button
-      if (recipe.source_url) {
-        html += `<div style="margin-top: 24px; text-align: center;"><a href="${recipe.source_url}" target="_blank" style="display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; font-weight: 800; border-radius: 8px; border: 4px solid #4A4A1F; transition: all 0.2s ease;">🌐 View Original Recipe</a></div>`;
-      }
-      
-      html += '</div>';
-      
       res.json({
         title: recipe.name,
-        recommendation: html
+        recommendation: buildRecipeHTML(recipe)
       });
       
     } else {
@@ -1185,6 +1164,70 @@ app.get('/recommend', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Helper function to build recipe HTML
+function buildRecipeHTML(recipe) {
+  let html = '<div class="rec-details">';
+  
+  // Info row
+  html += '<div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">';
+  html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">⏱️</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Prep: ${recipe.prep_time || 'N/A'}</div></div>`;
+  html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🔥</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Cook: ${recipe.cook_time || 'N/A'}</div></div>`;
+  html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🍽️</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Servings: ${recipe.servings || 'N/A'}</div></div>`;
+  html += '</div>';
+  
+  // Tags
+  if (recipe.tags && recipe.tags.length > 0) {
+    html += '<div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">';
+    recipe.tags.forEach(tag => {
+      html += `<span class="tag">${tag}</span>`;
+    });
+    html += '</div>';
+  }
+  
+  // Toggle buttons
+  html += '<div class="recipe-toggles">';
+  html += '<button class="recipe-toggle active" onclick="switchRecipeTab(\'ingredients\')">📝 Ingredients</button>';
+  html += '<button class="recipe-toggle" onclick="switchRecipeTab(\'instructions\')">👩🏻‍🍳 Instructions</button>';
+  html += '</div>';
+  
+  // Content box
+  html += '<div class="recipe-content-box">';
+  
+  // Ingredients
+  html += '<div id="ingredients-section" class="recipe-section active">';
+  if (recipe.ingredients) {
+    const ingredients = recipe.ingredients.split('\n').filter(i => i.trim());
+    html += '<ul>';
+    ingredients.forEach(ing => {
+      html += `<li>${ing.trim()}</li>`;
+    });
+    html += '</ul>';
+  } else {
+    html += '<p>No ingredients listed.</p>';
+  }
+  html += '</div>';
+  
+  // Instructions
+  html += '<div id="instructions-section" class="recipe-section">';
+  if (recipe.directions) {
+    html += `<p>${recipe.directions.replace(/\n/g, '<br><br>')}</p>`;
+  } else {
+    html += '<p>No instructions available.</p>';
+  }
+  html += '</div>';
+  
+  html += '</div>'; // Close recipe-content-box
+  
+  // Source button
+  if (recipe.source_url) {
+    html += `<div style="margin-top: 24px; text-align: center;"><a href="${recipe.source_url}" target="_blank" style="display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; font-weight: 800; border-radius: 8px; border: 4px solid #4A4A1F; transition: all 0.2s ease;">🌐 View Original Recipe</a></div>`;
+  }
+  
+  html += '</div>';
+  
+  return html;
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
