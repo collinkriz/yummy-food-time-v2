@@ -745,9 +745,39 @@ app.get('/recommend', async (req, res) => {
         );
       }
       
+      // Meal type filters
       if (filterList.includes('breakfast')) {
         candidates = candidates.filter(r => 
-          r.ai_category && r.ai_category.includes('Breakfast')
+          (r.ai_category && r.ai_category.includes('Breakfast')) ||
+          r.name.toLowerCase().includes('breakfast') ||
+          r.name.toLowerCase().includes('pancake') ||
+          r.name.toLowerCase().includes('waffle') ||
+          r.name.toLowerCase().includes('egg') ||
+          r.name.toLowerCase().includes('oatmeal') ||
+          r.name.toLowerCase().includes('muffin')
+        );
+      }
+      
+      if (filterList.includes('lunch')) {
+        candidates = candidates.filter(r =>
+          (r.ai_category && (r.ai_category.includes('Lunch') || r.ai_category.includes('Salad'))) ||
+          r.name.toLowerCase().includes('sandwich') ||
+          r.name.toLowerCase().includes('salad') ||
+          r.name.toLowerCase().includes('wrap') ||
+          r.name.toLowerCase().includes('soup') ||
+          r.name.toLowerCase().includes('bowl')
+        );
+      }
+      
+      if (filterList.includes('dinner')) {
+        candidates = candidates.filter(r =>
+          (r.ai_category && (r.ai_category.includes('Main Dish') || r.ai_category.includes('Dinner'))) ||
+          r.name.toLowerCase().includes('chicken') ||
+          r.name.toLowerCase().includes('beef') ||
+          r.name.toLowerCase().includes('pork') ||
+          r.name.toLowerCase().includes('pasta') ||
+          r.name.toLowerCase().includes('steak') ||
+          r.name.toLowerCase().includes('roast')
         );
       }
       
@@ -772,6 +802,101 @@ app.get('/recommend', async (req, res) => {
       if (filterList.includes('appetizer')) {
         candidates = candidates.filter(r => 
           r.ai_category && r.ai_category.includes('Appetizer')
+        );
+      }
+      
+      // Cuisine filters
+      if (filterList.includes('italian')) {
+        candidates = candidates.filter(r =>
+          r.name.toLowerCase().includes('italian') ||
+          r.name.toLowerCase().includes('pasta') ||
+          r.name.toLowerCase().includes('pizza') ||
+          r.name.toLowerCase().includes('risotto') ||
+          r.name.toLowerCase().includes('parmigiana') ||
+          r.name.toLowerCase().includes('marinara') ||
+          r.name.toLowerCase().includes('gnocchi') ||
+          r.name.toLowerCase().includes('lasagna') ||
+          r.name.toLowerCase().includes('ravioli') ||
+          (r.ingredients && (
+            r.ingredients.toLowerCase().includes('parmesan') ||
+            r.ingredients.toLowerCase().includes('mozzarella') ||
+            r.ingredients.toLowerCase().includes('basil')
+          ))
+        );
+      }
+      
+      if (filterList.includes('mexican')) {
+        candidates = candidates.filter(r =>
+          r.name.toLowerCase().includes('mexican') ||
+          r.name.toLowerCase().includes('taco') ||
+          r.name.toLowerCase().includes('burrito') ||
+          r.name.toLowerCase().includes('enchilada') ||
+          r.name.toLowerCase().includes('quesadilla') ||
+          r.name.toLowerCase().includes('fajita') ||
+          r.name.toLowerCase().includes('salsa') ||
+          r.name.toLowerCase().includes('guacamole') ||
+          (r.ingredients && (
+            r.ingredients.toLowerCase().includes('cilantro') ||
+            r.ingredients.toLowerCase().includes('cumin') ||
+            r.ingredients.toLowerCase().includes('tortilla')
+          ))
+        );
+      }
+      
+      if (filterList.includes('asian')) {
+        candidates = candidates.filter(r =>
+          r.name.toLowerCase().includes('asian') ||
+          r.name.toLowerCase().includes('chinese') ||
+          r.name.toLowerCase().includes('japanese') ||
+          r.name.toLowerCase().includes('thai') ||
+          r.name.toLowerCase().includes('korean') ||
+          r.name.toLowerCase().includes('vietnamese') ||
+          r.name.toLowerCase().includes('stir fry') ||
+          r.name.toLowerCase().includes('fried rice') ||
+          r.name.toLowerCase().includes('noodle') ||
+          r.name.toLowerCase().includes('sushi') ||
+          r.name.toLowerCase().includes('ramen') ||
+          r.name.toLowerCase().includes('teriyaki') ||
+          r.name.toLowerCase().includes('pad thai') ||
+          (r.ingredients && (
+            r.ingredients.toLowerCase().includes('soy sauce') ||
+            r.ingredients.toLowerCase().includes('ginger') ||
+            r.ingredients.toLowerCase().includes('sesame') ||
+            r.ingredients.toLowerCase().includes('rice vinegar')
+          ))
+        );
+      }
+      
+      if (filterList.includes('indian')) {
+        candidates = candidates.filter(r =>
+          r.name.toLowerCase().includes('indian') ||
+          r.name.toLowerCase().includes('curry') ||
+          r.name.toLowerCase().includes('tikka') ||
+          r.name.toLowerCase().includes('masala') ||
+          r.name.toLowerCase().includes('tandoori') ||
+          r.name.toLowerCase().includes('biryani') ||
+          r.name.toLowerCase().includes('naan') ||
+          (r.ingredients && (
+            r.ingredients.toLowerCase().includes('curry') ||
+            r.ingredients.toLowerCase().includes('turmeric') ||
+            r.ingredients.toLowerCase().includes('garam masala') ||
+            r.ingredients.toLowerCase().includes('cardamom')
+          ))
+        );
+      }
+      
+      if (filterList.includes('american')) {
+        candidates = candidates.filter(r =>
+          r.name.toLowerCase().includes('american') ||
+          r.name.toLowerCase().includes('burger') ||
+          r.name.toLowerCase().includes('bbq') ||
+          r.name.toLowerCase().includes('barbecue') ||
+          r.name.toLowerCase().includes('fried chicken') ||
+          r.name.toLowerCase().includes('mac and cheese') ||
+          r.name.toLowerCase().includes('meatloaf') ||
+          r.name.toLowerCase().includes('pot roast') ||
+          r.name.toLowerCase().includes('cornbread') ||
+          r.name.toLowerCase().includes('apple pie')
         );
       }
       
