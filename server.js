@@ -1045,6 +1045,34 @@ app.get('/api/recipes', (req, res) => {
   }
 });
 
+// ONE-TIME: Add tags column to existing database
+app.get('/admin/migrate-add-tags-column', async (req, res) => {
+  try {
+    // Check if column already exists
+    const checkColumn = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name='order_items' AND column_name='tags'
+    `);
+    
+    if (checkColumn.rows.length > 0) {
+      return res.send('✅ Tags column already exists! No migration needed.');
+    }
+    
+    // Add the tags column
+    await pool.query(`
+      ALTER TABLE order_items 
+      ADD COLUMN tags TEXT[]
+    `);
+    
+    res.send('✅ Successfully added tags column to order_items table!');
+    
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).send(`❌ Error: ${error.message}`);
+  }
+});
+
 // ONE-TIME: Batch tag all recipes (run once after deployment)
 app.post('/admin/tag-all-recipes', async (req, res) => {
   try {
