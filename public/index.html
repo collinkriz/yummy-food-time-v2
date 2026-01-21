@@ -352,12 +352,12 @@
             display: flex;
             justify-content: center;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         
         .progress-dots .dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: #DDD;
             border: 2px solid #4A4A1F;
@@ -374,22 +374,22 @@
             font-size: 24px;
             font-weight: 900;
             text-transform: uppercase;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             text-align: center;
         }
         
         @media (max-width: 768px) {
             .filter-section {
-                margin-top: 10px;
+                margin-top: 6px;
             }
             
             .filter-section h2 {
-                font-size: 20px;
-                margin-bottom: 12px;
+                font-size: 18px;
+                margin-bottom: 10px;
             }
             
             .progress-dots {
-                margin-bottom: 16px;
+                margin-bottom: 12px;
             }
         }
         
@@ -397,14 +397,14 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         
         @media (max-width: 768px) {
             .filter-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-                margin-bottom: 16px;
+                gap: 10px;
+                margin-bottom: 14px;
             }
         }
         
@@ -421,7 +421,7 @@
         
         @media (max-width: 768px) {
             .filter-tile {
-                padding: 18px 12px;
+                padding: 16px 10px;
             }
         }
         
@@ -463,13 +463,13 @@
         
         .filter-icon {
             font-size: 48px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         
         @media (max-width: 768px) {
             .filter-icon {
-                font-size: 40px;
-                margin-bottom: 8px;
+                font-size: 36px;
+                margin-bottom: 6px;
             }
         }
         
@@ -701,11 +701,19 @@
             cursor: pointer;
             box-shadow: 4px 4px 0 rgba(69, 90, 100, 0.3);
             text-transform: uppercase;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             display: inline-block;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 8px;
             -webkit-tap-highlight-color: rgba(120, 144, 156, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .back-btn {
+                margin-bottom: 10px;
+                padding: 12px 24px;
+                font-size: 14px;
+            }
         }
         
         .back-btn:active {
@@ -1425,7 +1433,6 @@
                 <div id="progressDots" class="progress-dots" style="display: none;">
                     <span class="dot active"></span>
                     <span class="dot"></span>
-                    <span class="dot"></span>
                 </div>
                 
                 <h2 id="filterTitle">What are you looking for?</h2>
@@ -1567,7 +1574,7 @@
             { id: 'comfort', icon: '🍕', name: 'Comfort' }
         ];
         
-        // Multi-page cooking filters
+        // Multi-page cooking filters (2 pages now)
         const cookingFiltersPage1 = [
             { id: 'breakfast', icon: '🍳', name: 'Breakfast' },
             { id: 'lunch', icon: '🥗', name: 'Lunch' },
@@ -1583,22 +1590,12 @@
             { id: 'filling', icon: '🍗', name: 'Filling' },
             { id: 'comfort', icon: '🧀', name: 'Comfort' },
             { id: 'complex', icon: '🎓', name: 'Complex' },
-            { id: 'any-vibe', icon: '😊', name: 'Any Vibe', isAny: true }
-        ];
-        
-        const cookingFiltersPage3 = [
-            { id: 'italian', icon: '🇮🇹', name: 'Italian' },
-            { id: 'mexican', icon: '🇲🇽', name: 'Mexican' },
-            { id: 'asian', icon: '🇨🇳', name: 'Asian' },
-            { id: 'indian', icon: '🇮🇳', name: 'Indian' },
-            { id: 'american', icon: '🥖', name: 'American' },
-            { id: 'any-cuisine', icon: '🌎', name: 'Any Cuisine', isAny: true }
+            { id: 'any-vibe', icon: '🎲', name: 'Any Vibe', isAny: true }
         ];
         
         const cookingFilterPages = [
             { filters: cookingFiltersPage1, title: 'What meal(s)?' },
-            { filters: cookingFiltersPage2, title: 'What vibe(s)?' },
-            { filters: cookingFiltersPage3, title: 'Cuisine(s)?' }
+            { filters: cookingFiltersPage2, title: 'What vibe(s)?' }
         ];
         
         // View navigation functions
@@ -1672,7 +1669,7 @@
                 });
                 
                 // Update button text
-                if (currentFilterPage === 3) {
+                if (currentFilterPage === 2) {
                     const selectedCount = selectedFilters.size;
                     nextBtn.textContent = selectedCount > 0 ? `Get Recommendation (${selectedCount})` : 'Get Recommendation';
                 } else {
@@ -1740,7 +1737,7 @@
             }
             
             // Update button text if on last page
-            if (currentChoice === 'cooking' && currentFilterPage === 3) {
+            if (currentChoice === 'cooking' && currentFilterPage === 2) {
                 const nextBtn = document.getElementById('filterNextBtn');
                 const selectedCount = selectedFilters.size;
                 nextBtn.textContent = selectedCount > 0 ? `Get Recommendation (${selectedCount})` : 'Get Recommendation';
@@ -1748,7 +1745,7 @@
         }
         
         function handleFilterNext() {
-            if (currentChoice === 'takeout' || currentFilterPage === 3) {
+            if (currentChoice === 'takeout' || currentFilterPage === 2) {
                 // Get recommendation
                 getRecommendation();
             } else {
@@ -1793,7 +1790,7 @@
         function backToFilters() {
             // Go back to the last page of filters
             if (currentChoice === 'cooking') {
-                currentFilterPage = 3;
+                currentFilterPage = 2;
                 renderFilterPage();
             }
             showView('filterView');
