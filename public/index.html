@@ -1410,6 +1410,245 @@
         .hidden {
             display: none !important;
         }
+        
+        /* ============================================
+           TAG SYSTEM STYLES
+           ============================================ */
+
+        /* Tag Container */
+        .item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* Base Tag Style */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+            transition: all 0.15s ease-out;
+            cursor: default;
+        }
+
+        /* Tag Colors by Category */
+        .tag-course { background: #ef4444; }
+        .tag-meal-type { background: #3b82f6; }
+        .tag-dietary { background: #10b981; }
+        .tag-cuisine { background: #8b5cf6; }
+        .tag-cooking-method { background: #f97316; }
+        .tag-time { background: #eab308; }
+        .tag-difficulty { background: #6b7280; }
+        .tag-characteristics { background: #14b8a6; }
+
+        .tag.removable {
+            padding-right: 8px;
+            cursor: pointer;
+        }
+
+        .tag.removable:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .tag.removable::after {
+            content: " ✕";
+            margin-left: 6px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .tag-editor {
+            background: #f8f9fa;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tag-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .tag-editor-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .suggest-tags-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease-out;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .suggest-tags-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .suggest-tags-btn:active {
+            transform: translateY(0);
+        }
+
+        .suggest-tags-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .current-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 32px;
+            margin-bottom: 12px;
+        }
+
+        .current-tags-empty {
+            color: #9ca3af;
+            font-size: 13px;
+            font-style: italic;
+            padding: 6px 0;
+        }
+
+        .tag-suggestions {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 12px;
+        }
+
+        .tag-suggestions-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-suggestions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag-suggestion {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            background: white;
+            border: 2px dashed #d1d5db;
+            cursor: pointer;
+            transition: all 0.15s ease-out;
+        }
+
+        .tag-suggestion:hover {
+            border-color: #9ca3af;
+            transform: scale(1.05);
+            background: #f9fafb;
+        }
+
+        .tag-suggestion:active {
+            transform: scale(0.98);
+        }
+
+        .tag-suggestion::before {
+            content: "+ ";
+            margin-right: 2px;
+            font-weight: bold;
+        }
+
+        .tag-suggestion.suggest-course { border-color: #fca5a5; background: #fef2f2; }
+        .tag-suggestion.suggest-meal-type { border-color: #93c5fd; background: #eff6ff; }
+        .tag-suggestion.suggest-dietary { border-color: #6ee7b7; background: #f0fdf4; }
+        .tag-suggestion.suggest-cuisine { border-color: #c4b5fd; background: #faf5ff; }
+        .tag-suggestion.suggest-cooking-method { border-color: #fdba74; background: #fff7ed; }
+        .tag-suggestion.suggest-time { border-color: #fde047; background: #fefce8; }
+        .tag-suggestion.suggest-difficulty { border-color: #d1d5db; background: #f9fafb; }
+        .tag-suggestion.suggest-characteristics { border-color: #5eead4; background: #f0fdfa; }
+
+        .tag-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            font-size: 13px;
+            padding: 8px 0;
+        }
+
+        .tag-loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tag-error {
+            color: #ef4444;
+            font-size: 12px;
+            padding: 6px 10px;
+            background: #fef2f2;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 640px) {
+            .tag {
+                font-size: 11px;
+                padding: 3px 8px;
+            }
+            
+            .tag-editor {
+                padding: 12px;
+            }
+            
+            .suggest-tags-btn {
+                font-size: 11px;
+                padding: 5px 10px;
+            }
+            
+            .tag-suggestion {
+                font-size: 11px;
+                padding: 3px 8px;
+            }
+        }
+
+        @media print {
+            .tag-editor {
+                display: none;
+            }
+            
+            .tag.removable::after {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1631,6 +1870,217 @@
         let selectedFilters = new Set();
         let chatHistory = [];
         let currentFilterPage = 1; // Track which page of filters we're on
+        
+        // ============================================
+        // TAG SYSTEM - 80+ Tags in 8 Categories
+        // ============================================
+
+        const TAG_SYSTEM = {
+            'Meal Type': ['Breakfast', 'Lunch', 'Dinner', 'Brunch', 'Snack'],
+            'Course': ['Appetizer', 'Main Dish', 'Side Dish', 'Salad', 'Soup', 'Dessert', 'Beverage', 'Sauce/Condiment'],
+            'Dietary': ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Nut-Free', 'Low-Carb', 'Keto', 'Paleo'],
+            'Cuisine': ['American', 'Italian', 'Mexican', 'Asian', 'Indian', 'Mediterranean', 'French', 'Thai', 'Korean', 'Japanese', 'Chinese', 'Greek', 'Middle Eastern'],
+            'Cooking Method': ['Baked', 'Grilled', 'Fried', 'Slow Cooker', 'Instant Pot', 'One-Pot', 'No-Cook', 'Roasted', 'Sautéed', 'Steamed'],
+            'Time': ['Quick (< 30 min)', 'Medium (30-60 min)', 'Long (> 60 min)'],
+            'Difficulty': ['Easy', 'Medium', 'Hard'],
+            'Characteristics': ['Healthy', 'Comfort Food', 'Kid-Friendly', 'Party Food', 'Make-Ahead', 'Meal Prep', 'Spicy', 'Sweet', 'Savory', 'Fresh', 'Hearty', 'Light']
+        };
+
+        function getTagCategory(tagName) {
+            for (const [category, tags] of Object.entries(TAG_SYSTEM)) {
+                if (tags.includes(tagName)) {
+                    return category;
+                }
+            }
+            return 'Characteristics';
+        }
+
+        function getCategoryClass(category) {
+            return 'tag-' + category.toLowerCase().replace(/ /g, '-');
+        }
+
+        function renderTags(tags) {
+            if (!tags || tags.length === 0) {
+                return '';
+            }
+            
+            return `
+                <div class="item-tags">
+                    ${tags.map(tag => {
+                        const category = getTagCategory(tag);
+                        const cssClass = getCategoryClass(category);
+                        return `<span class="tag ${cssClass}">${tag}</span>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function renderTagEditor(itemId, currentTags = [], itemName = '', ingredients = '', directions = '', prepTime = '', cookTime = '') {
+            const tags = currentTags || [];
+            const allTags = Object.values(TAG_SYSTEM).flat();
+            const topSuggestions = [];
+            for (const [category, categoryTags] of Object.entries(TAG_SYSTEM)) {
+                const available = categoryTags.filter(tag => !tags.includes(tag));
+                if (available.length > 0) {
+                    topSuggestions.push(...available.slice(0, 2));
+                }
+            }
+            
+            return `
+                <div class="tag-editor" id="tag-editor-${itemId}">
+                    <div class="tag-editor-header">
+                        <div class="tag-editor-title">🏷️ Tags</div>
+                        <button type="button" class="suggest-tags-btn" onclick="suggestTags(${itemId}, '${itemName.replace(/'/g, "\\'")}', '${ingredients.replace(/'/g, "\\'")}', '${directions.replace(/'/g, "\\'")}', '${prepTime}', '${cookTime}')">
+                            ✨ AI Suggest
+                        </button>
+                    </div>
+                    
+                    <div class="current-tags" id="current-tags-${itemId}">
+                        ${tags.length === 0 
+                            ? '<div class="current-tags-empty">No tags yet. Click AI Suggest or add from below.</div>'
+                            : tags.map(tag => {
+                                const category = getTagCategory(tag);
+                                const cssClass = getCategoryClass(category);
+                                return `<span class="tag ${cssClass} removable" onclick="removeTag(${itemId}, '${tag.replace(/'/g, "\\'")}')">${tag}</span>`;
+                            }).join('')
+                        }
+                    </div>
+                    
+                    <div class="tag-suggestions">
+                        <div class="tag-suggestions-title">Quick Add</div>
+                        <div class="tag-suggestions-list" id="tag-suggestions-${itemId}">
+                            ${topSuggestions.slice(0, 12).map(tag => {
+                                const category = getTagCategory(tag);
+                                const cssClass = 'suggest-' + category.toLowerCase().replace(/ /g, '-');
+                                return `<span class="tag-suggestion ${cssClass}" onclick="addTag(${itemId}, '${tag.replace(/'/g, "\\'")}')">${tag}</span>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function suggestTags(itemId, itemName, ingredients = '', directions = '', prepTime = '', cookTime = '') {
+            const button = event.target;
+            const suggestionsDiv = document.getElementById(`tag-suggestions-${itemId}`);
+            
+            button.disabled = true;
+            button.textContent = '⏳ Thinking...';
+            suggestionsDiv.innerHTML = '<div class="tag-loading"><div class="tag-loading-spinner"></div> AI is analyzing...</div>';
+            
+            try {
+                const response = await fetch('/suggest-tags', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: itemName,
+                        ingredients: ingredients,
+                        directions: directions,
+                        prep_time: prepTime,
+                        cook_time: cookTime
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.tags && data.tags.length > 0) {
+                    const currentTags = getCurrentTags(itemId);
+                    const newSuggestions = data.tags.filter(tag => !currentTags.includes(tag));
+                    
+                    suggestionsDiv.innerHTML = `
+                        <div class="tag-suggestions-title">✨ AI Suggestions</div>
+                        <div class="tag-suggestions-list">
+                            ${newSuggestions.map(tag => {
+                                const category = getTagCategory(tag);
+                                const cssClass = 'suggest-' + category.toLowerCase().replace(/ /g, '-');
+                                return `<span class="tag-suggestion ${cssClass}" onclick="addTag(${itemId}, '${tag.replace(/'/g, "\\'")}')">${tag}</span>`;
+                            }).join('')}
+                        </div>
+                    `;
+                    
+                    button.textContent = '✨ AI Suggest';
+                    button.disabled = false;
+                } else {
+                    throw new Error('No tags suggested');
+                }
+                
+            } catch (error) {
+                console.error('Error suggesting tags:', error);
+                suggestionsDiv.innerHTML = '<div class="tag-error">⚠️ Could not get suggestions. Try again.</div>';
+                button.textContent = '✨ AI Suggest';
+                button.disabled = false;
+            }
+        }
+
+        function addTag(itemId, tagName) {
+            const currentTagsDiv = document.getElementById(`current-tags-${itemId}`);
+            const suggestionsDiv = document.getElementById(`tag-suggestions-${itemId}`);
+            
+            const currentTags = getCurrentTags(itemId);
+            if (currentTags.includes(tagName)) {
+                return;
+            }
+            
+            currentTags.push(tagName);
+            
+            const category = getTagCategory(tagName);
+            const cssClass = getCategoryClass(category);
+            
+            const emptyState = currentTagsDiv.querySelector('.current-tags-empty');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const tagElement = document.createElement('span');
+            tagElement.className = `tag ${cssClass} removable`;
+            tagElement.textContent = tagName;
+            tagElement.onclick = () => removeTag(itemId, tagName);
+            currentTagsDiv.appendChild(tagElement);
+            
+            const suggestionElements = suggestionsDiv.querySelectorAll('.tag-suggestion');
+            suggestionElements.forEach(el => {
+                if (el.textContent.includes(tagName)) {
+                    el.remove();
+                }
+            });
+        }
+
+        function removeTag(itemId, tagName) {
+            const currentTagsDiv = document.getElementById(`current-tags-${itemId}`);
+            const suggestionsDiv = document.getElementById(`tag-suggestions-${itemId}`);
+            
+            const tags = currentTagsDiv.querySelectorAll('.tag');
+            tags.forEach(tag => {
+                if (tag.textContent === tagName) {
+                    tag.remove();
+                }
+            });
+            
+            if (currentTagsDiv.querySelectorAll('.tag').length === 0) {
+                currentTagsDiv.innerHTML = '<div class="current-tags-empty">No tags yet. Click AI Suggest or add from below.</div>';
+            }
+            
+            const category = getTagCategory(tagName);
+            const cssClass = 'suggest-' + category.toLowerCase().replace(/ /g, '-');
+            
+            const suggestionElement = document.createElement('span');
+            suggestionElement.className = `tag-suggestion ${cssClass}`;
+            suggestionElement.textContent = tagName;
+            suggestionElement.onclick = () => addTag(itemId, tagName);
+            
+            const suggestionsList = suggestionsDiv.querySelector('.tag-suggestions-list');
+            if (suggestionsList) {
+                suggestionsList.appendChild(suggestionElement);
+            }
+        }
+
+        function getCurrentTags(itemId) {
+            const currentTagsDiv = document.getElementById(`current-tags-${itemId}`);
+            if (!currentTagsDiv) return [];
+            
+            const tagElements = currentTagsDiv.querySelectorAll('.tag:not(.current-tags-empty)');
+            return Array.from(tagElements).map(el => el.textContent.trim());
+        }
         
         const takeoutFilters = [
             { id: 'cheap', icon: '💰', name: 'Cheap' },
