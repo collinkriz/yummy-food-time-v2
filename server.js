@@ -676,7 +676,16 @@ app.get('/recommend', async (req, res) => {
       const recipes = JSON.parse(fs.readFileSync(recipesPath, 'utf8'));
       
       // Filter logic for cooking
-      let candidates = recipes;
+      // Exclude sauce-only recipes from recommendations
+      let candidates = recipes.filter(r => {
+        // Exclude if it's just a sauce (not a meal)
+        const isSauceOnly = 
+          (r.ai_category && r.ai_category.includes('Sauce') && r.ai_category.length === 1) ||
+          (r.name.toLowerCase().includes('sauce') && 
+           !r.name.toLowerCase().includes('with') && 
+           r.name.toLowerCase().split(' ').length <= 3);
+        return !isSauceOnly;
+      });
       
       // Style filters
       if (filterList.includes('quick')) {
