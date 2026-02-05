@@ -271,28 +271,25 @@
         /* CHOICE CARDS (Take Out / Cook at Home) */
         .choice-cards {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-top: 20px;
-        }
-        
-        @media (max-width: 768px) {
-            .choice-cards {
-                grid-template-columns: 1fr 1fr;
-                gap: 12px;
-            }
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 16px;
         }
         
         .choice-card {
             background: white;
-            border: 4px solid #4A4A1F;
-            padding: 40px 16px;
+            border: 3px solid #4A4A1F;
+            padding: 16px 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 6px 6px 0 rgba(74, 74, 31, 0.2);
+            box-shadow: 4px 4px 0 rgba(74, 74, 31, 0.2);
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
         
         .choice-card::before {
@@ -327,8 +324,7 @@
         }
         
         .choice-icon {
-            font-size: 56px;
-            margin-bottom: 12px;
+            font-size: 36px;
             position: relative;
             z-index: 1;
             transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -336,7 +332,7 @@
         
         
         .choice-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 900;
             color: #4A4A1F;
             text-transform: uppercase;
@@ -349,12 +345,11 @@
         
         @media (max-width: 768px) {
             .choice-card {
-                padding: 24px 12px;
+                padding: 14px 16px;
             }
             
             .choice-icon {
-                font-size: 40px;
-                margin-bottom: 8px;
+                font-size: 32px;
             }
             
             .choice-title {
@@ -543,18 +538,25 @@
         .recommendation {
             background: white;
             border: 3px solid #4A4A1F;
-            padding: 20px 16px;
-            box-shadow: 4px 4px 0 rgba(74, 74, 31, 0.2);
-            margin-top: 16px;
+            padding: 16px;
+            box-shadow: 4px 4px 0 rgba(74, 74, 31, 0.15);
+            margin-top: 12px;
+            border-radius: 8px;
         }
         
         .rec-title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 900;
-            color: #FF9800;
+            color: #4A4A1F;
             text-transform: uppercase;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             text-align: center;
+        }
+        
+        .rec-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
         }
         
         .rec-info-header {
@@ -704,9 +706,7 @@
         }
         
         .rec-details {
-            background: linear-gradient(135deg, #FEFDF8 0%, #FFF9E6 100%);
-            padding: 12px;
-            margin-bottom: 0;
+            /* Removed - now using flat inline styles */
         }
         
         .back-btn {
@@ -2411,12 +2411,29 @@
             showView('filterView');
         }
         
-        function switchRecipeTab(tabName) {
-            document.querySelectorAll('.recipe-toggle').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.recipe-section').forEach(section => section.classList.remove('active'));
+        function switchRecipeTab(tab) {
+            const ingredientsSection = document.getElementById('ingredients-section');
+            const instructionsSection = document.getElementById('instructions-section');
+            const tabIngredients = document.getElementById('tab-ingredients');
+            const tabInstructions = document.getElementById('tab-instructions');
             
-            event.target.classList.add('active');
-            document.getElementById(tabName + '-section').classList.add('active');
+            if (ingredientsSection && instructionsSection && tabIngredients && tabInstructions) {
+                if (tab === 'ingredients') {
+                    ingredientsSection.style.display = 'block';
+                    instructionsSection.style.display = 'none';
+                    tabIngredients.style.borderBottomColor = '#FF9800';
+                    tabIngredients.style.color = '#FF9800';
+                    tabInstructions.style.borderBottomColor = 'transparent';
+                    tabInstructions.style.color = '#999';
+                } else {
+                    ingredientsSection.style.display = 'none';
+                    instructionsSection.style.display = 'block';
+                    tabIngredients.style.borderBottomColor = 'transparent';
+                    tabIngredients.style.color = '#999';
+                    tabInstructions.style.borderBottomColor = '#FF9800';
+                    tabInstructions.style.color = '#FF9800';
+                }
+            }
         }
         
         // Tab switching (legacy - not used in new design)
@@ -3318,94 +3335,85 @@
             const recipe = allRecipes.find(r => r.name === recipeName);
             if (!recipe) return;
             
-            // Track that we're viewing a recipe detail (for back button navigation)
-            // Check if we came from recipe list view
             const recipeListView = document.getElementById('recipeListView');
             if (recipeListView && recipeListView.classList.contains('active')) {
                 isViewingRecipeDetail = true;
             }
             
-            // Simulate getting recommendation by directly setting the content
             currentChoice = 'cooking';
             const recTitle = document.getElementById('recTitle');
             const recContent = document.getElementById('recContent');
             
             recTitle.textContent = recipe.name;
             
-            // Build the recipe HTML - more compact layout
-            let html = '<div class="rec-details" style="padding: 12px; border: none;">';
+            // Build clean, flat recipe HTML
+            let html = '';
             
-            // Compact info row - all inline
+            // Compact info line - just text, no boxes
             const infoParts = [];
-            if (recipe.prep_time && recipe.prep_time !== 'N/A') infoParts.push(`⏱️ Prep: ${recipe.prep_time}`);
-            if (recipe.cook_time && recipe.cook_time !== 'N/A') infoParts.push(`🔥 Cook: ${recipe.cook_time}`);
+            if (recipe.prep_time && recipe.prep_time !== 'N/A') infoParts.push(`⏱️ ${recipe.prep_time}`);
+            if (recipe.cook_time && recipe.cook_time !== 'N/A') infoParts.push(`🔥 ${recipe.cook_time}`);
             if (recipe.servings && recipe.servings !== 'N/A') infoParts.push(`🍽️ ${recipe.servings}`);
             
             if (infoParts.length > 0) {
-                html += `<div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #4A4A1F;">`;
-                infoParts.forEach(part => {
-                    html += `<span>${part}</span>`;
+                html += `<div style="text-align: center; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #666;">${infoParts.join(' · ')}</div>`;
+            }
+            
+            // Tags - compact row
+            if (recipe.tags && recipe.tags.length > 0) {
+                html += '<div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 16px;">';
+                recipe.tags.forEach(tag => {
+                    const category = getTagCategory(tag);
+                    const cssClass = getCategoryClass(category);
+                    html += `<span class="tag ${cssClass}" style="font-size: 11px; padding: 3px 8px;">${tag}</span>`;
                 });
                 html += '</div>';
             }
             
-            // Tags display - compact
-            if (recipe.tags && recipe.tags.length > 0) {
-                html += '<div style="display: flex; justify-content: center; margin-bottom: 12px;">';
-                html += renderTags(recipe.tags);
-                html += '</div>';
-            }
+            // Simple tab buttons - not boxed, just underlined style
+            html += `<div style="display: flex; border-bottom: 2px solid #ddd; margin-bottom: 16px;">
+                <button onclick="switchRecipeTab('ingredients')" id="tab-ingredients" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid #FF9800; margin-bottom: -2px; font-size: 14px; font-weight: 700; color: #FF9800; cursor: pointer;">📝 Ingredients</button>
+                <button onclick="switchRecipeTab('instructions')" id="tab-instructions" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-size: 14px; font-weight: 700; color: #999; cursor: pointer;">👩🏻‍🍳 Instructions</button>
+            </div>`;
             
-            // Toggle buttons (smaller)
-            html += '<div class="recipe-toggles" style="gap: 8px; margin-bottom: 10px;">';
-            html += '<button class="recipe-toggle active" onclick="switchRecipeTab(\'ingredients\')" style="padding: 10px 16px; font-size: 13px;">📝 Ingredients</button>';
-            html += '<button class="recipe-toggle" onclick="switchRecipeTab(\'instructions\')" style="padding: 10px 16px; font-size: 13px;">👩🏻‍🍳 Instructions</button>';
-            html += '</div>';
-            
-            // Content box with sections - less padding
-            html += '<div class="recipe-content-box" style="padding: 14px 12px;">';
-            
-            // Ingredients section
-            html += '<div id="ingredients-section" class="recipe-section active">';
+            // Content sections - no box, just content
+            html += '<div id="ingredients-section" class="recipe-section active" style="display: block;">';
             if (recipe.ingredients) {
-                const ingredients = recipe.ingredients.split('\n').filter(i => i.trim());
-                html += '<ul style="margin: 0; padding-left: 18px;">';
+                const ingredients = recipe.ingredients.split('\\n').filter(i => i.trim());
+                html += '<ul style="margin: 0; padding-left: 20px; line-height: 1.6;">';
                 ingredients.forEach(ing => {
-                    html += `<li style="margin-bottom: 6px; font-size: 14px; line-height: 1.4;">${ing.trim()}</li>`;
+                    html += `<li style="margin-bottom: 8px; font-size: 14px; color: #333;">${ing.trim()}</li>`;
                 });
                 html += '</ul>';
             } else {
-                html += '<p style="margin: 0; font-size: 14px;">No ingredients listed.</p>';
+                html += '<p style="color: #999; font-size: 14px;">No ingredients listed.</p>';
             }
             html += '</div>';
             
-            // Instructions section
-            html += '<div id="instructions-section" class="recipe-section">';
+            html += '<div id="instructions-section" class="recipe-section" style="display: none;">';
             if (recipe.directions) {
-                html += `<p style="margin: 0; font-size: 14px; line-height: 1.5;">${recipe.directions.replace(/\n/g, '<br><br>')}</p>`;
+                html += `<div style="font-size: 14px; line-height: 1.7; color: #333;">${recipe.directions.replace(/\\n/g, '<br><br>')}</div>`;
             } else {
-                html += '<p style="margin: 0; font-size: 14px;">No instructions available.</p>';
+                html += '<p style="color: #999; font-size: 14px;">No instructions available.</p>';
             }
             html += '</div>';
             
-            html += '</div>'; // Close recipe-content-box
+            // Source link - simple text link
+            if (!window.isLoggingMeal && recipe.source_url) {
+                html += `<div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; text-align: center;">
+                    <a href="${recipe.source_url}" target="_blank" style="color: #FF9800; font-weight: 600; font-size: 13px; text-decoration: none;">🌐 View Original Recipe →</a>
+                </div>`;
+            }
             
-            // If logging a meal, add confirmation button
+            // Log meal button if needed
             if (window.isLoggingMeal) {
-                html += `<div style="margin-top: 16px; text-align: center;">
+                html += `<div style="margin-top: 20px; text-align: center;">
                     <button onclick="confirmLogMeal('${recipe.name.replace(/'/g, "\\'")}')" 
-                            style="padding: 12px 28px; background: linear-gradient(135deg, #52c41a 0%, #3fa218 100%); color: white; font-size: 15px; font-weight: 800; border: 3px solid #4A4A1F; border-radius: 6px; cursor: pointer; text-transform: uppercase; box-shadow: 3px 3px 0 rgba(74, 74, 31, 0.3);">
+                            style="padding: 12px 24px; background: #52c41a; color: white; font-size: 14px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">
                         ✅ Log This Meal
                     </button>
                 </div>`;
-            } else {
-                // Source button - compact, single line
-                if (recipe.source_url) {
-                    html += `<div style="margin-top: 14px; text-align: center;"><a href="${recipe.source_url}" target="_blank" style="display: inline-block; padding: 8px 16px; background: #FF9800; color: white; text-decoration: none; font-weight: 700; font-size: 13px; border-radius: 6px; border: 2px solid #4A4A1F;">🌐 Original Recipe</a></div>`;
-                }
             }
-            
-            html += '</div>';
             
             recContent.innerHTML = html;
             showView('recommendationView');
