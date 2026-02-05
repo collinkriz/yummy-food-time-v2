@@ -43,7 +43,11 @@ async function initializeDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         overall_rating INTEGER CHECK (overall_rating >= 0 AND overall_rating <= 5),
-        tags TEXT[]
+        tags TEXT[],
+        
+        -- AI-generated background tags (hidden from user)
+        ai_tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+        ai_tag_metadata JSONB DEFAULT '{}'::JSONB
       )
     `);
 
@@ -81,6 +85,7 @@ async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_meals_type ON meals(meal_type);
       CREATE INDEX IF NOT EXISTS idx_meals_date ON meals(meal_date);
       CREATE INDEX IF NOT EXISTS idx_meals_tags ON meals USING GIN(tags);
+      CREATE INDEX IF NOT EXISTS idx_meals_ai_tags ON meals USING GIN(ai_tags);
       CREATE INDEX IF NOT EXISTS idx_meal_items_meal_id ON meal_items(meal_id);
       CREATE INDEX IF NOT EXISTS idx_ai_usage_created_at ON ai_usage(created_at);
       CREATE INDEX IF NOT EXISTS idx_ai_usage_feature ON ai_usage(feature);

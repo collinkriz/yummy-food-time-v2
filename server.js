@@ -1167,10 +1167,20 @@ Analyze these recipes and pick the BEST match considering:
 3. Are the ingredients appropriate for what they asked for?
 4. Would this actually be satisfying for their needs?
 
+Additionally, generate 5-10 descriptive AI tags for the chosen recipe that capture:
+- Cooking context (weeknight friendly, special occasion, meal prep suitable, etc.)
+- Ingredient characteristics (pantry staples, needs specialty items, budget friendly)
+- Meal characteristics (leftovers well, feeds a crowd, scales easily, reheats well)
+- Flavor profiles (rich, light, tangy, savory-forward, sweet, spicy)
+- Practical aspects (one pot, make ahead, freezable, quick cleanup)
+
+These tags should be lowercase, short phrases (2-4 words) that help future matching.
+
 Respond ONLY with a JSON object (no markdown, no backticks):
 {
   "topChoice": 1,
-  "reasoning": "Brief 1-2 sentence explanation of why this is the best match"
+  "reasoning": "Brief 1-2 sentence explanation of why this is the best match",
+  "aiTags": ["weeknight friendly", "uses pantry staples", "one pot", "leftovers well", "protein heavy"]
 }
 
 The topChoice should be the recipe number (1-${candidates.rows.length}) that best matches their criteria.`;
@@ -1198,6 +1208,27 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
             const aiResult = JSON.parse(cleanText);
             
             const chosenRecipe = candidates.rows[aiResult.topChoice - 1];
+            
+            // Save AI tags to database (background improvement)
+            if (aiResult.aiTags && aiResult.aiTags.length > 0) {
+              try {
+                await pool.query(`
+                  UPDATE meals 
+                  SET ai_tags = array_cat(COALESCE(ai_tags, ARRAY[]::text[]), $1::text[]),
+                      ai_tag_metadata = jsonb_set(
+                        COALESCE(ai_tag_metadata, '{}'::jsonb),
+                        '{last_updated}',
+                        to_jsonb(now())
+                      )
+                  WHERE id = $2
+                `, [aiResult.aiTags, chosenRecipe.id]);
+                
+                console.log(`Added ${aiResult.aiTags.length} AI tags to recipe ${chosenRecipe.name}`);
+              } catch (tagError) {
+                console.error('Error saving AI tags:', tagError);
+                // Don't fail the request if tag saving fails
+              }
+            }
             
             let html = `<div style="text-align: center; padding: 16px; background: #E8F5E9; border: 2px solid #4CAF50; border-radius: 8px; margin-bottom: 20px;">
               <p style="color: #2E7D32; font-weight: 600; margin: 0;">
@@ -1236,6 +1267,58 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
         `;
         
         const result = await pool.query(query, [tagFilters]);
+        
+        // If match is weak (< 50%), try AI tag fallback
+        if (result.rows.length === 0 || result.rows[0].match_count < tagFilters.length * 0.5) {
+          console.log('Weak match, checking AI tags for fallback...');
+          
+          // Expand query with related terms for AI tag search
+          const expandedTerms = tagFilters.flatMap(tag => {
+            // Add lowercase version + common synonyms
+            const lower = tag.toLowerCase();
+            const terms = [lower];
+            
+            // Add synonyms
+            if (lower.includes('quick')) terms.push('fast', 'weeknight', '30 min');
+            if (lower.includes('healthy')) terms.push('nutritious', 'light', 'fresh');
+            if (lower.includes('hearty')) terms.push('filling', 'substantial', 'satisfying');
+            if (lower.includes('comfort')) terms.push('cozy', 'indulgent', 'rich');
+            if (lower.includes('main dish')) terms.push('entree', 'main course', 'dinner');
+            
+            return terms;
+          });
+          
+          // Search recipes that match via AI tags
+          const aiQuery = `
+            SELECT *, 
+              (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as match_count,
+              (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as ai_match_count
+            FROM meals 
+            WHERE meal_type = 'recipe' 
+              AND (tags && $1::text[] OR ai_tags && $2::text[])
+            ORDER BY match_count DESC, ai_match_count DESC, RANDOM()
+            LIMIT 1
+          `;
+          
+          const aiResult = await pool.query(aiQuery, [tagFilters, expandedTerms.map(t => `%${t}%`)]);
+          
+          if (aiResult.rows.length > 0 && aiResult.rows[0].ai_match_count > 0) {
+            const recipe = aiResult.rows[0];
+            
+            let html = `<div style="text-align: center; padding: 16px; background: #E3F2FD; border: 2px solid #2196F3; border-radius: 8px; margin-bottom: 20px;">
+              <p style="color: #1565C0; font-weight: 600; margin: 0;">
+                💡 Found via smart matching - this recipe fits your vibe!
+              </p>
+            </div>`;
+            
+            html += buildRecipeHTML(recipe);
+            
+            return res.json({
+              title: recipe.name,
+              recommendation: html
+            });
+          }
+        }
         
         if (result.rows.length > 0) {
           const recipe = result.rows[0];
@@ -1677,6 +1760,45 @@ app.get('/api/ai-usage', async (req, res) => {
   } catch (error) {
     console.error('Error fetching AI usage:', error);
     res.status(500).json({ error: 'Could not fetch AI usage stats' });
+  }
+});
+
+// Debug endpoint: View AI tags for recipes (for monitoring system learning)
+app.get('/api/ai-tags-debug', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        id,
+        name,
+        tags,
+        ai_tags,
+        ai_tag_metadata,
+        (SELECT COUNT(*) FROM unnest(ai_tags)) as ai_tag_count
+      FROM meals
+      WHERE meal_type = 'recipe' AND ai_tags IS NOT NULL AND array_length(ai_tags, 1) > 0
+      ORDER BY ai_tag_metadata->>'last_updated' DESC NULLS LAST
+      LIMIT 50
+    `);
+    
+    // Count total recipes with AI tags
+    const statsResult = await pool.query(`
+      SELECT 
+        COUNT(*) as total_recipes,
+        COUNT(CASE WHEN ai_tags IS NOT NULL AND array_length(ai_tags, 1) > 0 THEN 1 END) as recipes_with_ai_tags,
+        AVG(array_length(ai_tags, 1)) as avg_ai_tags_per_recipe
+      FROM meals
+      WHERE meal_type = 'recipe'
+    `);
+    
+    res.json({
+      success: true,
+      stats: statsResult.rows[0],
+      recipes: result.rows
+    });
+    
+  } catch (error) {
+    console.error('Error fetching AI tags:', error);
+    res.status(500).json({ error: 'Could not fetch AI tags debug info' });
   }
 });
 
