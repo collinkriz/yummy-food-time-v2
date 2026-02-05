@@ -1802,6 +1802,230 @@ app.get('/api/ai-tags-debug', async (req, res) => {
   }
 });
 
+// ==================== BULK AI TAG GENERATION ====================
+// One-time endpoint to generate AI tags for all recipes
+// Cost: ~$2.50 for 162 recipes (cheaper than doing via Smart Match)
+app.get('/generate-all-ai-tags', async (req, res) => {
+  // Confirm parameter to prevent accidental runs
+  if (req.query.confirm !== 'yes') {
+    return res.send(`
+      <html>
+      <head>
+        <style>
+          body { font-family: sans-serif; padding: 40px; max-width: 700px; margin: 0 auto; }
+          .cost { background: #FFF3CD; padding: 20px; border-radius: 8px; border: 2px solid #FFC107; margin: 20px 0; }
+          .warning { background: #FEE; padding: 20px; border-radius: 8px; border: 2px solid #f88; margin: 20px 0; }
+          .btn { background: #4CAF50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 10px 5px; }
+          .btn-cancel { background: #999; }
+        </style>
+      </head>
+      <body>
+        <h1>🏷️ Bulk AI Tag Generation</h1>
+        <p>This will generate AI tags for <strong>all 162 recipes</strong> in one batch.</p>
+        
+        <div class="cost">
+          <h3>💰 Cost Estimate</h3>
+          <ul>
+            <li><strong>Total Cost:</strong> ~$2.50 (162 recipes × $0.015)</li>
+            <li><strong>Time:</strong> ~3-4 minutes</li>
+            <li><strong>Benefit:</strong> Entire library gets AI tags immediately</li>
+          </ul>
+        </div>
+        
+        <div class="warning">
+          <h3>⚠️ Important Notes</h3>
+          <ul>
+            <li>This will APPEND tags (not replace existing AI tags)</li>
+            <li>Recipes that already have AI tags will get more (safe)</li>
+            <li>Cost is tracked automatically</li>
+            <li>Quick Pick will immediately benefit from these tags</li>
+          </ul>
+        </div>
+        
+        <h3>Ready to proceed?</h3>
+        <a href="/generate-all-ai-tags?confirm=yes" class="btn">✅ Yes, Generate AI Tags ($2.50)</a>
+        <a href="/" class="btn btn-cancel">❌ Cancel</a>
+      </body>
+      </html>
+    `);
+  }
+  
+  // Set headers for streaming response
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Transfer-Encoding', 'chunked');
+  
+  res.write(`
+    <html>
+    <head>
+      <style>
+        body { font-family: monospace; padding: 40px; background: #1e1e1e; color: #d4d4d4; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .progress { color: #fbbf24; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <h1 style="color: #667eea;">🏷️ Bulk AI Tag Generation</h1>
+      <pre>
+  `);
+  
+  const startTime = Date.now();
+  let successCount = 0;
+  let errorCount = 0;
+  let totalCost = 0;
+  
+  try {
+    res.write(`<span class="info">📋 Fetching all recipes...</span>\n`);
+    
+    const result = await pool.query(`
+      SELECT id, name, ingredients, directions, prep_time, cook_time, servings, tags, ai_tags
+      FROM meals
+      WHERE meal_type = 'recipe'
+      ORDER BY name ASC
+    `);
+    
+    const recipes = result.rows;
+    res.write(`<span class="success">✅ Found ${recipes.length} recipes</span>\n\n`);
+    
+    // Process recipes one at a time (safer, easier to debug)
+    for (let i = 0; i < recipes.length; i++) {
+      const recipe = recipes[i];
+      const recipeNum = i + 1;
+      const recipeName = recipe.name.substring(0, 50).padEnd(50);
+      
+      // Show progress every 10 recipes
+      if (i % 10 === 0 && i > 0) {
+        res.write(`<span class="progress">\n📊 Progress: ${i}/${recipes.length} (${Math.round(i/recipes.length*100)}%)</span>\n\n`);
+      }
+      
+      try {
+        const prompt = `Analyze this recipe and generate 5-10 descriptive AI tags.
+
+**Recipe Name:** ${recipe.name}
+**Ingredients:** ${recipe.ingredients ? recipe.ingredients.substring(0, 300) : 'N/A'}
+**Directions:** ${recipe.directions ? recipe.directions.substring(0, 300) : 'N/A'}
+**Prep Time:** ${recipe.prep_time || 'N/A'}
+**Cook Time:** ${recipe.cook_time || 'N/A'}
+**Current Tags:** ${recipe.tags ? recipe.tags.join(', ') : 'None'}
+
+Generate 5-10 descriptive tags that capture:
+- Cooking context (weeknight friendly, special occasion, meal prep suitable)
+- Ingredient characteristics (pantry staples, needs specialty items, budget friendly)
+- Meal characteristics (leftovers well, feeds a crowd, scales easily, reheats well)
+- Flavor profiles (rich, light, tangy, savory-forward, sweet, spicy)
+- Practical aspects (one pot, make ahead, freezable, quick cleanup)
+
+Tags should be lowercase, short phrases (2-4 words).
+
+Respond ONLY with a JSON array (no markdown, no backticks):
+["tag 1", "tag 2", "tag 3", "tag 4", "tag 5"]`;
+
+        const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 200,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+        
+        const aiData = await aiResponse.json();
+        
+        if (!aiResponse.ok) {
+          throw new Error(aiData.error?.message || 'API error');
+        }
+        
+        const aiText = aiData.content[0].text.trim();
+        const cleanText = aiText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        const aiTags = JSON.parse(cleanText);
+        
+        if (Array.isArray(aiTags) && aiTags.length > 0) {
+          // Save AI tags to database
+          await pool.query(`
+            UPDATE meals 
+            SET ai_tags = array_cat(COALESCE(ai_tags, ARRAY[]::text[]), $1::text[]),
+                ai_tag_metadata = jsonb_set(
+                  COALESCE(ai_tag_metadata, '{}'::jsonb),
+                  '{last_updated}',
+                  to_jsonb(now())
+                )
+            WHERE id = $2
+          `, [aiTags, recipe.id]);
+          
+          // Track cost
+          const cost = 0.015;
+          await trackAIUsage('bulk_ai_tagging', cost);
+          totalCost += cost;
+          
+          successCount++;
+          res.write(`  <span class="success">[${recipeNum}/${recipes.length}] ${recipeName} ✅ ${aiTags.length} tags</span>\n`);
+        } else {
+          errorCount++;
+          res.write(`  <span class="error">[${recipeNum}/${recipes.length}] ${recipeName} ⚠️  parse error</span>\n`);
+        }
+        
+        // Small delay to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+      } catch (error) {
+        errorCount++;
+        res.write(`  <span class="error">[${recipeNum}/${recipes.length}] ${recipeName} ❌ ${error.message.substring(0, 40)}</span>\n`);
+      }
+    }
+    
+    const duration = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
+    
+    res.write(`\n<span class="success">✅ AI Tag generation complete in ${duration} minutes!</span>\n`);
+    res.write(`<span class="info">   Success: ${successCount} recipes</span>\n`);
+    res.write(`<span class="info">   Errors: ${errorCount} recipes</span>\n`);
+    res.write(`<span class="info">   Total Cost: $${totalCost.toFixed(2)}</span>\n\n`);
+    
+    // Show coverage stats
+    res.write(`<span class="info">📊 AI Tag Coverage:</span>\n`);
+    const stats = await pool.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(CASE WHEN ai_tags IS NOT NULL AND array_length(ai_tags, 1) > 0 THEN 1 END) as has_tags,
+        ROUND(100.0 * COUNT(CASE WHEN ai_tags IS NOT NULL AND array_length(ai_tags, 1) > 0 THEN 1 END) / COUNT(*), 1) as coverage_pct,
+        AVG(array_length(ai_tags, 1)) as avg_tags
+      FROM meals
+      WHERE meal_type = 'recipe'
+    `);
+    
+    const stat = stats.rows[0];
+    res.write(`   Total Recipes: ${stat.total}\n`);
+    res.write(`   With AI Tags: ${stat.has_tags} (${stat.coverage_pct}%)\n`);
+    res.write(`   Avg Tags/Recipe: ${parseFloat(stat.avg_tags).toFixed(1)}\n`);
+    
+    res.write(`\n<span class="success">🎉 Your recipe library is now supercharged with AI tags!</span>\n`);
+    res.write(`<span class="info">Quick Pick will now use these tags as fallback for better matching.</span>\n\n`);
+    
+    res.write(`
+      </pre>
+      <p style="margin-top: 30px;"><a href="/" style="background: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Go to App</a></p>
+      <p style="margin-top: 10px;"><a href="/api/ai-tags-debug" style="background: #9C27B0; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">View AI Tags</a></p>
+    </body></html>
+    `);
+    
+  } catch (error) {
+    res.write(`\n<span class="error">❌ Fatal Error: ${error.message}</span>\n`);
+    res.write(`
+      </pre>
+      <p><a href="/">Go back</a></p>
+    </body></html>
+    `);
+  } finally {
+    res.end();
+  }
+});
+// ==================== END BULK AI TAG GENERATION ====================
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
