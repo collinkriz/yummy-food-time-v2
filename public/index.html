@@ -698,17 +698,6 @@
             }
         }
         
-        .rec-content {
-            font-size: 18px;
-            line-height: 1.8;
-            color: #333;
-            margin-bottom: 30px;
-        }
-        
-        .rec-details {
-            /* Removed - now using flat inline styles */
-        }
-        
         .back-btn {
             background: linear-gradient(135deg, #78909C 0%, #607D8B 100%);
             color: white;
@@ -3349,14 +3338,14 @@
             // Build clean, flat recipe HTML
             let html = '';
             
-            // Compact info line - just text, no boxes
+            // Compact info line - text only, no icons
             const infoParts = [];
-            if (recipe.prep_time && recipe.prep_time !== 'N/A') infoParts.push(`⏱️ ${recipe.prep_time}`);
-            if (recipe.cook_time && recipe.cook_time !== 'N/A') infoParts.push(`🔥 ${recipe.cook_time}`);
-            if (recipe.servings && recipe.servings !== 'N/A') infoParts.push(`🍽️ ${recipe.servings}`);
+            if (recipe.prep_time && recipe.prep_time !== 'N/A') infoParts.push(`Prep: ${recipe.prep_time}`);
+            if (recipe.cook_time && recipe.cook_time !== 'N/A') infoParts.push(`Cook: ${recipe.cook_time}`);
+            if (recipe.servings && recipe.servings !== 'N/A') infoParts.push(`Serves: ${recipe.servings}`);
             
             if (infoParts.length > 0) {
-                html += `<div style="text-align: center; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #666;">${infoParts.join(' · ')}</div>`;
+                html += `<div style="text-align: center; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #666;">${infoParts.join(' · ')}</div>`;
             }
             
             // Tags - compact row
