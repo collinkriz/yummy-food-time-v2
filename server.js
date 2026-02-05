@@ -1305,11 +1305,7 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
           if (aiResult.rows.length > 0 && aiResult.rows[0].ai_match_count > 0) {
             const recipe = aiResult.rows[0];
             
-            let html = `<div style="text-align: center; padding: 16px; background: #E3F2FD; border: 2px solid #2196F3; border-radius: 8px; margin-bottom: 20px;">
-              <p style="color: #1565C0; font-weight: 600; margin: 0;">
-                💡 Found via smart matching - this recipe fits your vibe!
-              </p>
-            </div>`;
+            let html = `<p style="text-align: center; color: #1565C0; font-weight: 600; font-size: 13px; margin-bottom: 12px;">💡 Found via smart matching!</p>`;
             
             html += buildRecipeHTML(recipe);
             
@@ -1326,38 +1322,22 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
           
           let html = '';
           
-          // Show match quality indicator
+          // Show match quality indicator - simple text, not a big box
           if (matchCount === tagFilters.length) {
-            html += `<div style="text-align: center; padding: 16px; background: #E8F5E9; border: 2px solid #4CAF50; border-radius: 8px; margin-bottom: 20px;">
-              <p style="color: #2E7D32; font-weight: 600; margin: 0;">
-                ✨ Perfect Match! This recipe has all ${tagFilters.length} tags you selected.
-              </p>
-            </div>`;
+            html += `<p style="text-align: center; color: #2E7D32; font-weight: 600; font-size: 13px; margin-bottom: 12px;">✨ Perfect Match! All ${tagFilters.length} tags.</p>`;
           } else if (matchCount >= tagFilters.length * 0.66) {
-            html += `<div style="text-align: center; padding: 16px; background: #FFF8E1; border: 2px solid #FFB300; border-radius: 8px; margin-bottom: 20px;">
-              <p style="color: #E65100; font-weight: 600; margin: 0;">
-                👍 Great Match! Has ${matchCount} of ${tagFilters.length} tags you selected.
-                <button onclick="getSmartMatch()" 
-                        style="display: block; margin: 12px auto 0; padding: 8px 16px; 
-                               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                               color: white; border: 2px solid #4A4A1F; border-radius: 8px; 
-                               font-size: 13px; font-weight: 700; cursor: pointer;">
-                  🧠 Try Smart Match Instead (~$0.01)
-                </button>
-              </p>
+            html += `<div style="text-align: center; margin-bottom: 12px;">
+              <p style="color: #E65100; font-weight: 600; font-size: 13px; margin: 0 0 8px 0;">👍 Great Match! ${matchCount}/${tagFilters.length} tags.</p>
+              <button onclick="getSmartMatch()" style="padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                🧠 Try Smart Match (~$0.01)
+              </button>
             </div>`;
           } else {
-            html += `<div style="text-align: center; padding: 16px; background: #FFF3CD; border: 2px solid #FFC107; border-radius: 8px; margin-bottom: 20px;">
-              <p style="color: #856404; font-weight: 600; margin: 0;">
-                Close match - has ${matchCount} of ${tagFilters.length} tags.
-                <button onclick="getSmartMatch()" 
-                        style="display: block; margin: 12px auto 0; padding: 8px 16px; 
-                               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                               color: white; border: 2px solid #4A4A1F; border-radius: 8px; 
-                               font-size: 13px; font-weight: 700; cursor: pointer;">
-                  🧠 Try Smart Match Instead (~$0.01)
-                </button>
-              </p>
+            html += `<div style="text-align: center; margin-bottom: 12px;">
+              <p style="color: #856404; font-weight: 600; font-size: 13px; margin: 0 0 8px 0;">Close match - ${matchCount}/${tagFilters.length} tags.</p>
+              <button onclick="getSmartMatch()" style="padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                🧠 Try Smart Match (~$0.01)
+              </button>
             </div>`;
           }
           
@@ -1381,9 +1361,7 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
       }
       
       const recipe = anyRecipe.rows[0];
-      let html = '<div style="text-align: center; padding: 20px; background: #FFF3CD; border: 2px solid #FFC107; border-radius: 8px; margin-bottom: 20px;">';
-      html += '<p style="color: #856404; font-weight: 600;">No exact matches found for your filters, but here\'s a great recipe anyway!</p>';
-      html += '</div>';
+      let html = '<p style="text-align: center; color: #856404; font-weight: 600; font-size: 13px; margin-bottom: 12px;">No exact matches, but here\'s a great recipe!</p>';
       html += buildRecipeHTML(recipe);
       
       res.json({
@@ -1530,66 +1508,63 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
   }
 });
 
-// Helper function to build recipe HTML
+// Helper function to build recipe HTML - clean flat design
 function buildRecipeHTML(recipe) {
-  let html = '<div class="rec-details">';
+  let html = '';
   
-  // Info row
-  html += '<div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap;">';
-  html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">⏱️</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Prep: ${recipe.prep_time || 'N/A'}</div></div>`;
-  html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🔥</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Cook: ${recipe.cook_time || 'N/A'}</div></div>`;
-  html += `<div style="text-align: center; flex: 1; min-width: 80px;"><div style="font-size: 28px; margin-bottom: 4px;">🍽️</div><div style="font-weight: 600; color: #4A4A1F; font-size: 14px;">Servings: ${recipe.servings || 'N/A'}</div></div>`;
-  html += '</div>';
+  // Compact info line - just text, no boxes
+  const infoParts = [];
+  if (recipe.prep_time && recipe.prep_time !== 'N/A') infoParts.push(`⏱️ ${recipe.prep_time}`);
+  if (recipe.cook_time && recipe.cook_time !== 'N/A') infoParts.push(`🔥 ${recipe.cook_time}`);
+  if (recipe.servings && recipe.servings !== 'N/A') infoParts.push(`🍽️ ${recipe.servings}`);
   
-  // Tags
+  if (infoParts.length > 0) {
+    html += `<div style="text-align: center; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: #666;">${infoParts.join(' · ')}</div>`;
+  }
+  
+  // Tags - compact
   if (recipe.tags && recipe.tags.length > 0) {
-    html += '<div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">';
+    html += '<div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 16px;">';
     recipe.tags.forEach(tag => {
-      html += `<span class="tag">${tag}</span>`;
+      html += `<span class="tag" style="font-size: 11px; padding: 3px 8px;">${tag}</span>`;
     });
     html += '</div>';
   }
   
-  // Toggle buttons
-  html += '<div class="recipe-toggles">';
-  html += '<button class="recipe-toggle active" onclick="switchRecipeTab(\'ingredients\')">📝 Ingredients</button>';
-  html += '<button class="recipe-toggle" onclick="switchRecipeTab(\'instructions\')">👩🏻‍🍳 Instructions</button>';
-  html += '</div>';
+  // Simple tab buttons - underlined style
+  html += `<div style="display: flex; border-bottom: 2px solid #ddd; margin-bottom: 16px;">
+    <button onclick="switchRecipeTab('ingredients')" id="tab-ingredients" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid #FF9800; margin-bottom: -2px; font-size: 14px; font-weight: 700; color: #FF9800; cursor: pointer;">📝 Ingredients</button>
+    <button onclick="switchRecipeTab('instructions')" id="tab-instructions" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-size: 14px; font-weight: 700; color: #999; cursor: pointer;">👩🏻‍🍳 Instructions</button>
+  </div>`;
   
-  // Content box
-  html += '<div class="recipe-content-box">';
-  
-  // Ingredients
-  html += '<div id="ingredients-section" class="recipe-section active">';
+  // Content sections - no box
+  html += '<div id="ingredients-section" class="recipe-section active" style="display: block;">';
   if (recipe.ingredients) {
     const ingredients = recipe.ingredients.split('\n').filter(i => i.trim());
-    html += '<ul>';
+    html += '<ul style="margin: 0; padding-left: 20px; line-height: 1.6;">';
     ingredients.forEach(ing => {
-      html += `<li>${ing.trim()}</li>`;
+      html += `<li style="margin-bottom: 8px; font-size: 14px; color: #333;">${ing.trim()}</li>`;
     });
     html += '</ul>';
   } else {
-    html += '<p>No ingredients listed.</p>';
+    html += '<p style="color: #999; font-size: 14px;">No ingredients listed.</p>';
   }
   html += '</div>';
   
-  // Instructions
-  html += '<div id="instructions-section" class="recipe-section">';
+  html += '<div id="instructions-section" class="recipe-section" style="display: none;">';
   if (recipe.directions) {
-    html += `<p>${recipe.directions.replace(/\n/g, '<br><br>')}</p>`;
+    html += `<div style="font-size: 14px; line-height: 1.7; color: #333;">${recipe.directions.replace(/\n/g, '<br><br>')}</div>`;
   } else {
-    html += '<p>No instructions available.</p>';
+    html += '<p style="color: #999; font-size: 14px;">No instructions available.</p>';
   }
   html += '</div>';
   
-  html += '</div>'; // Close recipe-content-box
-  
-  // Source button
+  // Source link - simple text link
   if (recipe.source_url) {
-    html += `<div style="margin-top: 24px; text-align: center;"><a href="${recipe.source_url}" target="_blank" style="display: inline-block; padding: 12px 24px; background: #FF9800; color: white; text-decoration: none; font-weight: 800; border-radius: 8px; border: 4px solid #4A4A1F; transition: all 0.2s ease;">🌐 View Original Recipe</a></div>`;
+    html += `<div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; text-align: center;">
+      <a href="${recipe.source_url}" target="_blank" style="color: #FF9800; font-weight: 600; font-size: 13px; text-decoration: none;">🌐 View Original Recipe →</a>
+    </div>`;
   }
-  
-  html += '</div>';
   
   return html;
 }
