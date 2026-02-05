@@ -1746,14 +1746,14 @@
         
         <!-- RECOMMENDATION VIEW -->
         <div id="recommendationView" class="view">
-            <button class="back-btn" onclick="backToFilters()">← Back</button>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <button class="back-btn" onclick="backToFilters()" style="margin-bottom: 0; flex: 1;">← Back</button>
+                <button onclick="getRecommendation()" style="flex: 1; padding: 10px 16px; background: #6B6B3D; color: #FFC107; border: 3px solid #4A4A1F; border-radius: 6px; font-size: 13px; font-weight: 800; cursor: pointer; text-transform: uppercase;">🎲 Try Again</button>
+            </div>
             
             <div class="recommendation">
                 <div class="rec-title" id="recTitle"></div>
                 <div class="rec-content" id="recContent"></div>
-                <div class="filter-actions">
-                    <button class="filter-btn" onclick="getRecommendation()">🎲 Try Again</button>
-                </div>
             </div>
         </div>
         
@@ -3338,40 +3338,40 @@
             // Build clean, flat recipe HTML
             let html = '';
             
-            // Compact info line - text only, no icons
+            // Compact info line - text only
             const infoParts = [];
             if (recipe.prep_time && recipe.prep_time !== 'N/A') infoParts.push(`Prep: ${recipe.prep_time}`);
             if (recipe.cook_time && recipe.cook_time !== 'N/A') infoParts.push(`Cook: ${recipe.cook_time}`);
             if (recipe.servings && recipe.servings !== 'N/A') infoParts.push(`Serves: ${recipe.servings}`);
             
             if (infoParts.length > 0) {
-                html += `<div style="text-align: center; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #666;">${infoParts.join(' · ')}</div>`;
+                html += `<div style="text-align: center; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #888;">${infoParts.join(' · ')}</div>`;
             }
             
-            // Tags - compact row
+            // Tags - compact row, tighter spacing
             if (recipe.tags && recipe.tags.length > 0) {
-                html += '<div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 16px;">';
+                html += '<div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 12px;">';
                 recipe.tags.forEach(tag => {
                     const category = getTagCategory(tag);
                     const cssClass = getCategoryClass(category);
-                    html += `<span class="tag ${cssClass}" style="font-size: 11px; padding: 3px 8px;">${tag}</span>`;
+                    html += `<span class="tag ${cssClass}" style="font-size: 10px; padding: 2px 7px;">${tag}</span>`;
                 });
                 html += '</div>';
             }
             
-            // Simple tab buttons - not boxed, just underlined style
-            html += `<div style="display: flex; border-bottom: 2px solid #ddd; margin-bottom: 16px;">
-                <button onclick="switchRecipeTab('ingredients')" id="tab-ingredients" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid #FF9800; margin-bottom: -2px; font-size: 14px; font-weight: 700; color: #FF9800; cursor: pointer;">📝 Ingredients</button>
-                <button onclick="switchRecipeTab('instructions')" id="tab-instructions" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-size: 14px; font-weight: 700; color: #999; cursor: pointer;">👩🏻‍🍳 Instructions</button>
+            // Tab buttons - tighter
+            html += `<div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 12px;">
+                <button onclick="switchRecipeTab('ingredients')" id="tab-ingredients" style="flex: 1; padding: 8px; background: none; border: none; border-bottom: 2px solid #FF9800; margin-bottom: -2px; font-size: 12px; font-weight: 700; color: #FF9800; cursor: pointer; text-transform: uppercase;">📝 Ingredients</button>
+                <button onclick="switchRecipeTab('instructions')" id="tab-instructions" style="flex: 1; padding: 8px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; font-size: 12px; font-weight: 700; color: #999; cursor: pointer; text-transform: uppercase;">👩🏻‍🍳 Instructions</button>
             </div>`;
             
-            // Content sections - no box, just content
-            html += '<div id="ingredients-section" class="recipe-section active" style="display: block;">';
+            // Content sections
+            html += '<div id="ingredients-section" style="display: block;">';
             if (recipe.ingredients) {
                 const ingredients = recipe.ingredients.split('\\n').filter(i => i.trim());
                 html += '<ul style="margin: 0; padding-left: 20px; line-height: 1.6;">';
                 ingredients.forEach(ing => {
-                    html += `<li style="margin-bottom: 8px; font-size: 14px; color: #333;">${ing.trim()}</li>`;
+                    html += `<li style="margin-bottom: 6px; font-size: 14px; color: #333;">${ing.trim()}</li>`;
                 });
                 html += '</ul>';
             } else {
@@ -3379,26 +3379,26 @@
             }
             html += '</div>';
             
-            html += '<div id="instructions-section" class="recipe-section" style="display: none;">';
+            html += '<div id="instructions-section" style="display: none;">';
             if (recipe.directions) {
-                html += `<div style="font-size: 14px; line-height: 1.7; color: #333;">${recipe.directions.replace(/\\n/g, '<br><br>')}</div>`;
+                html += `<div style="font-size: 14px; line-height: 1.6; color: #333;">${recipe.directions.replace(/\\n/g, '<br><br>')}</div>`;
             } else {
                 html += '<p style="color: #999; font-size: 14px;">No instructions available.</p>';
             }
             html += '</div>';
             
-            // Source link - simple text link
+            // Bottom action - just source link, styled consistently
             if (!window.isLoggingMeal && recipe.source_url) {
-                html += `<div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; text-align: center;">
-                    <a href="${recipe.source_url}" target="_blank" style="color: #FF9800; font-weight: 600; font-size: 13px; text-decoration: none;">🌐 View Original Recipe →</a>
+                html += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee;">
+                    <a href="${recipe.source_url}" target="_blank" style="display: block; text-align: center; padding: 10px; background: #f5f5f5; border-radius: 6px; color: #666; font-weight: 600; font-size: 13px; text-decoration: none;">🌐 View Original Recipe</a>
                 </div>`;
             }
             
-            // Log meal button if needed
+            // Log meal button if logging
             if (window.isLoggingMeal) {
-                html += `<div style="margin-top: 20px; text-align: center;">
+                html += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #eee;">
                     <button onclick="confirmLogMeal('${recipe.name.replace(/'/g, "\\'")}')" 
-                            style="padding: 12px 24px; background: #52c41a; color: white; font-size: 14px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">
+                            style="width: 100%; padding: 12px; background: #52c41a; color: white; font-size: 14px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">
                         ✅ Log This Meal
                     </button>
                 </div>`;
