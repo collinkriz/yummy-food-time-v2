@@ -1802,6 +1802,74 @@ app.get('/api/ai-tags-debug', async (req, res) => {
   }
 });
 
+// ==================== FORCE ADD AI TAGS COLUMNS ====================
+// Simple endpoint to add ai_tags columns if migration didn't work
+app.get('/add-ai-tags-columns', async (req, res) => {
+  try {
+    await pool.query(`
+      ALTER TABLE meals ADD COLUMN IF NOT EXISTS ai_tags TEXT[] DEFAULT ARRAY[]::TEXT[];
+    `);
+    
+    await pool.query(`
+      ALTER TABLE meals ADD COLUMN IF NOT EXISTS ai_tag_metadata JSONB DEFAULT '{}'::JSONB;
+    `);
+    
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_meals_ai_tags ON meals USING GIN(ai_tags);
+    `);
+    
+    res.send(`
+      <html>
+      <head>
+        <style>
+          body { font-family: sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
+          .success { background: #E8F5E9; padding: 20px; border-radius: 8px; border: 2px solid #4CAF50; margin: 20px 0; }
+          .btn { background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin: 10px 5px; }
+        </style>
+      </head>
+      <body>
+        <h1>✅ AI Tags Columns Added!</h1>
+        
+        <div class="success">
+          <p><strong>Success!</strong> The following columns have been added to your database:</p>
+          <ul>
+            <li><code>ai_tags</code> - Array of AI-generated tags</li>
+            <li><code>ai_tag_metadata</code> - Tracking metadata</li>
+            <li><code>idx_meals_ai_tags</code> - Fast search index</li>
+          </ul>
+        </div>
+        
+        <h3>Next Step:</h3>
+        <p>Now you can generate AI tags for all recipes!</p>
+        
+        <a href="/generate-all-ai-tags" class="btn">🏷️ Generate AI Tags ($2.50)</a>
+        <a href="/" class="btn" style="background: #999;">Go Home</a>
+      </body>
+      </html>
+    `);
+    
+  } catch (error) {
+    res.send(`
+      <html>
+      <head>
+        <style>
+          body { font-family: sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
+          .error { background: #FFEBEE; padding: 20px; border-radius: 8px; border: 2px solid #f44; margin: 20px 0; }
+        </style>
+      </head>
+      <body>
+        <h1>❌ Error</h1>
+        <div class="error">
+          <p><strong>Error:</strong> ${error.message}</p>
+          <p>The columns might already exist (which is fine!) or there's a database issue.</p>
+        </div>
+        <a href="/generate-all-ai-tags">Try generating AI tags anyway</a> | <a href="/">Go home</a>
+      </body>
+      </html>
+    `);
+  }
+});
+
 // ==================== BULK AI TAG GENERATION ====================
 // One-time endpoint to generate AI tags for all recipes
 // Cost: ~$2.50 for 162 recipes (cheaper than doing via Smart Match)
