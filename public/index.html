@@ -1681,6 +1681,59 @@
                     <div class="choice-title">Recipe Ideas</div>
                 </div>
             </div>
+            
+            <!-- Settings button on homepage -->
+            <div style="text-align: center; margin-top: 24px;">
+                <button onclick="showSettings()" 
+                        style="padding: 12px 24px; 
+                               background: #FF9800; 
+                               color: white; 
+                               border: 4px solid #4A4A1F; 
+                               border-radius: 12px; 
+                               font-size: 16px; 
+                               font-weight: 900; 
+                               cursor: pointer;
+                               text-transform: uppercase;
+                               box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+                               transition: all 0.2s ease;">
+                    ⚙️ Settings & AI Usage
+                </button>
+            </div>
+        </div>
+        
+        <!-- SETTINGS MODAL -->
+        <div id="settingsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 1000; padding: 20px; overflow-y: auto;">
+            <div style="max-width: 600px; margin: 40px auto; background: #F5F1E8; border-radius: 12px; border: 4px solid #4A4A1F; padding: 24px; position: relative;">
+                <button onclick="closeSettings()" 
+                        style="position: absolute; top: 16px; right: 16px; background: #c00; color: white; border: 2px solid #4A4A1F; border-radius: 8px; width: 36px; height: 36px; font-size: 20px; font-weight: bold; cursor: pointer;">
+                    ×
+                </button>
+                
+                <h2 style="margin: 0 0 24px 0; font-size: 28px; font-weight: 900; color: #4A4A1F; text-transform: uppercase;">
+                    ⚙️ Settings & AI Usage
+                </h2>
+                
+                <div id="aiUsageStats" style="background: white; border: 4px solid #4A4A1F; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                    <div style="text-align: center; padding: 20px;">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 12px; color: #666;">Loading AI usage stats...</p>
+                    </div>
+                </div>
+                
+                <div style="background: white; border: 4px solid #4A4A1F; border-radius: 12px; padding: 20px;">
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 900; color: #4A4A1F; text-transform: uppercase;">
+                        💡 About AI Costs
+                    </h3>
+                    <ul style="margin: 0; padding-left: 20px; color: #4A4A1F; line-height: 1.8;">
+                        <li><strong>Receipt Extraction:</strong> ~$0.03 per receipt</li>
+                        <li><strong>Smart Match (recipes):</strong> ~$0.015 per recommendation</li>
+                        <li><strong>AI Takeout Suggestion:</strong> ~$0.01 per suggestion</li>
+                        <li><strong>Chat Messages:</strong> ~$0.02 per message</li>
+                        <li><strong>Quick Pick (recipes):</strong> FREE (database only)</li>
+                        <li><strong>Past Orders (takeout):</strong> FREE (database only)</li>
+                    </ul>
+                </div>
+            </div>
         </div>
         
         <!-- FILTER VIEW -->
@@ -2090,28 +2143,29 @@
             { id: 'comfort', icon: '🍕', name: 'Comfort' }
         ];
         
-        // Multi-page cooking filters (2 pages now)
+        // Multi-page cooking filters (2 pages) - Course-based
         const cookingFiltersPage1 = [
-            { id: 'breakfast', icon: '🍳', name: 'Breakfast' },
-            { id: 'lunch', icon: '🥗', name: 'Lunch' },
-            { id: 'dinner', icon: '🍽️', name: 'Dinner' },
-            { id: 'side', icon: '🥔', name: 'Side' },
+            { id: 'main-dish', icon: '🍽️', name: 'Main Dish' },
+            { id: 'salad', icon: '🥗', name: 'Salad' },
+            { id: 'side-dish', icon: '🥔', name: 'Side Dish' },
             { id: 'dessert', icon: '🍰', name: 'Dessert' },
-            { id: 'any-meal', icon: '🎲', name: 'Any Meal', isAny: true }
+            { id: 'appetizer', icon: '🥙', name: 'Appetizer' },
+            { id: 'soup', icon: '🍲', name: 'Soup' },
+            { id: 'any-course', icon: '🎲', name: 'Any Course', isAny: true }
         ];
         
         const cookingFiltersPage2 = [
-            { id: 'healthy', icon: '🥗', name: 'Healthy' },
             { id: 'quick', icon: '⚡', name: 'Quick' },
-            { id: 'filling', icon: '🍗', name: 'Filling' },
-            { id: 'comfort', icon: '🧀', name: 'Comfort' },
+            { id: 'healthy', icon: '🥗', name: 'Healthy' },
+            { id: 'filling', icon: '🍗', name: 'Hearty' },
             { id: 'complex', icon: '🎓', name: 'Complex' },
+            { id: 'comfort', icon: '🧀', name: 'Comfort Food' },
             { id: 'any-vibe', icon: '🎲', name: 'Any Vibe', isAny: true }
         ];
         
         const cookingFilterPages = [
-            { filters: cookingFiltersPage1, title: 'What meal(s)?' },
-            { filters: cookingFiltersPage2, title: 'What vibe(s)?' }
+            { filters: cookingFiltersPage1, title: 'What course?' },
+            { filters: cookingFiltersPage2, title: 'What vibe?' }
         ];
         
         // View navigation functions
@@ -3582,6 +3636,153 @@
             } else {
                 // Show order detail (reuse existing function)
                 viewOrder(mealId);
+            }
+        }
+        
+        // Settings Modal Functions
+        async function showSettings() {
+            document.getElementById('settingsModal').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            
+            // Load AI usage stats
+            try {
+                const response = await fetch('/api/ai-usage');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    const breakdown = data.breakdown;
+                    
+                    let html = `
+                        <h3 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 900; color: #4A4A1F; text-transform: uppercase;">
+                            💰 AI Usage Summary
+                        </h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+                            <div style="text-align: center; padding: 16px; background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%); border-radius: 8px; border: 3px solid #4A4A1F;">
+                                <div style="font-size: 32px; font-weight: 900; color: #4A4A1F; margin-bottom: 4px;">
+                                    $${parseFloat(stats.total_today || 0).toFixed(3)}
+                                </div>
+                                <div style="font-size: 14px; font-weight: 700; color: #4A4A1F; text-transform: uppercase;">
+                                    Today
+                                </div>
+                                <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                                    ${stats.calls_today || 0} calls
+                                </div>
+                            </div>
+                            
+                            <div style="text-align: center; padding: 16px; background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%); border-radius: 8px; border: 3px solid #4A4A1F;">
+                                <div style="font-size: 32px; font-weight: 900; color: #4A4A1F; margin-bottom: 4px;">
+                                    $${parseFloat(stats.total_week || 0).toFixed(2)}
+                                </div>
+                                <div style="font-size: 14px; font-weight: 700; color: #4A4A1F; text-transform: uppercase;">
+                                    This Week
+                                </div>
+                            </div>
+                            
+                            <div style="text-align: center; padding: 16px; background: linear-gradient(135deg, #8BC34A 0%, #AED581 100%); border-radius: 8px; border: 3px solid #4A4A1F;">
+                                <div style="font-size: 32px; font-weight: 900; color: #4A4A1F; margin-bottom: 4px;">
+                                    $${parseFloat(stats.total_month || 0).toFixed(2)}
+                                </div>
+                                <div style="font-size: 14px; font-weight: 700; color: #4A4A1F; text-transform: uppercase;">
+                                    This Month
+                                </div>
+                            </div>
+                            
+                            <div style="text-align: center; padding: 16px; background: linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%); border-radius: 8px; border: 3px solid #4A4A1F;">
+                                <div style="font-size: 32px; font-weight: 900; color: white; margin-bottom: 4px;">
+                                    $${parseFloat(stats.total_all_time || 0).toFixed(2)}
+                                </div>
+                                <div style="font-size: 14px; font-weight: 700; color: white; text-transform: uppercase;">
+                                    All Time
+                                </div>
+                                <div style="font-size: 12px; color: white; opacity: 0.9; margin-top: 4px;">
+                                    ${stats.total_calls || 0} total calls
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    if (breakdown && breakdown.length > 0) {
+                        html += `
+                            <h4 style="margin: 24px 0 12px 0; font-size: 16px; font-weight: 900; color: #4A4A1F; text-transform: uppercase;">
+                                📊 This Month Breakdown
+                            </h4>
+                            <div style="background: #f9f9f9; border-radius: 8px; padding: 12px;">
+                        `;
+                        
+                        const featureNames = {
+                            'receipt_extraction': '📸 Receipt Extraction',
+                            'smart_match': '🧠 Smart Match',
+                            'takeout_suggestion': '✨ AI Takeout Suggestions',
+                            'chat': '💬 Chat Messages'
+                        };
+                        
+                        breakdown.forEach(item => {
+                            const name = featureNames[item.feature] || item.feature;
+                            html += `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #ddd;">
+                                    <span style="font-weight: 600; color: #4A4A1F;">${name}</span>
+                                    <div style="text-align: right;">
+                                        <div style="font-weight: 700; color: #FF9800;">$${parseFloat(item.total_cost).toFixed(3)}</div>
+                                        <div style="font-size: 11px; color: #666;">${item.count} calls</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                    }
+                    
+                    document.getElementById('aiUsageStats').innerHTML = html;
+                } else {
+                    throw new Error('Failed to load stats');
+                }
+                
+            } catch (error) {
+                console.error('Error loading AI usage stats:', error);
+                document.getElementById('aiUsageStats').innerHTML = `
+                    <p style="text-align: center; color: #c00; padding: 20px;">
+                        Unable to load AI usage statistics. ${error.message}
+                    </p>
+                `;
+            }
+        }
+        
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+            document.body.style.overflow = 'auto'; // Re-enable scrolling
+        }
+        
+        // Smart Match function
+        async function getSmartMatch() {
+            const recTitle = document.getElementById('recTitle');
+            const recContent = document.getElementById('recContent');
+            
+            recTitle.textContent = 'Finding best match with AI...';
+            recContent.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                const params = new URLSearchParams({
+                    type: 'cooking',
+                    filters: Array.from(selectedFilters).join(','),
+                    smartMatch: 'true'
+                });
+                
+                const response = await fetch(`/recommend?${params}`);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to get Smart Match');
+                }
+                
+                recTitle.textContent = result.title;
+                recContent.innerHTML = result.recommendation;
+                
+            } catch (error) {
+                console.error('Smart Match error:', error);
+                recTitle.textContent = 'Oops!';
+                recContent.textContent = error.message || 'Unable to get Smart Match. Please try again.';
             }
         }
     </script>
