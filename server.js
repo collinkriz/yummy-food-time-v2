@@ -1492,20 +1492,20 @@ function buildRecipeHTML(recipe) {
   if (recipe.servings && recipe.servings !== 'N/A') infoParts.push(`Serves: ${recipe.servings}`);
   
   if (infoParts.length > 0) {
-    html += `<div style="text-align: center; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #888;">${infoParts.join(' · ')}</div>`;
+    html += `<div style="text-align: center; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #888;">${infoParts.join(' · ')}</div>`;
   }
   
   // Tags - compact, tighter
   if (recipe.tags && recipe.tags.length > 0) {
-    html += '<div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 12px;">';
+    html += '<div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 10px;">';
     recipe.tags.forEach(tag => {
       html += `<span class="tag" style="font-size: 10px; padding: 2px 7px;">${tag}</span>`;
     });
     html += '</div>';
   }
   
-  // Tab buttons - tighter
-  html += `<div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 12px;">
+  // Tab buttons - tighter, no gap above
+  html += `<div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 10px;">
     <button onclick="switchRecipeTab('ingredients')" id="tab-ingredients" style="flex: 1; padding: 8px; background: none; border: none; border-bottom: 2px solid #FF9800; margin-bottom: -2px; font-size: 12px; font-weight: 700; color: #FF9800; cursor: pointer; text-transform: uppercase;">📝 Ingredients</button>
     <button onclick="switchRecipeTab('instructions')" id="tab-instructions" style="flex: 1; padding: 8px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; font-size: 12px; font-weight: 700; color: #999; cursor: pointer; text-transform: uppercase;">👩🏻‍🍳 Instructions</button>
   </div>`;
@@ -1513,10 +1513,11 @@ function buildRecipeHTML(recipe) {
   // Content sections
   html += '<div id="ingredients-section" style="display: block;">';
   if (recipe.ingredients) {
-    const ingredients = recipe.ingredients.split('\n').filter(i => i.trim());
-    html += '<ul style="margin: 0; padding-left: 20px; line-height: 1.6;">';
+    // Clean up extra line breaks and filter empty lines
+    const ingredients = recipe.ingredients.split('\n').map(i => i.trim()).filter(i => i);
+    html += '<ul style="margin: 0; padding-left: 20px; line-height: 1.5;">';
     ingredients.forEach(ing => {
-      html += `<li style="margin-bottom: 6px; font-size: 14px; color: #333;">${ing.trim()}</li>`;
+      html += `<li style="margin-bottom: 4px; font-size: 14px; color: #333;">${ing}</li>`;
     });
     html += '</ul>';
   } else {
@@ -1526,7 +1527,13 @@ function buildRecipeHTML(recipe) {
   
   html += '<div id="instructions-section" style="display: none;">';
   if (recipe.directions) {
-    html += `<div style="font-size: 14px; line-height: 1.6; color: #333;">${recipe.directions.replace(/\n/g, '<br><br>')}</div>`;
+    // Clean up excessive line breaks - replace multiple with single paragraph break
+    const cleanedDirections = recipe.directions
+      .replace(/\n\n\n+/g, '\n\n')  // Multiple breaks to double
+      .replace(/\n\n/g, '</p><p style="margin: 0 0 12px 0;">')  // Double break = new paragraph
+      .replace(/\n/g, ' ')  // Single break = space
+      .trim();
+    html += `<div style="font-size: 14px; line-height: 1.6; color: #333;"><p style="margin: 0 0 12px 0;">${cleanedDirections}</p></div>`;
   } else {
     html += '<p style="color: #999; font-size: 14px;">No instructions available.</p>';
   }
