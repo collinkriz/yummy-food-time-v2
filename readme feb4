@@ -1,10 +1,36 @@
 # 🍕 Yummy Food Time - Complete Project Documentation
 
-**Version:** 2.2 (AI Tags + Smart Match - February 2026)  
+**Version:** 2.3 (UI Overhaul + AI Tags Integration - February 2026)  
 **Live App:** https://yummy-food-time-v2-production.up.railway.app  
 **GitHub:** collinkriz/yummy-food-time-v2  
 **Platform:** Railway (Node.js + PostgreSQL)  
 **Deployment:** Push to GitHub → Railway auto-deploys
+
+---
+
+## 🆕 Latest Updates (Feb 4-5, 2026)
+
+### **AI Tags Now First-Class Citizens**
+- AI tags are now searched on **every filter query**, not just as a fallback
+- Combined scoring: `total_match_score = visible_tag_matches + ai_tag_matches`
+- Expanded synonym matching for better AI tag hits
+- Simplified match indicators: "Great match!", "Good match!", "Ok match" (no numbers)
+
+### **Mobile UI Overhaul**
+- **Recipe Detail Page**: Completely redesigned - flat, clean, no nested boxes
+  - Prep/Cook/Servings now inline text: `Prep: 10 min · Cook: 25 min · Serves: 2`
+  - Tabs redesigned with underline style (not button boxes)
+  - "Try Again" moved to top (next to Back button)
+  - "View Original Recipe" styled as consistent button
+  - Removed all gaps and dead space
+- **Home Page**: Choice cards now horizontal layout (icon + text side by side), more compact
+- **Filter Pages**: Smaller tiles, tighter spacing
+- **Settings Modal**: Compact stat boxes, properly centered X button
+- **Global**: Reduced padding, borders, and font sizes throughout
+
+### **Code Changes**
+- `server.js`: Updated `buildRecipeHTML()` and Quick Pick query logic
+- `index.html`: Extensive CSS and JS updates for mobile optimization
 
 ---
 
@@ -41,13 +67,13 @@
 2. **AI Tags** (hidden, auto-generated)
    - 5-10 descriptive tags added during Smart Match
    - Examples: "weeknight friendly", "uses pantry staples", "leftovers well"
-   - Used as fallback when visible tags don't match well
+   - **Now searched on EVERY query** (not just fallback)
 
-**How It Works:**
-1. User does Smart Match → AI generates descriptive tags → Saves to `ai_tags` column
-2. Next time, Quick Pick searches AI tags as fallback
-3. Over time, more recipes get AI tags
-4. Quick Pick gets smarter, less need for Smart Match
+**How It Works (v2.3):**
+1. User selects filters → Quick Pick searches BOTH visible tags AND AI tags
+2. Combined score determines best match
+3. If user does Smart Match → AI generates new tags → Saves to `ai_tags` column
+4. Over time, more recipes get AI tags → Better Quick Pick results
 5. **Result:** 75% reduction in AI costs after 6 months
 
 **Example Evolution:**
@@ -251,27 +277,35 @@ await pool.query(`
 
 ### **2. Recipe Quick Pick** - FREE
 - Maps filter IDs to visible tags
-- Searches database: prioritizes recipes with MORE matches
-- **NEW:** Falls back to AI tags if weak match (< 50%)
-- Expands query with synonyms for AI tag search
-- Shows match quality indicator
+- **Searches BOTH visible tags AND AI tags on every query**
+- Expands query with synonyms for better AI tag matching
+- Combined scoring: prioritizes recipes with highest total matches
+- Shows simple match quality indicator
 
-**Match Quality:**
-- 100% = "✨ Perfect Match!"
-- 66%+ = "👍 Great Match!" + Smart Match button
-- <66% = "Close match" + Smart Match button
-- AI Tag = "💡 Found via smart matching!"
+**Match Quality (v2.3):**
+- All visible tags matched = "✨ Great match!"
+- Good combined score = "👍 Good match!"
+- Weak match = "👌 Ok match" + Smart Match button
 
-**SQL with AI Fallback:**
+**SQL Query (v2.3):**
 ```sql
 SELECT *, 
-  (SELECT COUNT(*) FROM unnest(tags) WHERE tag = ANY($1)) as match_count,
-  (SELECT COUNT(*) FROM unnest(ai_tags) WHERE tag ILIKE ANY($2)) as ai_match_count
+  (SELECT COUNT(*) FROM unnest(tags) WHERE tag = ANY($1)) as tag_match_count,
+  (SELECT COUNT(*) FROM unnest(ai_tags) WHERE tag ILIKE ANY($2)) as ai_match_count,
+  tag_match_count + ai_match_count as total_match_score
 FROM meals 
-WHERE meal_type = 'recipe' AND (tags && $1 OR ai_tags && $2)
-ORDER BY match_count DESC, ai_match_count DESC
+WHERE meal_type = 'recipe' AND (tags && $1 OR ai_tags IS NOT NULL)
+ORDER BY total_match_score DESC, tag_match_count DESC, RANDOM()
 LIMIT 1
 ```
+
+**Expanded Synonyms:**
+- Quick → fast, weeknight, 30 min, easy
+- Healthy → nutritious, light, fresh, lean
+- Hearty → filling, substantial, satisfying, comfort
+- Salad → fresh, greens, light
+- Soup → warm, broth, stew
+- Dessert → sweet, treat, baking
 
 ### **3. Recipe Smart Match** - $0.015/call
 - Gets 15 candidate recipes
@@ -677,9 +711,9 @@ Then attach this file. The new AI (Opus) will know:
 
 ---
 
-**Version:** 2.2  
-**Last Updated:** February 4, 2026  
+**Version:** 2.3  
+**Last Updated:** February 5, 2026  
 **Status:** Production-ready ✅  
-**Next:** Push to GitHub, run migration, watch system learn!
+**Next:** Push to GitHub, test mobile UI improvements!
 
 🎉 **The app is live and learning!**
