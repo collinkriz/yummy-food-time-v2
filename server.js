@@ -1252,62 +1252,89 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
         }
       }
       
-      // QUICK PICK: Search both visible tags AND ai_tags together
-      // AI tags are invisible but always used in matching
+      // QUICK PICK: Improved tag-based matching (free, instant)
+      // Prioritize recipes with MORE matching tags
       
       if (tagFilters.length > 0) {
-        // Expand query with related terms for AI tag search
-        const expandedTerms = tagFilters.flatMap(tag => {
-          const lower = tag.toLowerCase();
-          const terms = [lower];
-          
-          // Add synonyms for AI tag matching
-          if (lower.includes('quick')) terms.push('fast', 'weeknight', '30 min', 'easy');
-          if (lower.includes('healthy')) terms.push('nutritious', 'light', 'fresh', 'lean');
-          if (lower.includes('hearty')) terms.push('filling', 'substantial', 'satisfying', 'comfort');
-          if (lower.includes('comfort')) terms.push('cozy', 'indulgent', 'rich', 'hearty');
-          if (lower.includes('main dish')) terms.push('entree', 'main course', 'dinner', 'main');
-          if (lower.includes('salad')) terms.push('fresh', 'greens', 'light');
-          if (lower.includes('soup')) terms.push('warm', 'broth', 'stew');
-          if (lower.includes('dessert')) terms.push('sweet', 'treat', 'baking');
-          if (lower.includes('appetizer')) terms.push('starter', 'snack', 'small plate');
-          if (lower.includes('side')) terms.push('accompaniment', 'vegetable', 'side dish');
-          
-          return terms;
-        });
-        
-        // Search both tags and ai_tags, score by combined matches
+        // Count how many tags match and sort by match count
         const query = `
           SELECT *, 
-            (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as tag_match_count,
-            (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as ai_match_count,
-            (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) + 
-            (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as total_match_score
+            (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as match_count
           FROM meals 
-          WHERE meal_type = 'recipe' 
-            AND (tags && $1::text[] OR ai_tags IS NOT NULL)
-          ORDER BY total_match_score DESC, tag_match_count DESC, RANDOM()
+          WHERE meal_type = 'recipe' AND tags && $1::text[]
+          ORDER BY match_count DESC, RANDOM()
           LIMIT 1
         `;
         
-        const result = await pool.query(query, [tagFilters, expandedTerms.map(t => `%${t}%`)]);
+        const result = await pool.query(query, [tagFilters]);
+        
+        // If match is weak (< 50%), try AI tag fallback
+        if (result.rows.length === 0 || result.rows[0].match_count < tagFilters.length * 0.5) {
+          console.log('Weak match, checking AI tags for fallback...');
+          
+          // Expand query with related terms for AI tag search
+          const expandedTerms = tagFilters.flatMap(tag => {
+            // Add lowercase version + common synonyms
+            const lower = tag.toLowerCase();
+            const terms = [lower];
+            
+            // Add synonyms
+            if (lower.includes('quick')) terms.push('fast', 'weeknight', '30 min');
+            if (lower.includes('healthy')) terms.push('nutritious', 'light', 'fresh');
+            if (lower.includes('hearty')) terms.push('filling', 'substantial', 'satisfying');
+            if (lower.includes('comfort')) terms.push('cozy', 'indulgent', 'rich');
+            if (lower.includes('main dish')) terms.push('entree', 'main course', 'dinner');
+            
+            return terms;
+          });
+          
+          // Search recipes that match via AI tags
+          const aiQuery = `
+            SELECT *, 
+              (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as match_count,
+              (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as ai_match_count
+            FROM meals 
+            WHERE meal_type = 'recipe' 
+              AND (tags && $1::text[] OR ai_tags && $2::text[])
+            ORDER BY match_count DESC, ai_match_count DESC, RANDOM()
+            LIMIT 1
+          `;
+          
+          const aiResult = await pool.query(aiQuery, [tagFilters, expandedTerms.map(t => `%${t}%`)]);
+          
+          if (aiResult.rows.length > 0 && aiResult.rows[0].ai_match_count > 0) {
+            const recipe = aiResult.rows[0];
+            
+            let html = `<p style="text-align: center; color: #1565C0; font-weight: 600; font-size: 13px; margin-bottom: 12px;">💡 Found via smart matching!</p>`;
+            
+            html += buildRecipeHTML(recipe);
+            
+            return res.json({
+              title: recipe.name,
+              recommendation: html
+            });
+          }
+        }
         
         if (result.rows.length > 0) {
           const recipe = result.rows[0];
-          const tagMatches = parseInt(recipe.tag_match_count) || 0;
-          const aiMatches = parseInt(recipe.ai_match_count) || 0;
-          const totalScore = tagMatches + aiMatches;
+          const matchCount = recipe.match_count;
           
           let html = '';
           
-          // Simple match quality indicator
-          if (tagMatches === tagFilters.length) {
-            html += `<p style="text-align: center; color: #2E7D32; font-weight: 600; font-size: 13px; margin-bottom: 12px;">✨ Great match!</p>`;
-          } else if (totalScore >= tagFilters.length) {
-            html += `<p style="text-align: center; color: #1565C0; font-weight: 600; font-size: 13px; margin-bottom: 12px;">👍 Good match!</p>`;
-          } else if (totalScore > 0) {
+          // Show match quality indicator - simple text, not a big box
+          if (matchCount === tagFilters.length) {
+            html += `<p style="text-align: center; color: #2E7D32; font-weight: 600; font-size: 13px; margin-bottom: 12px;">✨ Perfect Match! All ${tagFilters.length} tags.</p>`;
+          } else if (matchCount >= tagFilters.length * 0.66) {
             html += `<div style="text-align: center; margin-bottom: 12px;">
-              <p style="color: #856404; font-weight: 600; font-size: 13px; margin: 0 0 8px 0;">👌 Ok match</p>
+              <p style="color: #E65100; font-weight: 600; font-size: 13px; margin: 0 0 8px 0;">👍 Great Match! ${matchCount}/${tagFilters.length} tags.</p>
+              <button onclick="getSmartMatch()" style="padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                🧠 Try Smart Match (~$0.01)
+              </button>
+            </div>`;
+          } else {
+            html += `<div style="text-align: center; margin-bottom: 12px;">
+              <p style="color: #856404; font-weight: 600; font-size: 13px; margin: 0 0 8px 0;">Close match - ${matchCount}/${tagFilters.length} tags.</p>
               <button onclick="getSmartMatch()" style="padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
                 🧠 Try Smart Match (~$0.01)
               </button>
