@@ -66,12 +66,24 @@ async function initializeDatabase() {
       )
     `);
 
+    // Create AI usage tracking table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS ai_usage (
+        id SERIAL PRIMARY KEY,
+        feature VARCHAR(50) NOT NULL,
+        estimated_cost DECIMAL(10, 4) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Create indexes for better performance
     await pool.query(`
       CREATE INDEX IF NOT EXISTS idx_meals_type ON meals(meal_type);
       CREATE INDEX IF NOT EXISTS idx_meals_date ON meals(meal_date);
       CREATE INDEX IF NOT EXISTS idx_meals_tags ON meals USING GIN(tags);
       CREATE INDEX IF NOT EXISTS idx_meal_items_meal_id ON meal_items(meal_id);
+      CREATE INDEX IF NOT EXISTS idx_ai_usage_created_at ON ai_usage(created_at);
+      CREATE INDEX IF NOT EXISTS idx_ai_usage_feature ON ai_usage(feature);
     `);
 
     console.log('✅ Unified database tables initialized successfully');

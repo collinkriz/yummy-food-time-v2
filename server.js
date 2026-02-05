@@ -12,6 +12,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// AI Cost Tracking Helper
+async function trackAIUsage(feature, estimatedCost) {
+  try {
+    await pool.query(
+      'INSERT INTO ai_usage (feature, estimated_cost) VALUES ($1, $2)',
+      [feature, estimatedCost]
+    );
+  } catch (error) {
+    console.error('Error tracking AI usage:', error);
+    // Don't throw - we don't want to break the app if tracking fails
+  }
+}
+
 // Initialize database on startup
 initializeDatabase().catch(console.error);
 
@@ -681,6 +694,10 @@ Look at EVERY section of the receipt carefully. The address is often near the to
     console.log('Claude response:', text);
     const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const orderData = JSON.parse(cleanText);
+    
+    // Track AI usage (receipt extraction typically costs ~$0.03)
+    await trackAIUsage('receipt_extraction', 0.03);
+    
     res.json({ success: true, data: orderData });
 
   } catch (error) {
@@ -1084,13 +1101,16 @@ app.get('/recommend', async (req, res) => {
     const filterArray = filters ? filters.split(',').filter(f => f) : [];
     
     if (type === 'cooking') {
+      const { smartMatch } = req.query;
+      
       // Map filter IDs to actual tag names
       const filterToTagMap = {
-        'breakfast': 'Breakfast',
-        'lunch': 'Lunch',
-        'dinner': 'Dinner',
-        'side': 'Side Dish',
+        'main-dish': 'Main Dish',
+        'salad': 'Salad',
+        'side-dish': 'Side Dish',
         'dessert': 'Dessert',
+        'appetizer': 'Appetizer',
+        'soup': 'Soup',
         'healthy': 'Healthy',
         'quick': 'Quick (< 30 min)',
         'filling': 'Hearty',
@@ -1104,51 +1124,188 @@ app.get('/recommend', async (req, res) => {
         .map(f => filterToTagMap[f] || f)
         .filter(Boolean);
       
-      // Get recipes from database
-      let query = `SELECT * FROM meals WHERE meal_type = 'recipe'`;
-      const params = [];
-      
-      // Apply tag filters if any
-      if (tagFilters.length > 0) {
-        // Use && operator to check if recipe tags contain ANY of the selected filters
-        query += ` AND tags && $1::text[]`;
-        params.push(tagFilters);
-      }
-      
-      query += ` ORDER BY RANDOM() LIMIT 1`;
-      
-      const result = await pool.query(query, params);
-      
-      if (result.rows.length === 0) {
-        // If no exact match, try getting any recipe
-        const anyRecipe = await pool.query(`SELECT * FROM meals WHERE meal_type = 'recipe' ORDER BY RANDOM() LIMIT 1`);
+      if (smartMatch === 'true' && tagFilters.length > 0) {
+        // SMART MATCH: Use AI to find the best match
         
-        if (anyRecipe.rows.length === 0) {
+        // Get candidate recipes (more than we need so AI can choose)
+        let query = `SELECT * FROM meals WHERE meal_type = 'recipe' AND tags && $1::text[] ORDER BY RANDOM() LIMIT 15`;
+        const candidates = await pool.query(query, [tagFilters]);
+        
+        if (candidates.rows.length === 0) {
+          // No matches at all - fallback to any recipe
+          const anyRecipe = await pool.query(`SELECT * FROM meals WHERE meal_type = 'recipe' ORDER BY RANDOM() LIMIT 1`);
+          if (anyRecipe.rows.length === 0) {
+            return res.json({
+              title: 'No Recipes Found',
+              recommendation: '<p style="text-align: center; padding: 40px;">No recipes available in the database.</p>'
+            });
+          }
+          
           return res.json({
-            title: 'No Recipes Found',
-            recommendation: '<p style="text-align: center; padding: 40px;">No recipes available in the database.</p>'
+            title: anyRecipe.rows[0].name,
+            recommendation: buildRecipeHTML(anyRecipe.rows[0])
           });
         }
         
-        // Return a random recipe with a note
-        const recipe = anyRecipe.rows[0];
-        let html = '<div style="text-align: center; padding: 20px; background: #FFF3CD; border: 2px solid #FFC107; border-radius: 8px; margin-bottom: 20px;">';
-        html += '<p style="color: #856404; font-weight: 600;">No exact matches found for your filters, but here\'s a great recipe anyway!</p>';
-        html += '</div>';
+        // Build prompt for AI to analyze candidates
+        const recipeSummaries = candidates.rows.map((r, i) => {
+          return `Recipe ${i + 1}: ${r.name}
+- Prep: ${r.prep_time || 'N/A'}, Cook: ${r.cook_time || 'N/A'}, Servings: ${r.servings || 'N/A'}
+- Tags: ${r.tags.join(', ')}
+- Ingredients (first 200 chars): ${r.ingredients ? r.ingredients.substring(0, 200).replace(/\n/g, ' ') : 'N/A'}...`;
+        }).join('\n\n');
         
-        html += buildRecipeHTML(recipe);
+        const aiPrompt = `You are recommending a recipe. The user wants: ${tagFilters.join(', ')}
+
+Here are ${candidates.rows.length} candidate recipes that match at least some of their criteria:
+
+${recipeSummaries}
+
+Analyze these recipes and pick the BEST match considering:
+1. How many of the user's criteria does it match?
+2. Does the cooking time/method actually align with their request?
+3. Are the ingredients appropriate for what they asked for?
+4. Would this actually be satisfying for their needs?
+
+Respond ONLY with a JSON object (no markdown, no backticks):
+{
+  "topChoice": 1,
+  "reasoning": "Brief 1-2 sentence explanation of why this is the best match"
+}
+
+The topChoice should be the recipe number (1-${candidates.rows.length}) that best matches their criteria.`;
+
+        try {
+          const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': process.env.ANTHROPIC_API_KEY,
+              'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+              model: 'claude-sonnet-4-20250514',
+              max_tokens: 300,
+              messages: [{ role: 'user', content: aiPrompt }]
+            })
+          });
+          
+          const aiData = await aiResponse.json();
+          
+          if (aiResponse.ok) {
+            const aiText = aiData.content[0].text.trim();
+            const cleanText = aiText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            const aiResult = JSON.parse(cleanText);
+            
+            const chosenRecipe = candidates.rows[aiResult.topChoice - 1];
+            
+            let html = `<div style="text-align: center; padding: 16px; background: #E8F5E9; border: 2px solid #4CAF50; border-radius: 8px; margin-bottom: 20px;">
+              <p style="color: #2E7D32; font-weight: 600; margin: 0;">
+                🧠 Smart Match: ${aiResult.reasoning}
+              </p>
+            </div>`;
+            
+            html += buildRecipeHTML(chosenRecipe);
+            
+            // Track AI usage (Smart Match costs ~$0.015)
+            await trackAIUsage('smart_match', 0.015);
+            
+            return res.json({
+              title: chosenRecipe.name,
+              recommendation: html
+            });
+          }
+        } catch (error) {
+          console.error('Smart Match AI error:', error);
+          // Fallback to Quick Pick if AI fails
+        }
+      }
+      
+      // QUICK PICK: Improved tag-based matching (free, instant)
+      // Prioritize recipes with MORE matching tags
+      
+      if (tagFilters.length > 0) {
+        // Count how many tags match and sort by match count
+        const query = `
+          SELECT *, 
+            (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as match_count
+          FROM meals 
+          WHERE meal_type = 'recipe' AND tags && $1::text[]
+          ORDER BY match_count DESC, RANDOM()
+          LIMIT 1
+        `;
         
+        const result = await pool.query(query, [tagFilters]);
+        
+        if (result.rows.length > 0) {
+          const recipe = result.rows[0];
+          const matchCount = recipe.match_count;
+          
+          let html = '';
+          
+          // Show match quality indicator
+          if (matchCount === tagFilters.length) {
+            html += `<div style="text-align: center; padding: 16px; background: #E8F5E9; border: 2px solid #4CAF50; border-radius: 8px; margin-bottom: 20px;">
+              <p style="color: #2E7D32; font-weight: 600; margin: 0;">
+                ✨ Perfect Match! This recipe has all ${tagFilters.length} tags you selected.
+              </p>
+            </div>`;
+          } else if (matchCount >= tagFilters.length * 0.66) {
+            html += `<div style="text-align: center; padding: 16px; background: #FFF8E1; border: 2px solid #FFB300; border-radius: 8px; margin-bottom: 20px;">
+              <p style="color: #E65100; font-weight: 600; margin: 0;">
+                👍 Great Match! Has ${matchCount} of ${tagFilters.length} tags you selected.
+                <button onclick="getSmartMatch()" 
+                        style="display: block; margin: 12px auto 0; padding: 8px 16px; 
+                               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                               color: white; border: 2px solid #4A4A1F; border-radius: 8px; 
+                               font-size: 13px; font-weight: 700; cursor: pointer;">
+                  🧠 Try Smart Match Instead (~$0.01)
+                </button>
+              </p>
+            </div>`;
+          } else {
+            html += `<div style="text-align: center; padding: 16px; background: #FFF3CD; border: 2px solid #FFC107; border-radius: 8px; margin-bottom: 20px;">
+              <p style="color: #856404; font-weight: 600; margin: 0;">
+                Close match - has ${matchCount} of ${tagFilters.length} tags.
+                <button onclick="getSmartMatch()" 
+                        style="display: block; margin: 12px auto 0; padding: 8px 16px; 
+                               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                               color: white; border: 2px solid #4A4A1F; border-radius: 8px; 
+                               font-size: 13px; font-weight: 700; cursor: pointer;">
+                  🧠 Try Smart Match Instead (~$0.01)
+                </button>
+              </p>
+            </div>`;
+          }
+          
+          html += buildRecipeHTML(recipe);
+          
+          return res.json({
+            title: recipe.name,
+            recommendation: html
+          });
+        }
+      }
+      
+      // No filters or no matches - random recipe
+      const anyRecipe = await pool.query(`SELECT * FROM meals WHERE meal_type = 'recipe' ORDER BY RANDOM() LIMIT 1`);
+      
+      if (anyRecipe.rows.length === 0) {
         return res.json({
-          title: recipe.name,
-          recommendation: html
+          title: 'No Recipes Found',
+          recommendation: '<p style="text-align: center; padding: 40px;">No recipes available in the database.</p>'
         });
       }
       
-      const recipe = result.rows[0];
+      const recipe = anyRecipe.rows[0];
+      let html = '<div style="text-align: center; padding: 20px; background: #FFF3CD; border: 2px solid #FFC107; border-radius: 8px; margin-bottom: 20px;">';
+      html += '<p style="color: #856404; font-weight: 600;">No exact matches found for your filters, but here\'s a great recipe anyway!</p>';
+      html += '</div>';
+      html += buildRecipeHTML(recipe);
       
       res.json({
         title: recipe.name,
-        recommendation: buildRecipeHTML(recipe)
+        recommendation: html
       });
       
     } else {
@@ -1475,11 +1632,51 @@ Make sure it's a REAL restaurant with good reviews that matches the vibe: ${vibe
       recommendation: html
     });
     
+    // Track AI usage (AI takeout suggestion costs ~$0.01)
+    await trackAIUsage('takeout_suggestion', 0.01);
+    
   } catch (error) {
     console.error('Error generating AI suggestion:', error);
     res.status(500).json({ 
       error: 'Could not generate AI suggestion. Please try again.' 
     });
+  }
+});
+
+// Get AI usage statistics
+app.get('/api/ai-usage', async (req, res) => {
+  try {
+    const stats = await pool.query(`
+      SELECT 
+        SUM(estimated_cost) as total_all_time,
+        SUM(CASE WHEN created_at >= NOW() - INTERVAL '1 day' THEN estimated_cost ELSE 0 END) as total_today,
+        SUM(CASE WHEN created_at >= NOW() - INTERVAL '7 days' THEN estimated_cost ELSE 0 END) as total_week,
+        SUM(CASE WHEN created_at >= NOW() - INTERVAL '30 days' THEN estimated_cost ELSE 0 END) as total_month,
+        COUNT(*) as total_calls,
+        COUNT(CASE WHEN created_at >= NOW() - INTERVAL '1 day' THEN 1 END) as calls_today
+      FROM ai_usage
+    `);
+    
+    const breakdown = await pool.query(`
+      SELECT 
+        feature,
+        COUNT(*) as count,
+        SUM(estimated_cost) as total_cost
+      FROM ai_usage
+      WHERE created_at >= NOW() - INTERVAL '30 days'
+      GROUP BY feature
+      ORDER BY total_cost DESC
+    `);
+    
+    res.json({
+      success: true,
+      stats: stats.rows[0],
+      breakdown: breakdown.rows
+    });
+    
+  } catch (error) {
+    console.error('Error fetching AI usage:', error);
+    res.status(500).json({ error: 'Could not fetch AI usage stats' });
   }
 });
 
