@@ -2315,10 +2315,6 @@
     
     function handleFilterNext() {
         if (currentChoice === 'takeout' || currentFilterPage === 2) {
-            // Reset seen recipes when starting fresh filter selection
-            seenRecipeIds = [];
-            currentRecipeIndex = 0;
-            totalMatchingRecipes = 0;
             getRecommendation();
         } else {
             // Go to next page
@@ -2326,11 +2322,6 @@
             renderFilterPage();
         }
     }
-    
-    // Track seen recipes to cycle through all before repeating
-    let seenRecipeIds = [];
-    let currentRecipeIndex = 0;
-    let totalMatchingRecipes = 0;
     
     async function getRecommendation(forceRandom = false) {
         const recTitle = document.getElementById('recTitle');
@@ -2344,8 +2335,7 @@
             const params = new URLSearchParams({
                 type: currentChoice,
                 filters: Array.from(selectedFilters).join(','),
-                random: forceRandom,
-                exclude: seenRecipeIds.join(',')
+                random: forceRandom
             });
             
             const response = await fetch(`/recommend?${params}`);
@@ -2353,23 +2343,6 @@
             
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to get recommendation');
-            }
-            
-            // Track this recipe as seen
-            if (result.recipeId) {
-                seenRecipeIds.push(result.recipeId);
-                currentRecipeIndex = seenRecipeIds.length;
-            }
-            
-            // Update total count if provided
-            if (result.totalMatches) {
-                totalMatchingRecipes = result.totalMatches;
-            }
-            
-            // If we've seen all, reset for next cycle
-            if (result.cycleComplete) {
-                seenRecipeIds = [result.recipeId]; // Keep current one
-                currentRecipeIndex = 1;
             }
             
             recTitle.textContent = result.title || (currentChoice === 'takeout' ? 'Order This!' : 'Cook This!');
