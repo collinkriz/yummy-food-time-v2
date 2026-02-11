@@ -1226,9 +1226,9 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
   // AI tags are invisible but always used in matching
   
   if (tagFilters.length > 0) {
-    // Get excluded recipe IDs from request
+    // Get excluded recipe IDs from request (for cycling through results)
     const excludeParam = req.query.exclude || '';
-    const excludeIds = excludeParam ? excludeParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0) : [];
+    const excludeIds = excludeParam.split(',').filter(id => id && !isNaN(parseInt(id))).map(id => parseInt(id));
     
     // Expand query with related terms for AI tag search
     const expandedTerms = tagFilters.flatMap(tag => {
@@ -1250,51 +1250,58 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
       return terms;
     });
     
-    // First, get total count of matching recipes (simpler query)
-    let totalMatches = 0;
-    try {
-      const countQuery = `
-        SELECT COUNT(*) as total
-        FROM meals 
-        WHERE meal_type = 'recipe' 
-          AND tags && $1::text[]
-      `;
-      const countResult = await pool.query(countQuery, [tagFilters]);
-      totalMatches = parseInt(countResult.rows[0].total) || 0;
-    } catch (countErr) {
-      console.error('Count query error:', countErr);
-      totalMatches = 0;
-    }
+    // Count total matches
+    const countQuery = `
+      SELECT COUNT(*) as total FROM meals 
+      WHERE meal_type = 'recipe' AND tags && $1::text[]
+    `;
+    const countResult = await pool.query(countQuery, [tagFilters]);
+    const totalMatches = parseInt(countResult.rows[0].total) || 0;
     
-    // Check if we've seen all recipes - if so, reset exclusions
+    // Reset if we've cycled through all
     let cycleComplete = false;
-    let effectiveExcludeIds = excludeIds;
+    let useExcludeIds = excludeIds;
     if (excludeIds.length >= totalMatches && totalMatches > 0) {
-      effectiveExcludeIds = [];
+      useExcludeIds = [];
       cycleComplete = true;
     }
     
-    // Build exclusion clause safely
-    const excludeClause = effectiveExcludeIds.length > 0 
-      ? `AND id NOT IN (${effectiveExcludeIds.map(id => parseInt(id)).join(',')})` 
-      : '';
+    // Search query with optional exclusion
+    let query;
+    let queryParams;
     
-    // Search both tags and ai_tags, score by combined matches, exclude seen
-    const query = `
-      SELECT *, 
-        (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as tag_match_count,
-        (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as ai_match_count,
-        (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) + 
-        (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as total_match_score
-      FROM meals 
-      WHERE meal_type = 'recipe' 
-        AND (tags && $1::text[] OR ai_tags IS NOT NULL)
-        ${excludeClause}
-      ORDER BY total_match_score DESC, tag_match_count DESC, RANDOM()
-      LIMIT 1
-    `;
+    if (useExcludeIds.length > 0) {
+      query = `
+        SELECT *, 
+          (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as tag_match_count,
+          (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as ai_match_count,
+          (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) + 
+          (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as total_match_score
+        FROM meals 
+        WHERE meal_type = 'recipe' 
+          AND (tags && $1::text[] OR ai_tags IS NOT NULL)
+          AND id != ALL($3::int[])
+        ORDER BY total_match_score DESC, tag_match_count DESC, RANDOM()
+        LIMIT 1
+      `;
+      queryParams = [tagFilters, expandedTerms.map(t => `%${t}%`), useExcludeIds];
+    } else {
+      query = `
+        SELECT *, 
+          (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as tag_match_count,
+          (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as ai_match_count,
+          (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) + 
+          (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as total_match_score
+        FROM meals 
+        WHERE meal_type = 'recipe' 
+          AND (tags && $1::text[] OR ai_tags IS NOT NULL)
+        ORDER BY total_match_score DESC, tag_match_count DESC, RANDOM()
+        LIMIT 1
+      `;
+      queryParams = [tagFilters, expandedTerms.map(t => `%${t}%`)];
+    }
     
-    const result = await pool.query(query, [tagFilters, expandedTerms.map(t => `%${t}%`)]);
+    const result = await pool.query(query, queryParams);
     
     if (result.rows.length > 0) {
       const recipe = result.rows[0];
