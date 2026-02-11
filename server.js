@@ -1226,10 +1226,6 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
   // AI tags are invisible but always used in matching
   
   if (tagFilters.length > 0) {
-    // Get excluded recipe IDs from request (for cycling through results)
-    const excludeParam = req.query.exclude || '';
-    const excludeIds = excludeParam.split(',').filter(id => id && !isNaN(parseInt(id))).map(id => parseInt(id));
-    
     // Expand query with related terms for AI tag search
     const expandedTerms = tagFilters.flatMap(tag => {
       const lower = tag.toLowerCase();
@@ -1250,58 +1246,21 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
       return terms;
     });
     
-    // Count total matches
-    const countQuery = `
-      SELECT COUNT(*) as total FROM meals 
-      WHERE meal_type = 'recipe' AND tags && $1::text[]
+    // Search both tags and ai_tags, score by combined matches
+    const query = `
+      SELECT *, 
+        (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as tag_match_count,
+        (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as ai_match_count,
+        (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) + 
+        (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as total_match_score
+      FROM meals 
+      WHERE meal_type = 'recipe' 
+        AND (tags && $1::text[] OR ai_tags IS NOT NULL)
+      ORDER BY total_match_score DESC, tag_match_count DESC, RANDOM()
+      LIMIT 1
     `;
-    const countResult = await pool.query(countQuery, [tagFilters]);
-    const totalMatches = parseInt(countResult.rows[0].total) || 0;
     
-    // Reset if we've cycled through all
-    let cycleComplete = false;
-    let useExcludeIds = excludeIds;
-    if (excludeIds.length >= totalMatches && totalMatches > 0) {
-      useExcludeIds = [];
-      cycleComplete = true;
-    }
-    
-    // Search query with optional exclusion
-    let query;
-    let queryParams;
-    
-    if (useExcludeIds.length > 0) {
-      query = `
-        SELECT *, 
-          (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as tag_match_count,
-          (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as ai_match_count,
-          (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) + 
-          (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as total_match_score
-        FROM meals 
-        WHERE meal_type = 'recipe' 
-          AND (tags && $1::text[] OR ai_tags IS NOT NULL)
-          AND id != ALL($3::int[])
-        ORDER BY total_match_score DESC, tag_match_count DESC, RANDOM()
-        LIMIT 1
-      `;
-      queryParams = [tagFilters, expandedTerms.map(t => `%${t}%`), useExcludeIds];
-    } else {
-      query = `
-        SELECT *, 
-          (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) as tag_match_count,
-          (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as ai_match_count,
-          (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) + 
-          (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) as total_match_score
-        FROM meals 
-        WHERE meal_type = 'recipe' 
-          AND (tags && $1::text[] OR ai_tags IS NOT NULL)
-        ORDER BY total_match_score DESC, tag_match_count DESC, RANDOM()
-        LIMIT 1
-      `;
-      queryParams = [tagFilters, expandedTerms.map(t => `%${t}%`)];
-    }
-    
-    const result = await pool.query(query, queryParams);
+    const result = await pool.query(query, [tagFilters, expandedTerms.map(t => `%${t}%`)]);
     
     if (result.rows.length > 0) {
       const recipe = result.rows[0];
@@ -1309,15 +1268,7 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
       const aiMatches = parseInt(recipe.ai_match_count) || 0;
       const totalScore = tagMatches + aiMatches;
       
-      // Calculate current position (exclude count + 1, or 1 if cycle reset)
-      const currentPosition = cycleComplete ? 1 : (excludeIds.length + 1);
-      
       let html = '';
-      
-      // Show position counter
-      if (totalMatches > 1) {
-        html += `<p style="text-align: center; color: #999; font-size: 11px; margin-bottom: 4px;">${currentPosition} of ${totalMatches} matches</p>`;
-      }
       
       // Simple match quality indicator
       if (tagMatches === tagFilters.length) {
@@ -1337,10 +1288,7 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
       
       return res.json({
         title: recipe.name,
-        recommendation: html,
-        recipeId: recipe.id,
-        totalMatches: totalMatches,
-        cycleComplete: cycleComplete
+        recommendation: html
       });
     }
   }
