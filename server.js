@@ -1228,7 +1228,7 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
   if (tagFilters.length > 0) {
     // Get excluded recipe IDs from request
     const excludeParam = req.query.exclude || '';
-    const excludeIds = excludeParam ? excludeParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id)) : [];
+    const excludeIds = excludeParam ? excludeParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0) : [];
     
     // Expand query with related terms for AI tag search
     const expandedTerms = tagFilters.flatMap(tag => {
@@ -1250,19 +1250,21 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
       return terms;
     });
     
-    // First, get total count of matching recipes
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM meals 
-      WHERE meal_type = 'recipe' 
-        AND (tags && $1::text[] OR ai_tags IS NOT NULL)
-        AND (
-          (SELECT COUNT(*) FROM unnest(tags) tag WHERE tag = ANY($1::text[])) > 0
-          OR (SELECT COUNT(*) FROM unnest(ai_tags) tag WHERE tag ILIKE ANY($2::text[])) > 0
-        )
-    `;
-    const countResult = await pool.query(countQuery, [tagFilters, expandedTerms.map(t => `%${t}%`)]);
-    const totalMatches = parseInt(countResult.rows[0].total) || 0;
+    // First, get total count of matching recipes (simpler query)
+    let totalMatches = 0;
+    try {
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM meals 
+        WHERE meal_type = 'recipe' 
+          AND tags && $1::text[]
+      `;
+      const countResult = await pool.query(countQuery, [tagFilters]);
+      totalMatches = parseInt(countResult.rows[0].total) || 0;
+    } catch (countErr) {
+      console.error('Count query error:', countErr);
+      totalMatches = 0;
+    }
     
     // Check if we've seen all recipes - if so, reset exclusions
     let cycleComplete = false;
@@ -1271,6 +1273,11 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
       effectiveExcludeIds = [];
       cycleComplete = true;
     }
+    
+    // Build exclusion clause safely
+    const excludeClause = effectiveExcludeIds.length > 0 
+      ? `AND id NOT IN (${effectiveExcludeIds.map(id => parseInt(id)).join(',')})` 
+      : '';
     
     // Search both tags and ai_tags, score by combined matches, exclude seen
     const query = `
@@ -1282,7 +1289,7 @@ The topChoice should be the recipe number (1-${candidates.rows.length}) that bes
       FROM meals 
       WHERE meal_type = 'recipe' 
         AND (tags && $1::text[] OR ai_tags IS NOT NULL)
-        ${effectiveExcludeIds.length > 0 ? `AND id NOT IN (${effectiveExcludeIds.join(',')})` : ''}
+        ${excludeClause}
       ORDER BY total_match_score DESC, tag_match_count DESC, RANDOM()
       LIMIT 1
     `;
